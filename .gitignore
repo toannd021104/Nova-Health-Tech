@@ -8,3 +8,34 @@ crash.log
 *.pem
 *.key
 .env
+
+# Excluded deliverables (not pushed)
+Nova Health Tech's challenge.txt
+Task List - Task list.csv
+
+# Kiro / IDE
+.vscode/
+.kiro/
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# SAM / AWS
+.aws-sam/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+
+# Large third-party corpora — fetch at runtime, don't commit
+data/pubmed/pubmed_medrag_sample.jsonl
+data/pubmed/*.jsonl

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Nova Health Tech — Clinical Portal (Demo)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <strong>Nova Health Tech</strong>
+      <span class="muted">Clinical Decision Support — Demo</span>
+    </div>
+    <div class="api-box">
+      <label>API endpoint</label>
+      <input id="api-endpoint" type="text" placeholder="https://xxxx.execute-api.us-east-1.amazonaws.com/demo/chat" />
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Main clinical area -->
+    <section class="clinical">
+      <h2>Patient roster</h2>
+      <ul class="roster">
+        <li><strong>P-8821</strong> — 68M, chest pain, ST-elevation II/III <span class="tag urgent">URGENT</span></li>
+        <li><strong>P-7734</strong> — 52F, febrile, WBC 18k, suspected sepsis <span class="tag urgent">URGENT</span></li>
+        <li><strong>P-4401</strong> — 71M, newly diagnosed T2DM, HbA1c 9.8</li>
+        <li><strong>P-9920</strong> — 34F, migraine review</li>
+      </ul>
+
+      <h2>Active patient: P-8821</h2>
+      <div class="card">
+        <p><strong>Presenting:</strong> Acute substernal chest pain, radiating to left arm, onset 45 min ago.</p>
+        <p><strong>Vitals:</strong> BP 148/92, HR 104, SpO₂ 96% RA, T 37.1°C.</p>
+        <p><strong>ECG:</strong> ST elevation in leads II, III, aVF. Reciprocal depression in I, aVL.</p>
+        <p><strong>Allergies:</strong> NKDA.</p>
+        <p><strong>Meds:</strong> Atorvastatin 40 mg, Lisinopril 10 mg.</p>
+      </div>
+
+      <h2>Recent internal trials</h2>
+      <ul class="trials">
+        <li>NCT0XXXXX — "Tenecteplase vs alteplase in STEMI transfer patients" (Phase III, results 2024)</li>
+        <li>NCT0YYYYY — "Early DOAC initiation post-STEMI" (Phase II, ongoing)</li>
+      </ul>
+
+      <p class="disclaimer">Demo data only. Never enter real patient identifiers.</p>
+    </section>
+
+    <!-- Right-hand AI assistant panel -->
+    <aside class="assistant">
+      <div class="assistant-header">
+        <strong>🩺 Nova AI Assistant</strong>
+        <span id="model-label" class="muted">Claude Haiku 4.5</span>
+      </div>
+      <div id="chat" class="chat">
+        <div class="msg assistant-msg">
+          Hi. I'm the Nova clinical assistant. Ask me about protocols, drug interactions, or internal trial findings.
+          I am decision support, not a diagnosis.
+        </div>
+      </div>
+      <form id="chat-form" class="chat-form">
+        <textarea id="chat-input" placeholder="e.g., Immediate management for inferior STEMI?" rows="2"></textarea>
+        <button type="submit" id="send-btn">Send</button>
+      </form>
+      <div class="suggestions">
+        <button class="suggestion">Sepsis bundle for this patient</button>
+        <button class="suggestion">Tenecteplase dosing by weight</button>
+        <button class="suggestion">Contraindications for fibrinolysis</button>
+      </div>
+    </aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

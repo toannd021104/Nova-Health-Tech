@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Nova Health Tech AI Assistant demo — API Gateway + Lambda calling Amazon Bedrock.
+  This is a minimal demo. See docs/architecture/AWS_architecture.md for a production design.
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 512
+    Runtime: python3.12
+
+Parameters:
+  ModelId:
+    Type: String
+    Default: anthropic.claude-haiku-4-5-20251001-v1:0
+    Description: Bedrock model ID. Haiku 4.5 for speed; swap to Sonnet for reasoning.
+  AllowedOrigin:
+    Type: String
+    Default: '*'
+    Description: CORS origin for the demo frontend. Lock this down before going to production.
+
+Resources:
+  ChatFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/
+      Handler: chat_handler.handler
+      Environment:
+        Variables:
+          MODEL_ID: !Ref ModelId
+          ALLOWED_ORIGIN: !Ref AllowedOrigin
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+                - bedrock:Converse
+                - bedrock:ConverseStream
+              Resource: '*'
+      Events:
+        ChatApi:
+          Type: Api
+          Properties:
+            Path: /chat
+            Method: post
+            RestApiId: !Ref ChatApi
+
+  ChatApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: demo
+      Cors:
+        AllowMethods: "'POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: !Sub "'${AllowedOrigin}'"
+
+Outputs:
+  ApiEndpoint:
+    Description: POST this URL from the frontend
+    Value: !Sub 'https://${ChatApi}.execute-api.${AWS::Region}.amazonaws.com/demo/chat'
+  ModelUsed:
+    Value: !Ref ModelId

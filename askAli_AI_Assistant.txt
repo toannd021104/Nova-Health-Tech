@@ -1,0 +1,82 @@
+Can we fine-tuning Qwen. If so, which model can we do?
+6 pages read ：
+1
+Quick start: Deploy, fine-tune, and evaluate Qwen3 models | Platform For AI
+2
+Quick start: Fine-tune, evaluate, and deploy Qwen2.5 models | Platform For AI
+3
+Fine-tuning and Model Management using Arena | Container Service for Kubernetes
+4
+Deploy and fine-tune Qwen1.5 series models | Platform For AI
+5
+Fine-tune a Qwen3 model on an Elastic GPU Service instance - Deployment Tutorial
+6
+Fine-tune Qwen | Alibaba Cloud Model Studio
+Yes, you can fine-tune Qwen models. Supported variants include:
+
+Qwen3 series: 0.6B, 1.7B, 4B, 8B, 14B, and 32B models support SFT (full-parameter, LoRA, QLoRA) and GRPO training
+.
+Qwen2.5 series: Includes models like Qwen2.5-7B-Instruct and Qwen2.5-Coder-32B-Instruct, which support Supervised Fine-Tuning (SFT) and Direct Preference Optimization (DPO)
+.
+Qwen1.5 series: Available in Base and Chat variants with multiple sizes, supporting SFT and DPO
+.
+Qwen-7B-Chat: Can be fine-tuned using LoRA via Arena CLI
+.
+Fine-tuning methods include full-parameter tuning, LoRA, QLoRA (4-bit or 8-bit), and DPO, depending on the model and platform used
+.
+
+embedding for pdf that contains images, which emdedding model support
+3 pages read ：
+1
+Configure embedding model from Model Studio | OpenSearch
+2
+Manage vector data with OSS Vectors Embed CLI | Object Storage Service
+3
+Multimodal embeddings | Alibaba Cloud Model Studio
+For a PDF containing images, you need a multimodal embedding model that supports both text and images. The following models are suitable:
+
+qwen3-vl-embedding: Supports fused embeddings (combines text and images into a single vector) and is ideal for mixed-content retrieval
+.
+qwen2.5-vl-embedding: Accepts text and images as input and generates embeddings in dimensions 2048, 1024, 768, or 512
+.
+tongyi-embedding-vision-plus: Handles text, images, and video; generates independent embeddings per modality and supports up to 8 images per request
+.
+tongyi-embedding-vision-flash: A faster option for multimodal inputs (text, images, video) with 768-dimensional embeddings
+.
+Recommendation: If your use case involves joint understanding of text and images within the PDF (e.g., retrieving based on combined semantics), use qwen3-vl-embedding with enable_fusion=true. If you need separate representations for text and images (e.g., for cross-modal search), use tongyi-embedding-vision-plus.
+
+guide me how to use qwen3-vl-embedding
+1 page read ：
+1
+Text and multimodal embedding | Alibaba Cloud Model Studio
+To use qwen3-vl-embedding, follow these steps:
+
+1. Prepare Input Data
+Combine text, image(s), and/or video in a list of dictionaries:
+
+python
+input_data = [
+    {"text": "Your descriptive text"},
+    {"image": "https://example.com/image.jpg"},  # URL, Base64, or OSS path
+    # {"video": "..."}  # optional
+]
+2. Call the Model via DashScope SDK
+Set enable_fusion=True to generate a single fused embedding across modalities:
+
+python
+import dashscope
+import os
+
+resp = dashscope.MultiModalEmbedding.call(
+    api_key=os.getenv("DASHSCOPE_API_KEY"),
+    model="qwen3-vl-embedding",
+    input=input_data,
+    enable_fusion=True,
+    # Optional: specify dimension (default: 2560)
+    # parameters={"dimension": 1024}
+)
+3. Use Cases
+Cross-modal retrieval (e.g., search images using text)
+Multi-image + text semantic search (e.g., product matching with multiple views and description)
+Note: This model is also available in OpenSearch Vector Search Edition for automatic vectorization of PDFs/images during indexing—configure it under Model Studio tab with image data sources (OSS, URL, etc.).
+
