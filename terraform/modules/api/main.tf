@@ -117,14 +117,10 @@ resource "aws_api_gateway_authorizer" "cognito" {
 # VPC Link to internal ALB
 resource "aws_api_gateway_vpc_link" "main" {
   name        = "${var.project}-${var.environment}-vpc-link"
-  description = "VPC Link to internal ALB for ECS RAG service"
-  target_arns = ["arn:aws:elasticloadbalancing:${var.aws_region}:${var.aws_account_id}:loadbalancer/app/${var.project}-${var.environment}-alb-int/dummy"]
+  description = "VPC Link to internal NLB for ECS RAG service"
+  target_arns = [var.alb_internal_arn]
 
   tags = var.tags
-
-  lifecycle {
-    ignore_changes = [target_arns]
-  }
 }
 
 # /v1 resource

@@ -22,6 +22,11 @@ variable "alb_internal_dns" {
   type = string
 }
 
+variable "alb_internal_arn" {
+  description = "NLB ARN for VPC Link target"
+  type        = string
+}
+
 variable "alb_listener_arn" {
   type = string
 }

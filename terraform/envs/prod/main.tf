@@ -248,6 +248,7 @@ module "api" {
 
   cognito_user_pool_arn = module.cognito.user_pool_arn
   alb_internal_dns      = module.compute.alb_internal_dns
+  alb_internal_arn      = module.compute.alb_internal_arn
   alb_listener_arn      = module.compute.alb_listener_arn
 
   vpc_id             = module.networking.vpc_id

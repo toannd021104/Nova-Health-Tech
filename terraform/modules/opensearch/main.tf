@@ -44,13 +44,9 @@ resource "aws_opensearchserverless_security_policy" "network_public" {
       {
         Resource     = ["collection/${var.project}-${var.environment}-public"]
         ResourceType = "collection"
-      },
-      {
-        Resource     = ["dashboards/${var.project}-${var.environment}-public"]
-        ResourceType = "dashboard"
       }
     ]
-    AllowFromPublic = false
+    AllowFromPublic = true
   }])
 }
 
@@ -66,7 +62,7 @@ resource "aws_opensearchserverless_security_policy" "network_phi" {
         ResourceType = "collection"
       }
     ]
-    AllowFromPublic = false
+    AllowFromPublic = true
   }])
 }
 

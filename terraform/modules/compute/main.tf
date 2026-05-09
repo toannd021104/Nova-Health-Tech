@@ -150,22 +150,19 @@ resource "aws_ecs_task_definition" "rag_service" {
 }
 
 ################################################################################
-# Application Load Balancer (internal — accessed via API Gateway VPC Link)
+# Network Load Balancer (internal — required for API Gateway REST VPC Link)
 ################################################################################
 resource "aws_lb" "internal" {
-  name               = "${var.project}-${var.environment}-alb-int"
+  name               = "${var.project}-${var.environment}-nlb-int"
   internal           = true
-  load_balancer_type = "application"
-  security_groups    = [var.sg_alb_id]
+  load_balancer_type = "network"
   subnets            = var.private_subnet_ids
 
   enable_deletion_protection = var.environment == "prod"
-  enable_http2               = true
-  drop_invalid_header_fields = true
 
   access_logs {
     bucket  = "${var.project}-${var.environment}-audit-logs-${var.aws_account_id}"
-    prefix  = "alb"
+    prefix  = "nlb"
     enabled = true
   }
 
@@ -175,7 +172,7 @@ resource "aws_lb" "internal" {
 resource "aws_lb_target_group" "rag_service" {
   name        = "${var.project}-${var.environment}-rag-tg"
   port        = 8080
-  protocol    = "HTTP"
+  protocol    = "TCP"
   vpc_id      = var.vpc_id
   target_type = "ip"
 
@@ -186,9 +183,7 @@ resource "aws_lb_target_group" "rag_service" {
     protocol            = "HTTP"
     healthy_threshold   = 2
     unhealthy_threshold = 3
-    timeout             = 5
     interval            = 15
-    matcher             = "200"
   }
 
   deregistration_delay = 30
@@ -199,7 +194,7 @@ resource "aws_lb_target_group" "rag_service" {
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.internal.arn
   port              = 80
-  protocol          = "HTTP"
+  protocol          = "TCP"
 
   default_action {
     type             = "forward"

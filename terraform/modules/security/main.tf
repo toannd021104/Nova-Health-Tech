@@ -194,6 +194,7 @@ resource "aws_config_delivery_channel" "main" {
   name           = "${var.project}-${var.environment}-config-delivery"
   s3_bucket_name = var.audit_bucket_id
   s3_key_prefix  = "aws-config"
+  s3_kms_key_arn = var.public_kms_key_arn
 
   snapshot_delivery_properties {
     delivery_frequency = "Six_Hours"
