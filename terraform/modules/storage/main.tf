@@ -29,6 +29,20 @@ resource "aws_kms_key" "public_content" {
         Principal = { Service = "cloudtrail.amazonaws.com" }
         Action   = ["kms:GenerateDataKey*", "kms:Decrypt"]
         Resource = "*"
+      },
+      {
+        Sid    = "ConfigService"
+        Effect = "Allow"
+        Principal = { Service = "config.amazonaws.com" }
+        Action   = ["kms:GenerateDataKey*", "kms:Decrypt"]
+        Resource = "*"
+      },
+      {
+        Sid    = "OpenSearchServerlessService"
+        Effect = "Allow"
+        Principal = { Service = "aoss.amazonaws.com" }
+        Action   = ["kms:GenerateDataKey*", "kms:Decrypt", "kms:CreateGrant", "kms:DescribeKey"]
+        Resource = "*"
       }
     ]
   })
@@ -64,6 +78,13 @@ resource "aws_kms_key" "phi" {
         Effect = "Allow"
         Principal = { Service = "s3.amazonaws.com" }
         Action   = ["kms:GenerateDataKey", "kms:Decrypt"]
+        Resource = "*"
+      },
+      {
+        Sid    = "OpenSearchServerlessService"
+        Effect = "Allow"
+        Principal = { Service = "aoss.amazonaws.com" }
+        Action   = ["kms:GenerateDataKey*", "kms:Decrypt", "kms:CreateGrant", "kms:DescribeKey"]
         Resource = "*"
       },
       {
