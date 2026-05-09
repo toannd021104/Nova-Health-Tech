@@ -29,11 +29,14 @@ Bedrock model access must be enabled manually in the AWS console before applying
 ```bash
 chmod +x scripts/init.sh
 
+# Set your AWS profile in the environment (never hardcode in code)
+export AWS_PROFILE=<your-profile>
+
 # dev
-./scripts/init.sh dev <aws_account_id> us-east-1 gapv50k
+./scripts/init.sh dev <aws_account_id> us-east-1
 
 # prod
-./scripts/init.sh prod <aws_account_id> us-east-1 gapv50k
+./scripts/init.sh prod <aws_account_id> us-east-1
 ```
 
 This creates the S3 state bucket (`nova-terraform-state-<account_id>`), the DynamoDB lock table (`nova-terraform-locks`), and runs `terraform init` + `terraform validate`.

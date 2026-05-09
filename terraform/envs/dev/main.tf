@@ -23,8 +23,8 @@ terraform {
 }
 
 provider "aws" {
-  region  = var.aws_region
-  profile = "gapv50k"
+  region = var.aws_region
+  # Profile set via AWS_PROFILE env var or ~/.aws/credentials — do NOT hardcode here
 
   default_tags {
     tags = local.common_tags

@@ -14,12 +14,13 @@
 set -euo pipefail
 
 # ── Args ─────────────────────────────────────────────────────────────────────
-ENV="${1:?Usage: $0 <environment> <aws_account_id> [aws_region] [aws_profile]}"
+ENV="${1:?Usage: $0 <environment> <aws_account_id> [aws_region]}"
 ACCOUNT_ID="${2:?AWS account ID required}"
 REGION="${3:-us-east-1}"
-AWS_PROFILE="${4:-gapv50k}"
 
-export AWS_PROFILE
+# Use AWS_PROFILE from env if already set, otherwise default to 'default'
+# Example: AWS_PROFILE=myprofile ./scripts/init.sh dev 123456789012
+export AWS_PROFILE="${AWS_PROFILE:-default}"
 
 STATE_BUCKET="nova-terraform-state-${ACCOUNT_ID}"
 LOCK_TABLE="nova-terraform-locks"
@@ -30,7 +31,6 @@ echo " Nova Health Tech — Terraform Bootstrap"
 echo " Environment   : ${ENV}"
 echo " AWS Account   : ${ACCOUNT_ID}"
 echo " AWS Region    : ${REGION}"
-echo " AWS Profile   : ${AWS_PROFILE}"
 echo " State Bucket  : ${STATE_BUCKET}"
 echo " Lock Table    : ${LOCK_TABLE}"
 echo "========================================================"
