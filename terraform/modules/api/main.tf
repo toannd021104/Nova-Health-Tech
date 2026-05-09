@@ -265,11 +265,6 @@ resource "aws_api_gateway_stage" "main" {
     })
   }
 
-  default_route_settings {
-    throttling_burst_limit = var.throttle_burst_limit
-    throttling_rate_limit  = var.throttle_rate_limit
-  }
-
   tags = var.tags
 }
 

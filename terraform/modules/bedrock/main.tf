@@ -75,7 +75,7 @@ resource "aws_bedrock_provisioned_model_throughput" "claude" {
   provisioned_model_name   = "${var.project}-${var.environment}-claude-pt"
   model_arn                = "arn:aws:bedrock:${var.aws_region}::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0"
   model_units              = var.model_units
-  commitment_duration       = "ONE_MONTH"
+  commitment_duration       = "OneMonth"
 
   tags = var.tags
 }

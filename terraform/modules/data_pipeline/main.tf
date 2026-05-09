@@ -1,4 +1,17 @@
 ################################################################################
+# Placeholder ZIP — must be declared first so Lambda resources can reference it
+################################################################################
+data "archive_file" "placeholder" {
+  type        = "zip"
+  output_path = "${path.module}/placeholder.zip"
+
+  source {
+    content  = "def handler(event, context): return {'statusCode': 200, 'body': 'placeholder'}"
+    filename = "placeholder.py"
+  }
+}
+
+################################################################################
 # CloudWatch Log Groups — Lambda & Step Functions
 ################################################################################
 resource "aws_cloudwatch_log_group" "lambda_pdf_processor" {
@@ -38,8 +51,8 @@ resource "aws_lambda_function" "pdf_processor" {
   memory_size   = var.lambda_memory_mb
 
   # Placeholder code — replaced by CI/CD on first deploy
-  filename         = "${path.module}/placeholder.zip"
-  source_code_hash = filebase64sha256("${path.module}/placeholder.zip")
+  filename         = data.archive_file.placeholder.output_path
+  source_code_hash = data.archive_file.placeholder.output_base64sha256
 
   vpc_config {
     subnet_ids         = var.private_subnet_ids
@@ -56,7 +69,7 @@ resource "aws_lambda_function" "pdf_processor" {
       METADATA_TABLE           = var.document_metadata_table_name
       APP_CONFIG_SECRET_ARN    = var.app_config_secret_arn
       AWS_REGION_NAME          = var.aws_region
-      SFN_ARN                  = aws_sfn_state_machine.pdf_pipeline.arn
+      SFN_ARN                  = "arn:aws:states:${var.aws_region}:${var.aws_account_id}:stateMachine:${var.project}-${var.environment}-pdf-pipeline"
     }
   }
 
@@ -102,8 +115,8 @@ resource "aws_lambda_function" "chunker_embedder" {
   timeout       = var.lambda_timeout_sec
   memory_size   = var.lambda_memory_mb
 
-  filename         = "${path.module}/placeholder.zip"
-  source_code_hash = filebase64sha256("${path.module}/placeholder.zip")
+  filename         = data.archive_file.placeholder.output_path
+  source_code_hash = data.archive_file.placeholder.output_base64sha256
 
   vpc_config {
     subnet_ids         = var.private_subnet_ids
@@ -142,8 +155,8 @@ resource "aws_lambda_function" "who_ingestor" {
   timeout       = var.lambda_timeout_sec
   memory_size   = 512
 
-  filename         = "${path.module}/placeholder.zip"
-  source_code_hash = filebase64sha256("${path.module}/placeholder.zip")
+  filename         = data.archive_file.placeholder.output_path
+  source_code_hash = data.archive_file.placeholder.output_base64sha256
 
   vpc_config {
     subnet_ids         = var.private_subnet_ids
@@ -157,7 +170,7 @@ resource "aws_lambda_function" "who_ingestor" {
       METADATA_TABLE        = var.document_metadata_table_name
       APP_CONFIG_SECRET_ARN = var.app_config_secret_arn
       AWS_REGION_NAME       = var.aws_region
-      SFN_ARN               = aws_sfn_state_machine.pdf_pipeline.arn
+      SFN_ARN               = "arn:aws:states:${var.aws_region}:${var.aws_account_id}:stateMachine:${var.project}-${var.environment}-pdf-pipeline"
     }
   }
 
@@ -312,16 +325,3 @@ resource "aws_scheduler_schedule" "who_monthly" {
   }
 }
 
-################################################################################
-# Placeholder ZIP — required for Terraform to create Lambda functions.
-# Real code is deployed by CI/CD pipeline (CodePipeline).
-################################################################################
-data "archive_file" "placeholder" {
-  type        = "zip"
-  output_path = "${path.module}/placeholder.zip"
-
-  source {
-    content  = "def handler(event, context): return {'statusCode': 200, 'body': 'placeholder'}"
-    filename = "placeholder.py"
-  }
-}

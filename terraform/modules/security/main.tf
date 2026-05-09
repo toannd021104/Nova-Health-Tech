@@ -9,25 +9,39 @@ resource "aws_cloudtrail" "main" {
   enable_log_file_validation    = true
   kms_key_id                    = var.public_kms_key_arn
 
-  event_selector {
-    read_write_type           = "All"
-    include_management_events = true
-
-    data_resource {
-      type   = "AWS::S3::Object"
-      values = ["arn:aws:s3:::${var.phi_bucket_id}/", "arn:aws:s3:::${var.public_bucket_id}/"]
+  # Management events (all read/write)
+  advanced_event_selector {
+    name = "ManagementEvents"
+    field_selector {
+      field  = "eventCategory"
+      equals = ["Management"]
     }
   }
 
-  # Log Bedrock invocations as data events
+  # S3 data events for PHI and public buckets
   advanced_event_selector {
-    name = "BedrockModelInvocationDataEvents"
-
+    name = "S3DataEvents"
     field_selector {
       field  = "eventCategory"
       equals = ["Data"]
     }
+    field_selector {
+      field  = "resources.type"
+      equals = ["AWS::S3::Object"]
+    }
+    field_selector {
+      field       = "resources.ARN"
+      starts_with = ["arn:aws:s3:::${var.phi_bucket_id}/", "arn:aws:s3:::${var.public_bucket_id}/"]
+    }
+  }
 
+  # Bedrock model invocation data events
+  advanced_event_selector {
+    name = "BedrockModelInvocationDataEvents"
+    field_selector {
+      field  = "eventCategory"
+      equals = ["Data"]
+    }
     field_selector {
       field  = "resources.type"
       equals = ["AWS::Bedrock::Model"]
@@ -80,7 +94,6 @@ resource "aws_iam_role_policy" "cloudtrail_cw_policy" {
 # Bucket policy allowing CloudTrail to write
 resource "aws_s3_bucket_policy" "cloudtrail_write" {
   bucket = var.audit_bucket_id
-  id     = var.audit_bucket_id
 
   policy = jsonencode({
     Version = "2012-10-17"

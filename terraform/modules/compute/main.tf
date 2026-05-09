@@ -233,14 +233,12 @@ resource "aws_ecs_service" "rag_service" {
     container_port   = 8080
   }
 
-  deployment_configuration {
-    minimum_healthy_percent = 50
-    maximum_percent         = 200
+  deployment_minimum_healthy_percent = 50
+  deployment_maximum_percent         = 200
 
-    deployment_circuit_breaker {
-      enable   = true
-      rollback = true
-    }
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
   }
 
   deployment_controller {

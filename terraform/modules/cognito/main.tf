@@ -81,7 +81,7 @@ resource "aws_cognito_user_pool" "main" {
     invite_message_template {
       email_subject = "Nova Health Tech — Your clinical assistant account"
       email_message = "Your username is {username} and temporary password is {####}. You must reset your password and set up MFA on first login."
-      sms_message   = "Nova Health Tech temp password: {####}"
+      sms_message   = "Hello {username}, your Nova Health Tech temp password is: {####}"
     }
   }
 
@@ -94,28 +94,28 @@ resource "aws_cognito_user_pool" "main" {
 ################################################################################
 # Cognito User Groups — map to IAM roles (RBAC)
 ################################################################################
-resource "aws_cognito_user_pool_group" "clinical_staff" {
+resource "aws_cognito_user_group" "clinical_staff" {
   name         = "clinical-staff"
   user_pool_id = aws_cognito_user_pool.main.id
   description  = "Internal clinical staff — access to public protocols, no PHI index"
   precedence   = 10
 }
 
-resource "aws_cognito_user_pool_group" "phi_researchers" {
+resource "aws_cognito_user_group" "phi_researchers" {
   name         = "phi-researchers"
   user_pool_id = aws_cognito_user_pool.main.id
   description  = "Clinical researchers — full access including PHI clinical trial index"
   precedence   = 5
 }
 
-resource "aws_cognito_user_pool_group" "hospital_clients" {
+resource "aws_cognito_user_group" "hospital_clients" {
   name         = "hospital-clients"
   user_pool_id = aws_cognito_user_pool.main.id
   description  = "External hospital client users — read-only access to public protocols"
   precedence   = 20
 }
 
-resource "aws_cognito_user_pool_group" "admins" {
+resource "aws_cognito_user_group" "admins" {
   name         = "admins"
   user_pool_id = aws_cognito_user_pool.main.id
   description  = "Platform administrators"

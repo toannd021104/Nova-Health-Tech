@@ -143,6 +143,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "public_content" {
     id     = "archive-old-versions"
     status = "Enabled"
 
+    filter {}
+
     noncurrent_version_transition {
       noncurrent_days = 90
       storage_class   = "STANDARD_IA"
@@ -291,6 +293,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "audit_logs" {
   rule {
     id     = "transition-to-glacier"
     status = "Enabled"
+
+    filter {}
 
     transition {
       days          = 90
