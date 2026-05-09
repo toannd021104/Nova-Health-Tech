@@ -116,6 +116,25 @@ resource "aws_s3_bucket_policy" "cloudtrail_write" {
             "s3:x-amz-acl" = "bucket-owner-full-control"
           }
         }
+      },
+      {
+        Sid    = "AWSConfigBucketPermissionsCheck"
+        Effect = "Allow"
+        Principal = { Service = "config.amazonaws.com" }
+        Action   = "s3:GetBucketAcl"
+        Resource = var.audit_bucket_arn
+      },
+      {
+        Sid    = "AWSConfigBucketDelivery"
+        Effect = "Allow"
+        Principal = { Service = "config.amazonaws.com" }
+        Action   = "s3:PutObject"
+        Resource = "${var.audit_bucket_arn}/aws-config/AWSLogs/${var.aws_account_id}/Config/*"
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
+          }
+        }
       }
     ]
   })

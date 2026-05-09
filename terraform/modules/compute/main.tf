@@ -163,7 +163,7 @@ resource "aws_lb" "internal" {
   access_logs {
     bucket  = "${var.project}-${var.environment}-audit-logs-${var.aws_account_id}"
     prefix  = "nlb"
-    enabled = true
+    enabled = var.environment == "prod"
   }
 
   tags = var.tags
