@@ -1,0 +1,75 @@
+{
+  "@context": "http://id.who.int/icd/contexts/contextForLinearizationEntity.json",
+  "@id": "http://id.who.int/icd/release/11/2024-01/mms/1766440644/other",
+  "parent": [
+    "http://id.who.int/icd/release/11/2024-01/mms/1766440644"
+  ],
+  "browserUrl": "https://icd.who.int/browse/2024-01/mms/en#1766440644/other",
+  "code": "3C0Y",
+  "classKind": "category",
+  "postcoordinationScale": [
+    {
+      "@id": "http://id.who.int/icd/release/11/2024-01/mms/1766440644/other/postcoordinationScale/associatedWith",
+      "axisName": "http://id.who.int/icd/schema/associatedWith",
+      "requiredPostcoordination": "false",
+      "allowMultipleValues": "AllowAlways",
+      "scaleEntity": [
+        "http://id.who.int/icd/release/11/2024-01/mms/459275392"
+      ]
+    }
+  ],
+  "title": {
+    "@language": "en",
+    "@value": "Other specified diseases of the blood or blood-forming organs"
+  },
+  "indexTerm": [
+    {
+      "label": {
+        "@language": "en",
+        "@value": "Other specified diseases of the blood or blood-forming organs"
+      }
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "Congenital anomaly blood or lymph other"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/1180562645"
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "Blood dyscrasia"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/166243288"
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "blood dyscrasia NOS"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/166243288"
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "Bone marrow hyperplasia"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/2045601748"
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "hyperplasia of bone marrow"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/2045601748"
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "hyperplastic bone marrow"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/2045601748"
+    }
+  ]
+}

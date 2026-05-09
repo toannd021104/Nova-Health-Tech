@@ -1,0 +1,102 @@
+{
+  "@context": "http://id.who.int/icd/contexts/contextForLinearizationEntity.json",
+  "@id": "http://id.who.int/icd/release/11/2024-01/mms/1435254666/unspecified",
+  "parent": [
+    "http://id.who.int/icd/release/11/2024-01/mms/1435254666"
+  ],
+  "browserUrl": "https://icd.who.int/browse/2024-01/mms/en#1435254666/unspecified",
+  "code": "1H0Z",
+  "classKind": "category",
+  "title": {
+    "@language": "en",
+    "@value": "Infection, unspecified"
+  },
+  "relatedEntitiesInPerinatalChapter": [
+    "http://id.who.int/icd/entity/911707612"
+  ],
+  "indexTerm": [
+    {
+      "label": {
+        "@language": "en",
+        "@value": "Infection, unspecified"
+      }
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "infection NOS"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/1435254666"
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "infectious disease NOS"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/1435254666"
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "infection unknown"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/1435254666"
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "infection process NOS"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/1435254666"
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "infection by unspecified organism and of unspecified site"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/1435254666"
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "Systemic inflammatory response syndrome of infectious origin"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/5960175"
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "SIRS -[systemic inflammatory response syndrome] of infectious origin"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/5960175"
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "systemic inflammatory response syndrome as a result of disease classified elsewhere, infectious origin, without organ failure"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/5960175"
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "Opportunistic infection"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/2143513892"
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "opportunistic infestation"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/2143513892"
+    },
+    {
+      "label": {
+        "@language": "en",
+        "@value": "opportunistic infectious disease"
+      },
+      "foundationReference": "http://id.who.int/icd/entity/2143513892"
+    }
+  ]
+}

@@ -1,52 +1,35 @@
-# Nova Health Tech — AWS Demo App
+# Nova Health Tech — AWS Demo Web UI (publicly accessible for verification)
 
-Minimal clinician-facing web app with a right-hand AI assistant panel.
+Lightweight clinician-facing web app with a right-hand AI assistant panel. Use this to sanity-check the AI service behind it. The UI is intentionally simple; the **production** design of the AI service itself is in `docs/architecture/AWS_architecture.md`.
 
 ## What it shows
 
-- A simple clinical portal (patient list, current patient summary, recent trials) in the main area.
-- A persistent right-hand **AI Assistant** panel that streams answers from Amazon Bedrock (Claude Haiku 4.5 by default).
-- Calls a Lambda `/chat` endpoint behind API Gateway.
-- Uses `bedrock-runtime.converse_stream` for token streaming so the first token shows up inside ~500 ms — important for the "emergency 2-second SLA" scenario.
+- A minimal clinical portal (patient list, one patient summary, a couple of trials).
+- A persistent right-hand AI assistant panel calling Amazon Bedrock through API Gateway + Lambda.
+- `bedrock-runtime.converse` with `temperature=0.2, top_p=0.8` — same low-variance settings used by the production plan for tone consistency.
 
-## Architecture (demo, not production)
+## Not production
 
-```
-Browser (static HTML+JS)
-      │  HTTPS
-      ▼
-CloudFront → API Gateway → Lambda (/chat)
-                                  │
-                                  ▼
-                            Amazon Bedrock
-                       (Claude Haiku 4.5)
-```
+The demo deploys without:
 
-Production would add: Cognito auth, Bedrock Guardrails, Bedrock Knowledge Base retrieval, Comprehend Medical PHI scan, VPC, WAF, CloudTrail → S3 Object Lock (see `docs/architecture/AWS_architecture.md`).
+- Cognito / hospital SSO (anyone with the URL can chat — fine for a verification demo, not for real use).
+- Bedrock Guardrails + Comprehend Medical PHI masking (must be on for real clinical traffic).
+- Bedrock Knowledge Base wiring for real RAG (answers come from Claude's training data, not from WHO + internal trials).
+- VPC isolation, WAF, CloudTrail → S3 Object Lock.
+
+Wire those up per `docs/architecture/AWS_architecture.md` before putting the UI in front of any clinician with real data.
 
 ## Files
 
 ```
 aws-demo/
-├── frontend/
-│   ├── index.html          ← clinical portal + right-panel chat
-│   ├── app.js
-│   └── styles.css
-├── backend/
-│   └── chat_handler.py     ← Lambda with Bedrock Converse streaming
-├── template.yaml           ← SAM template: API Gateway + Lambda + IAM
+├── frontend/        ← index.html + app.js + styles.css  (static, S3+CloudFront deploy)
+├── backend/         ← chat_handler.py  (Lambda)
+├── template.yaml    ← SAM: API Gateway + Lambda + IAM
 └── README.md
 ```
 
 ## Quickstart
-
-### 1. Prereqs
-
-- AWS CLI configured (`aws configure`)
-- AWS SAM CLI installed
-- Bedrock access enabled for `anthropic.claude-haiku-4-5-*` in your region (Bedrock → Model access)
-
-### 2. Deploy backend
 
 ```bash
 cd aws-demo
@@ -54,18 +37,9 @@ sam build
 sam deploy --guided
 ```
 
-Note the `ApiEndpoint` output.
+Copy the `ApiEndpoint` output, open `frontend/index.html` in a browser, paste the endpoint in the top-right box. Try:
 
-### 3. Run frontend locally
+- "Summarize immediate management for inferior STEMI."
+- "What's the adult sepsis bundle?"
 
-Open `frontend/index.html` in your browser (or host on any static web server). Paste the `ApiEndpoint` into the settings box at top right.
-
-For production, upload `frontend/` to an S3 bucket and front it with CloudFront.
-
-## Test prompts (scenario-aligned)
-
-- "Summarize the latest WHO sepsis bundle recommendations."
-- "A 68-year-old presents with chest pain, ST elevation on lead II–III. What is the immediate protocol?"
-- "Compare efficacy of tenecteplase vs alteplase in acute ischemic stroke."
-
-Without the full RAG pipeline wired in, Claude will answer from its training data with a warning. Hooking up Bedrock Knowledge Base is the next step (see `docs/architecture/AWS_architecture.md`).
+To make it production-grade, continue with the AWS architecture doc — specifically wire up a Bedrock Knowledge Base and switch the router Lambda to the two-lane (student/teacher) pattern.

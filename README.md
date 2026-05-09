@@ -1,89 +1,104 @@
 # Nova Health Tech — Clinical GenAI Assistant
 
-Proposal package for Nova Health Tech's clinical decision-support GenAI assistant, covering both **AWS (primary build)** and **Alibaba Cloud (proposed)** architectures.
+Production-oriented proposal for Nova Health Tech's clinical decision-support GenAI assistant, with a build-ready AWS plan and a parallel Alibaba Cloud (Qwen) plan.
 
-## What's in this repo
+## Scope
+
+- **AI service** — production: real hundreds-of-documents RAG (WHO guidelines + internal clinical trial reports + WHO ICD-11 API), managed parsing for complex PDFs (tables, figures, flowcharts), fine-tuned small-model student distilled from a large-model teacher to meet the 2-second emergency SLA, full compliance posture (HIPAA / GDPR / MLPS).
+- **Web UI** — demo: a lightweight public web page with a right-hand AI assistant panel, good for stakeholder verification. See `aws-demo/`. This is intentionally simple; the AI service behind it is the serious piece.
+
+## Map
 
 ```
 .
-├── README.md                          ← this file
-├── Nova Health Tech's challenge.txt   ← original scenario
-├── askAli_AI_Assistant.txt            ← Ali assistant answers (Qwen fine-tune + multimodal embeddings)
-├── Task List - Task list.csv          ← task tracker
+├── README.md                                       ← this file
+├── askAli_AI_Assistant.txt                         ← vendor research (kept for reviewers)
 │
-├── data/                              ← sample input data for RAG
-│   ├── DATA_SOURCES.md                ← how to download each corpus
-│   ├── clinical-trials/               ← ClinicalTrials.gov API samples + sample medical PDF
-│   ├── pubmed/                        ← MedRAG PubMed abstracts chunk (~15k records)
-│   ├── who/                           ← WHO guideline PDFs (manual download links)
-│   └── treatment-protocols/           ← FDA drug labels (openFDA)
+├── data/                                           ← REAL source data for RAG ingestion
+│   ├── who/                                        ← 8 WHO guideline PDFs (100+ pages each, mixed text/tables/figures)
+│   ├── icd11/                                      ← ICD-11 MMS entities + search snapshots (live API)
+│   │   ├── mms_root.json
+│   │   ├── entities/*.json                         ← 28 chapter-level entities, depth-0 walk
+│   │   └── search_*.json                           ← sepsis / stroke / MI
+│   └── clinical-trials/protocols/                  ← drop internal trial PDFs here (gitignored by size)
 │
 ├── docs/
 │   ├── architecture/
-│   │   ├── AWS_architecture.md
-│   │   ├── Alibaba_architecture.md
-│   │   └── fine_tuning_vs_rag.md
+│   │   ├── AWS_architecture.md                     ← production AWS design
+│   │   ├── Alibaba_architecture.md                 ← parallel Qwen design
+│   │   ├── rag_strategy.md                         ← 3 RAG strategies for complex PDFs; one chosen
+│   │   ├── fine_tuning_and_distillation.md         ← teacher→student distillation, tone via hyperparams
+│   │   └── caching_strategy.md                     ← 3-layer cache: semantic / prompt / reserved
 │   ├── compliance/
-│   │   └── security_compliance.md     ← HIPAA, GDPR, China MLPS, DSL, medical AI regs
+│   │   └── security_compliance.md                  ← HIPAA / GDPR / FDA SaMD / EU AI Act / MLPS
 │   └── pricing/
-│       └── cost_analysis.md           ← AWS vs Alibaba cost sheet + free-tier notes
+│       └── cost_analysis.md                        ← AWS vs Ali with caching + batch + distillation
 │
 ├── scripts/
-│   ├── download_clinicaltrials.py     ← pull additional CT.gov records
-│   ├── download_pubmed.py             ← pull PubMed abstracts via E-utilities
-│   ├── download_who_icd.py            ← pull WHO ICD-11 via API (requires free OAuth key)
-│   └── ingest_to_bedrock_kb.py        ← upload processed chunks to S3 for Bedrock KB
+│   ├── download_who_icd.py                         ← run the live WHO ICD-11 API (OAuth2)
+│   ├── download_clinicaltrials.py                  ← ClinicalTrials.gov v2 API
+│   └── ingest_to_bedrock_kb.py                     ← push /data to S3 + trigger KB sync
 │
-└── aws-demo/                          ← minimal web app: clinical portal + right-panel AI chat
-    ├── frontend/                      ← static HTML/JS (deploy to S3 + CloudFront)
-    ├── backend/                       ← Lambda handler calling Bedrock
-    ├── template.yaml                  ← SAM template (API Gateway + Lambda + Bedrock)
+└── aws-demo/                                       ← simple public web UI + Lambda → Bedrock
+    ├── frontend/                                   ← static HTML/JS, deploy to S3+CloudFront
+    ├── backend/                                    ← Lambda chat handler
+    ├── template.yaml                               ← SAM deploy
     └── README.md
 ```
 
-## Quick start
+## Read order
 
-1. Read `Nova Health Tech's challenge.txt` for the scenario.
-2. Read `docs/architecture/AWS_architecture.md` for the build-ready AWS design.
-3. Read `docs/architecture/Alibaba_architecture.md` for the Alibaba Cloud proposal (Qwen + Model Studio + PAI + OpenSearch Vector Search Edition).
-4. Check `data/DATA_SOURCES.md` for data that was downloaded vs. needs manual download (WHO IRIS + PubMed are rate-limited from automation IPs).
-5. Deploy the demo: `cd aws-demo && sam build && sam deploy --guided`.
+1. `docs/architecture/AWS_architecture.md` — the build target.
+2. `docs/architecture/rag_strategy.md` — how we handle the WHO PDFs and the ICD-11 API.
+3. `docs/architecture/fine_tuning_and_distillation.md` — how we hit the 2-second SLA without sacrificing accuracy.
+4. `docs/architecture/caching_strategy.md` — the three cache layers.
+5. `docs/architecture/Alibaba_architecture.md` — the parallel Qwen plan.
+6. `docs/compliance/security_compliance.md` — regulation coverage.
+7. `docs/pricing/cost_analysis.md` — cost sheet including caching / batch / distillation.
 
-## Cloud strategy summary
+## Key production decisions (summary)
 
-| Dimension | AWS (build) | Alibaba Cloud (proposal) |
+| Decision | AWS choice | Alibaba choice |
 |---|---|---|
-| Foundation model | Claude Haiku 4.5 (speed) + Claude Sonnet 4.6 (depth) on Bedrock | Qwen3-Plus + Qwen3-Max on Model Studio |
-| Multimodal embedding | Amazon Nova Multimodal Embeddings | qwen3-vl-embedding (fused) |
-| Vector store | OpenSearch Serverless (vector) | OpenSearch Vector Search Edition |
-| RAG orchestration | Bedrock Knowledge Bases + Agents | Model Studio Application (RAG) + PAI-EAS |
-| Fine-tuning | Bedrock custom models (Nova / Llama 3.2) | PAI Model Gallery — Qwen3 SFT + LoRA + DPO |
-| PHI guardrails | Bedrock Guardrails + Comprehend Medical + Macie | Content Moderation + DataWorks masking + PAI-ACP |
-| Region for data residency | us-east-1 with HIPAA BAA; eu-central-1 for GDPR | Singapore / Frankfurt for intl; Shanghai for mainland (MLPS L3) |
-| Deploy model | Serverless public cloud (VPC-isolated) + on-prem hybrid via Outposts if hospital requires | Hybrid: Alibaba Cloud + on-prem via ACK-Edge / Apsara Stack |
+| RAG strategy (of 3 candidates) | Managed parse + managed RAG: **Bedrock Data Automation → Bedrock Knowledge Bases on OpenSearch Serverless** | Managed parse + managed RAG: **DocMind + Qwen-VL → Model Studio RAG on OpenSearch Vector Search Edition** |
+| Teacher model (complex / distillation source) | Claude Sonnet 4.6 | Qwen3-Max |
+| Student model (emergency lane, fine-tuned) | **Nova Lite**, SFT + preference-tuned | **Qwen3-8B**, SFT + LoRA (+ optional DPO) on PAI |
+| Text embeddings | Titan Embed Text v2 | text-embedding-v4 |
+| Multimodal embeddings (figure-bearing pages) | Amazon Nova Multimodal Embeddings | qwen3-vl-embedding with `enable_fusion=True` |
+| Semantic cache (layer 1) | ElastiCache Valkey + RediSearch (LangChain `RedisSemanticCache`) | Tair (Redis-compatible) + TairVector |
+| Prompt / context cache (layer 2) | Bedrock Prompt Caching | Qwen Context Cache (implicit + explicit) |
+| Reserved capacity (layer 3, peak hours only) | Bedrock Reserved Tier | Qwen PTU |
+| Batch for offline teacher + eval | Bedrock Batch (50% off) | Model Studio Batch (50% off) |
+| WHO ICD-11 | Ingest + runtime tool call + query expansion | Same, with FC |
+| Tone consistency | Distillation on approved answers + `temperature≈0.1, top_p≈0.7, top_k≈40`, fixed system prompt | Same, plus `seed` (Qwen supports it) |
 
-## Build status (what's done vs. pending)
+## Running the pieces
 
-| Task | Status | Artifact |
-|---|---|---|
-| Find English-language inputs for RAG (trials, protocols, PubMed, WHO) | ✅ Done (partial — see DATA_SOURCES.md) | `data/` + download scripts |
-| Simple AWS web page with right-panel AI assistant | ✅ Done (demo) | `aws-demo/` |
-| Fine-tuning research (SFT / RLHF) on AWS + Alibaba, feasibility for emergency-care + budget | ✅ Done | `docs/architecture/fine_tuning_vs_rag.md` + cost analysis |
-| Pricing & free-trial check for Ali (OpenSearch, Model Studio, PAI) | ✅ Done | `docs/pricing/cost_analysis.md` |
-| Choose vector DB | ✅ Done (recommendation + rationale) | AWS: OpenSearch Serverless vector; Ali: OpenSearch Vector Search Edition (see architecture docs) |
-| AWS fine-tune cost + Bedrock multimodal embedding Nova credit check | ✅ Done (pricing + model choice) | `docs/pricing/cost_analysis.md` + `docs/architecture/AWS_architecture.md` |
+Environment variables (never commit):
 
-### Remaining manual steps (see `data/DATA_SOURCES.md`)
+```bash
+# WHO ICD-11 (free OAuth2; register at https://icd.who.int/icdapi)
+export WHO_ICD_CLIENT_ID=...
+export WHO_ICD_CLIENT_SECRET=...
 
-1. Download a handful of WHO guideline PDFs from `https://www.who.int/publications/who-guidelines` (IRIS now serves via JS SPA — curl/Invoke-WebRequest don't work).
-2. Register a free NCBI API key at https://account.ncbi.nlm.nih.gov/ if you want to run `scripts/download_pubmed.py`. My local IP got blocked during testing; NCBI explicitly recommends using an API key for any automated pipeline.
-3. Register free WHO ICD-11 API credentials at https://icd.who.int/icdapi to run `scripts/download_who_icd.py`.
+# AWS or Alibaba cloud creds via the standard SDK env or profile
+```
 
-### Data already downloaded (ready to feed the RAG pipeline)
+```bash
+# 1. Pull real ICD-11 snapshot (the one used for the demo corpus)
+python scripts/download_who_icd.py --walk --max-depth 0          # chapters only
+python scripts/download_who_icd.py --search sepsis               # keyword search
 
-- `data/clinical-trials/sample_diabetes_studies.json` (368 KB)
-- `data/clinical-trials/sample_sepsis_studies.json` (88 KB) — emergency-care relevant
-- `data/clinical-trials/sample_stroke_studies.json` (104 KB) — emergency-care relevant
-- `data/clinical-trials/fda_sepsis_drugs.json` (123 KB) — openFDA drug labels
-- `data/clinical-trials/arxiv_radiology_rag.pdf` (773 KB) — real PDF stand-in for "legacy clinical trial report with inconsistent tagging"
-- `data/pubmed/pubmed_medrag_sample.jsonl` (34 MB, 15,377 abstracts) — MedRAG PubMed mirror
+# 2. Pull clinical trials (public API, no auth)
+python scripts/download_clinicaltrials.py --condition sepsis --pages 2
+
+# 3. Upload data to S3 + kick a Bedrock KB sync
+python scripts/ingest_to_bedrock_kb.py \
+    --bucket nova-rag-raw-dev \
+    --kb-id  ABCDEFGHIJ \
+    --ds-id  KLMNOPQRST \
+    --prefix-map clinical-trials=trials who=who-guidelines icd11=icd11
+
+# 4. Deploy the demo UI
+cd aws-demo && sam build && sam deploy --guided
+```

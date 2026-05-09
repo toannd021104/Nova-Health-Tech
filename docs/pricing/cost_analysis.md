@@ -1,163 +1,167 @@
-# Cost Analysis — AWS vs Alibaba Cloud for Nova Health Tech Clinical GenAI
+# Cost Analysis — AWS vs Alibaba Cloud (Production, with Caching + Distillation)
 
-All figures are list prices as of **early 2026**, in USD, rounded. Confirm current rates with your account team before committing — cloud pricing moves weekly.
+All figures are list prices as of **early 2026** in USD, rounded. Confirm current rates with your account team before committing.
 
-## 1. Free-tier / trial credits at start
+## 1. Three cost levers both clouds offer
+
+| Lever | AWS | Alibaba Cloud | Typical savings |
+|---|---|---|---|
+| **Prompt / context caching** on repeated prefix | Bedrock Prompt Caching (`<cachePoint/>` in Converse API) | Qwen Context Cache — implicit (auto) + explicit | Up to **90% off input tokens** on cache hits; up to **85% lower time-to-first-token** |
+| **Batch inference** for offline work | Bedrock Batch (50% off) | Model Studio Batch (50% off) | **50% off input+output tokens** for any non-realtime job |
+| **Reserved / provisioned throughput** for peaks | Bedrock Reserved Tier ($/1k TPM monthly) | Qwen Provisioned Throughput Units (PTU) | Flat-rate, removes queueing, consistent latency |
+
+### Options chosen for Nova's main deploy
+
+- **Realtime traffic (emergency + complex lanes)** → on-demand + **prompt/context caching**. Caching shines because our system prompt + tone template + top retrieved chunks repeat across many calls.
+- **Teacher batch (distillation dataset, nightly eval)** → **Batch** inference at 50% off.
+- **Peak-hours emergency lane only** → **Reserved Tier / PTU**, turned on once traffic is steady and predictable (phase 3).
+
+Prompt caching is the single most impactful optimization — the RAG system prompt and tone template together are ~2–3k tokens and are effectively identical across calls, so they become free after the first hit window.
+
+## 2. Free-tier / trial credits
 
 | Item | AWS | Alibaba Cloud |
 |---|---|---|
-| LLM free tokens | AWS Free Tier does not include Bedrock tokens; sign up may include marketing credits | **1,000,000 free tokens per Qwen model** (one-time, at account activation) |
-| Fine-tuning free quota | None; pay per token trained | PAI workspace activation is free; pay per compute job |
-| Embedding free quota | None; pay per token | Model Studio embedding model gets a share of the 1M-token quota |
-| OpenSearch trial | OpenSearch Serverless charges per OCU hour from minute 1 (no free tier) | OpenSearch Vector Search Edition — check current free trial banner; historically 1-month trial on small instance |
-| Object storage | 5 GB S3 Standard free (first 12 months) | OSS has per-region free tier; ~5 GB standard storage typically free in trial |
-| CDN | 1 TB out/month (first 12 months) | CDN has regional trial quotas |
-| Compute | 1M Lambda requests + 400k GB-s free monthly | FC has ~1M free invocations monthly, free tier |
+| LLM free tokens | None for Bedrock; AWS Activate credits possible for startups | **1,000,000 free tokens per Qwen model** at account activation |
+| Fine-tuning free quota | None; pay per token trained | PAI workspace activation free; pay per compute job |
+| OpenSearch trial | None (OCU billed from minute 1) | Trial banners apply periodically |
+| Object storage | 5 GB S3 free first year | OSS small free tier |
+| Compute | 1M Lambda invocations/mo free | ~1M FC invocations/mo free |
 
-**Bottom line for Ali free trial**: the 1M token quota per Qwen model plus PAI's free activation lets Nova prototype RAG + a small Qwen3-8B fine-tune for roughly **$0–50** in out-of-pocket spend. AWS Bedrock has no comparable token free tier, so prototype cost is closer to **$100–300**.
+Ali's 1M-token-per-model quota gives Nova a near-zero-cost RAG+light-finetune prototype. AWS prototype is typically $100–300 in Bedrock charges.
 
-## 2. LLM inference pricing (per 1M tokens)
+## 3. LLM inference pricing (per 1M tokens)
 
 ### AWS Bedrock (on-demand, us-east-1)
 
 | Model | Input | Output | Best fit |
 |---|---|---|---|
-| Claude Haiku 4.5 | ~$1.00 | ~$5.00 | Emergency lane (fast) |
-| Claude Sonnet 4.6 | ~$3.00 | ~$15.00 | Complex reasoning |
-| Claude Opus 4.6 | ~$15.00 | ~$75.00 | Rarely — only complex consults |
-| Amazon Nova Lite | ~$0.06 | ~$0.24 | Tone fine-tune target; low-latency answers |
-| Amazon Nova Pro | ~$0.80 | ~$3.20 | Mid-tier reasoning |
-| Amazon Nova Premier | ~$2.50 | ~$12.50 | Top-tier reasoning |
-| Titan Text Express (embeddings/legacy) | ~$0.20 | ~$0.60 | Legacy |
-| Nova Multimodal Embeddings | ~$0.06 per 1M tokens + image pricing | — | Embedding |
+| Claude Haiku 4.5 | ~$1.00 | ~$5.00 | Emergency lane fallback (before student ships) |
+| Claude Sonnet 4.6 | ~$3.00 | ~$15.00 | Teacher (distillation) + complex reasoning |
+| Claude Opus 4.6 | ~$15.00 | ~$75.00 | Rarely — only hardest consults |
+| Amazon Nova Lite | ~$0.06 | ~$0.24 | **Student (fine-tuned)** for emergency lane |
+| Amazon Nova Pro | ~$0.80 | ~$3.20 | Larger student if Lite under-fits |
+| Titan Embed Text v2 | ~$0.02 per 1M | — | Text embeddings |
+| Nova Multimodal Embeddings | ~$0.06 per 1M + image pricing | — | Figure-bearing chunks |
 
-Batch: 50% off. Reserved tier: fixed price per 1k tokens-per-minute, monthly invoice.
+Batch: 50% off. Prompt-caching: cache writes at a small premium, cache hits discount input tokens up to 90%.
 
 ### Alibaba Cloud Model Studio (global pricing, per 1M tokens)
 
 | Model | Input | Output | Best fit |
 |---|---|---|---|
-| Qwen3.5-Flash | $0.10 | $0.40 | Emergency lane (fast) |
-| Qwen-Plus / Qwen3-Plus | $0.40 | $1.20 | Balanced primary model |
-| Qwen3.5-Plus | $0.40 | $2.40 | Balanced, long-context |
-| Qwen3.6-Plus | $0.50–$2.00 | $3.00–$6.00 | Multimodal, 1M context |
-| Qwen3-Max | $1.20 | $6.00 | Complex reasoning |
-| qwen3-vl-embedding | per token + per image | — | Multimodal embedding |
+| Qwen3.5-Flash | $0.10 | $0.40 | Emergency lane fallback (before student ships) |
+| Qwen-Plus / Qwen3-Plus | $0.40 | $1.20 | Mid-tier; optional second teacher |
+| Qwen3-Max | $1.20 | $6.00 | Teacher (distillation) + complex reasoning |
+| Qwen3-8B (self-host on PAI-EAS, GPU-hour billed) | ~$1–2/hr small GPU | — | **Student (fine-tuned)** for emergency lane |
+| text-embedding-v4 | per token | — | Text embeddings |
+| qwen3-vl-embedding | per token + per image | — | Figure-bearing chunks |
 
-Batch: 50% off. Context caching: further discount on repeated input (useful for repeated system prompts + retrieved chunks).
+Batch: 50% off. Implicit context cache hits bill at **20% of standard input price**; explicit cache same discount with guaranteed hit.
 
-**Ali is roughly 5–10× cheaper per token than AWS Bedrock for a comparable-quality model.** That changes the shape of the architecture: you can afford a larger retrieved-context window on Qwen, which can partially substitute for aggressive reranking.
+## 4. Fine-tuning / distillation cost
 
-## 3. Fine-tuning cost
+### AWS — distill Claude Sonnet → Nova Lite
 
-### AWS
+- Teacher batch generation of ~20k answers with RAG context (avg ~4k input + ~300 output tokens): ~80M input + ~6M output tokens.
+  - Batch Sonnet: (80 × $1.50) + (6 × $7.50) ≈ **$165**.
+- Bedrock Nova Lite custom-model SFT: typically **$1,500–2,500** end-to-end on a 20k-sample job.
+- Hosted custom-model inference via Provisioned Throughput: ~$10–30/hr depending on model and region (only billed when the reserved endpoint is active).
+- **Total retrain (quarterly)**: roughly **$2,000 per cycle**.
 
-- **Bedrock custom models** — charged per training token and per hour of training job; a 10k-sample Nova Lite SFT run is typically **low four figures** USD.
-- **SageMaker training for Llama 3.2/3.3 LoRA** — 1× ml.g5.12xlarge for a few hours ≈ **$50–150** per run; much cheaper than Bedrock custom, but you manage the GPU cluster.
-- Hosted custom model inference requires Provisioned Throughput — commit fees can run **$20–80/hour** depending on model.
+Note: Claude weights are not available for SFT on Bedrock; distillation targets Nova Lite (Bedrock-native) or an open-weight model on SageMaker.
 
-### Alibaba Cloud
+### Alibaba — distill Qwen3-Max → Qwen3-8B (LoRA)
 
-- **PAI Model Gallery Qwen3-8B LoRA** on A10 GPU: typical 10k-sample SFT job ~1–3 GPU-hours → **$5–30** total.
-- **PAI-EAS serving** fine-tuned Qwen3-8B: starts around ~$0.8–$2/hour for a small GPU instance; A10 for a 7–8B model runs around $1–2/hour.
-- **Model Studio token-based tuning** for Qwen-Plus/Turbo — you pay by training tokens at a published rate (visible in the training console before the job starts); no GPU-hour billing.
+- Teacher batch generation: 80M + 6M tokens on Qwen3-Max batch pricing (50% off): (80 × $0.60) + (6 × $3.00) ≈ **$66**.
+- PAI Model Gallery Qwen3-8B LoRA SFT on A10 GPU: 2–4 GPU-hours × ~$1–2/hr ≈ **$5–30**.
+- PAI-EAS hosting: ~$1–2/hr for an A10 serving the 8B model; budget ~$720–1,500/mo if kept warm 24×7 (or lower if scaled on demand).
+- **Total retrain (quarterly)**: under **$100 per cycle** for training; hosting is the larger recurring cost.
 
-Fine-tuning on Ali is decisively cheaper for Qwen — that's the main reason the Ali proposal is attractive for phase-2 work.
+Ali wins the distillation TCO decisively.
 
-## 4. Vector store pricing
+## 5. Vector store
 
-| | AWS — OpenSearch Serverless (vector) | Alibaba — OpenSearch Vector Search Edition |
+| | AWS — OpenSearch Serverless | Alibaba — OpenSearch Vector Search Edition |
 |---|---|---|
-| Unit | OCU-hour (search OCU + indexing OCU) | Compute unit hour (CU) + storage |
-| Entry monthly cost | ~$170–350/month for small workloads (minimum 2 OCUs each) | Entry single-node ~$80–200/month |
-| Scaling | Auto-scale OCUs | Scale CU count |
+| Unit | OCU-hour (search + indexing) | CU-hour + storage |
+| Entry monthly cost | ~$170–350/mo (minimum OCU floor) | ~$80–200/mo (small single-node) |
+| Scaling | Auto-scale OCUs | Add CUs |
+| Notes | Minimum-OCU floor billed even at zero traffic; consider Aurora + pgvector for tiny pilots | Native Model Studio embedding plugin handles re-vectorization |
 
-AWS minimum-OCU floor (was 2 each; now 1 in most regions) is the thing that can surprise small teams — you pay that floor even with zero traffic. For a pilot, consider **Aurora PostgreSQL + pgvector** on AWS (cheaper) if Bedrock KB flexibility isn't needed day-one.
-
-## 5. Storage, logs, networking
-
-Roughly comparable; both providers charge cents per GB-month for object storage and per-GB egress. Budget ~$20–50/month for a pilot footprint of a few GB of PDFs + logs.
-
-## 6. Indicative monthly cost — 500-physician pilot
+## 6. Indicative monthly cost — 500-physician production pilot, with all optimizations on
 
 Assumptions:
 
-- 500 physicians, 40 queries/day average per physician → 20,000 queries/day, ~600,000/month.
-- Average query: 3k input tokens (context + RAG chunks), 400 output tokens.
-- 60% on fast model (emergency lane), 35% on balanced model, 5% on top-tier.
-- Vector store: ~10 GB index, moderate search volume.
-- Fine-tune: one Qwen3-8B / Nova Lite SFT per quarter.
+- 500 physicians × 40 queries/day = 20,000/day → ~600,000/month.
+- Average request: 3,000 input + 350 output tokens (with RAG context and the tone template).
+- Traffic split: 60% emergency (fast lane), 35% complex, 5% top-tier.
+- **Semantic cache** hit 35% on the fast lane (no LLM call).
+- **Prompt / context cache** hit 70% of remaining calls (those calls pay ~10% of normal input token cost for the cached prefix; we conservatively apply a 50% effective discount on input tokens overall).
+- Vector store: ~20 GB indexed, moderate search.
+- Distillation retrain: one per quarter, amortized.
 
-### AWS monthly estimate
+### AWS (production, optimized)
 
-| Item | Units | Cost |
+| Item | Unit calc | Cost |
 |---|---|---|
-| Haiku 4.5: 360k queries × (3k input + 400 out) × $1/$5 per M | 1.08B input + 144M out | ~$1,080 + $720 = **$1,800** |
-| Sonnet 4.6: 210k queries × same × $3/$15 per M | 630M in + 84M out | ~$1,890 + $1,260 = **$3,150** |
-| Opus 4.6: 30k queries × same × $15/$75 | 90M in + 12M out | ~$1,350 + $900 = **$2,250** |
-| Nova Multimodal Embeddings (ingest) | ~200M tokens | ~$12 |
-| Bedrock Guardrails | included per call (few cents per 1k calls) | ~$60 |
-| OpenSearch Serverless (min 2+2 OCUs) | 720 hr × ~$0.24/OCU | ~**$350** |
-| Comprehend Medical (DetectPHI on inputs) | ~$0.0001 per 100 chars | ~**$180** |
-| Lambda + API Gateway + CloudFront | serverless | ~**$120** |
-| S3 + CloudTrail + Macie | | ~**$80** |
-| ElastiCache Redis (cache.t4g.small × 2 AZ) | | ~**$50** |
-| **AWS subtotal** | | **~$8,050 / month** |
+| Fast lane — Nova Lite student | 360k × 65% (after sem cache) = 234k calls × (3k in + 350 out); input effective price ~$0.03 per 1M after prompt cache | ~**$45** |
+| Slow lane — Sonnet 4.6 | 210k × (3k in + 350 out); input effective price ~$1.50 after prompt cache | ~**$1,700** |
+| Top-tier — Opus 4.6 | 30k × same | ~**$2,250** |
+| Titan text embeddings (ingest + queries) | ~500M tokens amortized | ~**$10** |
+| Nova Multimodal embeddings (figure chunks) | ~50M tokens + images | ~**$20** |
+| Bedrock Guardrails | per call | ~**$60** |
+| OpenSearch Serverless (baseline + 20 GB) | min 1+1 OCU × 720 hr × ~$0.24 | ~**$350** |
+| Comprehend Medical DetectPHI | per 100-char unit on input | ~**$180** |
+| Lambda + API Gateway + CloudFront + WAF | serverless | ~**$150** |
+| S3 + CloudTrail (Object Lock) + Macie | low | ~**$120** |
+| ElastiCache Valkey/Redis (cache.t4g.small × 2 AZ with RediSearch) | | ~**$80** |
+| Distillation retrain, amortized | $2k / 3 | ~**$700** |
+| **AWS total** | | **≈ $5,665 / month** |
 
-Fine-tune quarterly ≈ **$2,000–3,000** per run, amortized ~$700/month.
+Without the caching layers, the same workload would run ~$8–9k/month. With prompt caching + semantic cache + router biasing traffic to the student, roughly **30–40% savings** is realistic.
 
-### Alibaba Cloud monthly estimate
+### Alibaba Cloud (production, optimized)
 
-| Item | Cost |
-|---|---|
-| Qwen3.5-Flash: 360k queries × (3k in + 400 out) × $0.10/$0.40 per M | ~$108 + $58 = **$166** |
-| Qwen-Plus: 210k × same × $0.40/$1.20 | ~$252 + $101 = **$353** |
-| Qwen3-Max: 30k × same × $1.20/$6.00 | ~$108 + $72 = **$180** |
-| qwen3-vl-embedding (ingest + queries) | ~**$30** |
-| Content Moderation 2.0 for Qwen | ~**$50** |
-| OpenSearch Vector Search Edition (small cluster) | ~**$180** |
-| SDDP / DataWorks PHI masking | ~**$120** |
-| FC + API Gateway + CDN | ~**$80** |
-| OSS + ActionTrail + SLS | ~**$60** |
-| Tair (Redis-compatible) | ~**$40** |
-| **Alibaba subtotal** | **~$1,260 / month** |
-
-Fine-tune quarterly on Qwen3-8B ≈ **$30–100** per run, amortized < $50/month.
-
-### Cost comparison
-
-For this workload **Alibaba is ~6× cheaper on token spend**, driven by Qwen's aggressive pricing. AWS costs flip if:
-
-- Your clients require US HIPAA + US data-residency (Ali's HIPAA posture is weaker; BAA is region-specific).
-- You need deep Claude-class reasoning for a majority of queries.
-- You already have committed AWS EDP spend and can apply credits.
-
-## 7. Credit / savings levers
-
-| | AWS | Alibaba |
+| Item | Unit calc | Cost |
 |---|---|---|
-| Volume commit | Enterprise Discount Program (EDP), Private Pricing Agreement | Enterprise Discount Agreement |
-| Batch inference | 50% off on Bedrock | 50% off on Model Studio |
-| Reserved | Bedrock Reserved Tier (fixed $/kTPM monthly) | Qwen PTU (Provisioned Throughput Units) |
-| Caching | Semantic cache in ElastiCache | Context caching + Tair |
-| Model right-sizing | Route to Haiku/Nova Lite when possible | Route to Qwen3.5-Flash when possible |
-| Self-host | SageMaker + Llama if latency/cost tips that way | PAI-EAS with fine-tuned Qwen on A10 — from ~$1/hr |
+| Fast lane — Qwen3-8B student on PAI-EAS | 234k calls routed to PAI-EAS; serve on 1× A10 always-on | ~**$1,200** (GPU-hour) |
+| Slow lane — Qwen3-Max | 210k × (3k in + 350 out); input effective price ~$0.60 after context cache | ~**$580** |
+| Top-tier path — Qwen3-Max with longer context | 30k × same | ~**$90** |
+| text-embedding-v4 (ingest + queries) | ~500M tokens | ~**$25** |
+| qwen3-vl-embedding (figure chunks) | ~50M + images | ~**$30** |
+| Content Moderation 2.0 | per call | ~**$50** |
+| OpenSearch Vector Search Edition (small cluster) | | ~**$180** |
+| DataWorks SDDP PHI masking | | ~**$120** |
+| FC + API Gateway + CDN + WAF | | ~**$90** |
+| OSS + ActionTrail + SLS WORM | | ~**$70** |
+| Tair (Redis-compatible) + TairVector | | ~**$60** |
+| Distillation retrain, amortized | $100 / 3 | ~**$35** |
+| **Alibaba total** | | **≈ $2,530 / month** |
 
-## 8. What to verify with the account team before committing
+Note: you can trade GPU-hour for token-cost by serving the student via a Qwen Plus/Flash API instead of PAI-EAS. That brings the fast-lane cost to ~$50–$100/mo at the expense of less control over latency and tone. Most Nova-class deployments justify the dedicated endpoint on the emergency lane.
 
-- **AWS Bedrock BAA scope** for Comprehend Medical + Guardrails + your specific model IDs.
-- **Bedrock model availability** in `us-east-1` and `eu-central-1` (model availability varies by region).
-- **Alibaba HIPAA BAA** availability in your target region.
-- **Alibaba China regions** — only needed if you serve mainland hospitals; triggers MLPS L3 + PIPL scope.
-- **Current free trial** pages — AWS credits sometimes available via AWS Activate / AWS for Healthcare; Alibaba runs periodic credit campaigns.
+## 7. When AWS is the right call despite higher cost
 
-## References
+- US hospital clients require a signed BAA + US HIPAA-eligible services in US regions.
+- Compliance team prefers AWS's well-mapped HIPAA posture.
+- Nova already has EDP / Activate credits that absorb much of the bill.
+- Clinical leadership wants Claude Sonnet as the teacher's quality ceiling.
+
+## 8. When Alibaba is the right call
+
+- International rollout outside the US, especially APAC or mainland China.
+- Cost ceiling is a hard constraint.
+- Nova wants open weights (Qwen3-8B) so they can also serve on-prem when a hospital requires it.
+- Heavy distillation / fine-tune cadence planned.
+
+## 9. References
 
 - [Amazon Bedrock Pricing](https://aws.amazon.com/bedrock/pricing/)
+- [Amazon Bedrock Prompt Caching](https://aws.amazon.com/bedrock/prompt-caching/)
 - [Amazon Nova Pricing](https://aws.amazon.com/nova/pricing/)
 - [Alibaba Cloud Model Studio model pricing](https://www.alibabacloud.com/help/en/model-studio/model-pricing)
-- [Understand PTU and Token-Based Billing for Model Studio](https://www.alibabacloud.com/help/en/model-studio/model-training-and-deployment-billing)
-- [Alibaba Model Studio free quota](https://www.alibabacloud.com/help/en/model-studio/new-free-quota)
-- [PAI product purchase guidelines](https://www.alibabacloud.com/help/en/pai/pai-product-purchase-guidelines)
+- [Qwen Context Cache](https://www.alibabacloud.com/help/en/model-studio/context-cache)
+- [PTU and token-based billing for Model Studio](https://www.alibabacloud.com/help/en/model-studio/model-training-and-deployment-billing)
 
 *Content above is rephrased for compliance with licensing restrictions.*

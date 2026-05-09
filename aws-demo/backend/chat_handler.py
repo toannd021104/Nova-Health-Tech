@@ -69,11 +69,18 @@ def handler(event, context):
     messages.append({"role": "user", "content": [{"text": user_message}]})
 
     try:
+        # Hyperparameters per docs/architecture/fine_tuning_and_distillation.md
+        # Low temperature + narrowed top_p = consistent tone across clinicians.
         resp = bedrock.converse(
             modelId=MODEL_ID,
             system=[{"text": SYSTEM_PROMPT}],
             messages=messages,
-            inferenceConfig={"maxTokens": 800, "temperature": 0.2, "topP": 0.9},
+            inferenceConfig={
+                "maxTokens": 700,
+                "temperature": 0.1,
+                "topP": 0.7,
+                "stopSequences": ["\n\nDisclaimer:", "\n\nEND"],
+            },
         )
     except Exception as exc:  # surface the error to the caller in the demo
         return _response(500, {"error": f"Bedrock call failed: {exc}"})
