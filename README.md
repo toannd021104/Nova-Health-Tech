@@ -32,6 +32,7 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 │   │   ├── fine_tuning_and_distillation.md             ← teacher→student distillation + tone via hyperparams
 │   │   ├── caching_strategy.md                         ← 3-layer cache (semantic / prompt-context / reserved)
 │   │   ├── framework_choice.md                         ← Bedrock Agents + Model Studio Application (chosen) vs LangGraph/LlamaIndex
+│   │   ├── regional_availability.md                    ← which models actually work in Singapore (verified 10 May 2026)
 │   │   ├── corporate_integration.md                    ← EHR (SMART on FHIR) + SharePoint (Graph webhooks) + upload portal
 │   │   ├── ingestion_and_identity.md                   ← scheduled ingestion, upload portal, Site-to-Site VPN, IdP federation
 │   │   └── diagrams/
