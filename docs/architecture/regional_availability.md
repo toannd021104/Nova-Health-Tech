@@ -38,13 +38,24 @@ Verified **10 May 2026** against the AWS profile `gapv50k` using `aws bedrock li
 
 | Region | Qwen models present | Distance from Singapore |
 |---|---|---|
-| `ap-southeast-2` (Sydney) | qwen3-32b, qwen3-235b-a22b-2507, qwen3-vl-235b-a22b, qwen3-next-80b-a3b, qwen3-coder-30b-a3b, qwen3-coder-480b-a35b, qwen3-coder-next | ~6,300 km · ~90–110 ms round-trip |
+| `ap-southeast-2` (Sydney) | qwen3-32b, qwen3-235b-a22b-2507, qwen3-vl-235b-a22b, **qwen3-next-80b-a3b**, qwen3-coder-30b-a3b, qwen3-coder-480b-a35b, qwen3-coder-next | ~6,300 km · ~90–110 ms round-trip |
 | `ap-northeast-1` (Tokyo) | Same set (minus coder-next) | ~5,300 km · ~80–100 ms |
 | `ap-south-1` (Mumbai) | Same set | ~3,900 km · ~75–90 ms |
-| `us-west-2` (Oregon) | Same set; **+ OpenAI-compatible fine-tuning endpoint** | ~13,000 km · ~180–220 ms |
+| `us-west-2` (Oregon) | Same set; **+ Reinforcement Fine-Tuning endpoint for Qwen3-32B** ($80/hr training) | ~13,000 km · ~180–220 ms |
 | `us-east-1` (Virginia) | Reduced set (no 235B variant) | ~15,500 km · ~230 ms |
 
-**Sydney is the nearest APAC region with Qwen.** It's in the same PDPA-aware region class as Singapore for APAC data-residency conversations, but it is **not** Singapore — some hospital clients may reject it.
+**Sydney is the nearest APAC region with Qwen.** All four key models (Qwen3 Next 80B, Qwen3 VL 235B, Qwen3 32B, Qwen3 235B text-only) verified working there via live Converse calls.
+
+### Sydney Qwen pricing (from AWS Bedrock pricing page, verified 10 May 2026)
+
+| Model | Input $/1M | Output $/1M | Batch input | Batch output |
+|---|---|---|---|---|
+| Qwen3 Next 80B A3B | $0.1545 | $1.2360 | $0.0773 | $0.6180 |
+| Qwen3 32B dense | $0.1545 | $0.6180 | $0.0773 | $0.3090 |
+| Qwen3 VL 235B A22B | $0.5459 | $2.7398 | $0.2730 | $1.3699 |
+| Qwen3 235B A22B 2507 | $0.2266 | $0.9064 | $0.1133 | $0.4532 |
+
+Flex tier 50 % off. Priority tier 75 % premium.
 
 ## 3. SageMaker (for GRPO+RLVR fine-tuning per the AWS builder article)
 

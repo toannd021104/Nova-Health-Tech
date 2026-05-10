@@ -30,11 +30,12 @@ Key constraint: **fine-tuning Claude Haiku 4.5 itself is not possible on Bedrock
 
 | Role | Model | Customization |
 |---|---|---|
-| Complex-lane / teacher | Qwen3-VL 235B A22B on Bedrock `bedrock-mantle` | — |
-| Student (primary) | **Qwen3-8B on SageMaker** | **SFT + LoRA** via Hugging Face TRL; optional **DPO** round; optional **GRPO** round on tool-calling / citation-correctness reward |
-| Student (alternate) | Qwen3 32B on Bedrock `bedrock-mantle` | **Reinforcement fine-tuning** via Bedrock OpenAI-compatible API with Lambda grader |
+| Complex-lane / teacher | **Qwen3 VL 235B A22B** on Bedrock Sydney (`qwen.qwen3-vl-235b-a22b`), with Qwen3 235B A22B 2507 text-only as the cheaper alternative when figures aren't needed | — |
+| Fast-lane base | **Qwen3 Next 80B A3B** on Bedrock Sydney (`qwen.qwen3-next-80b-a3b`) — MoE, 3B active | — (served as-is) |
+| Fast-lane student (path B-1, preferred) | **Qwen3 32B on Bedrock Reinforcement Fine-Tuning** (us-west-2) | **RFT** via Bedrock's OpenAI-compatible endpoint with a Lambda grader. Training $80/hr, output $0.78/1M. Fully managed. |
+| Fast-lane student (path B-2, optional) | **Qwen3-1.7B or Qwen3-4B on SageMaker** (SG endpoint possible) | **SFT + LoRA + GRPO** via Hugging Face TRL on `ml.g6e.8xlarge`. Matches the AWS builder article. |
 
-SageMaker path wins on flexibility (three techniques available, portable LoRA adapter). Bedrock-mantle path wins on "one service, one IAM surface" simplicity. Choose per team preference; both are real.
+Path B-1 is the default: simpler operations, one AWS service, and the $0.78/1M output rate on the custom model is actually *cheaper* than the Qwen3 Next 80B A3B base price of $1.24/1M. It's a cost win as well as a quality win. Path B-2 only beats B-1 when SG data residency for the student is required.
 
 ### Version C — Alibaba Cloud (Qwen)
 

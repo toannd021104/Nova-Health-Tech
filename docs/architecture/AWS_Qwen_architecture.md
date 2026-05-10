@@ -1,34 +1,72 @@
-# AWS with Qwen — Architecture (Version B)
+# AWS with Qwen — Architecture (Version B, simplified)
 
-All-Qwen on AWS. Combines Bedrock's new OpenAI-compatible endpoint (hosts `qwen.qwen3-32b` with reinforcement fine-tuning) with SageMaker for flexible SFT / DPO / GRPO on smaller Qwen variants. Useful when Nova wants open-weight models + AWS compliance posture in one bundle.
+All-Qwen on AWS Bedrock. Customization story is pragmatic: use Bedrock's native Qwen family for serving today, use Bedrock's **reinforcement fine-tuning** for Qwen3 32B when we want a custom student, and keep the SageMaker + TRL GRPO path from the AWS builder article as an optional alternative for sub-8B Qwen experiments.
 
-## 1. Why a Qwen-on-AWS variant exists
+## 1. Major simplification vs the earlier draft
 
-- Some Nova clients (or Nova's own compliance team) require **open weights** to eliminate vendor lock on model behavior, but also want AWS's HIPAA posture + BAA.
-- Cost: Qwen3-32B fine-tuned and served on SageMaker can beat Claude Sonnet token pricing 3–5×.
-- Data residency: AWS GovCloud / us-east-1 / us-west-2 gives fixed-region guarantees the Alibaba-hosted Qwen path cannot currently offer for US clients.
+Earlier drafts of Version B pushed SageMaker + Hugging Face TRL as the primary path. That was overbuilt. Bedrock now hosts four Qwen3 models managed-serverless in APAC/US/EU regions, and Bedrock's **reinforcement fine-tuning** endpoint supports Qwen3 32B directly. Keep SageMaker as a side-option; Bedrock alone covers the main deployment and most customization needs.
 
-## 2. Regulatory caveat
+## 2. Available Qwen models on Bedrock (verified 10 May 2026)
 
-- **Bedrock OpenAI-compatible fine-tuning is `us-west-2` only** today. Inference for `qwen.qwen3-32b` and `qwen.qwen3-vl-235b-a22b` is also us-west-2 in the current model cards.
-- This means **data residency is US** for the AWS-Qwen version — not Singapore. If the hospital client requires PDPA/Singapore-only, Version A (AWS Claude in ap-southeast-1) or Version C (Alibaba in Singapore) is correct.
-- Otherwise: fine-tuning + inference both in `us-west-2` under an AWS BAA.
+`aws bedrock list-foundation-models` + live smoke test across regions confirmed:
 
-## 3. Model selection
+| Model | Total / Active params | Input $/1M (Sydney) | Output $/1M (Sydney) | Role in this design |
+|---|---|---|---|---|
+| **Qwen3 Next 80B A3B** | 80B / **3B active (MoE)** | **$0.1545** | **$1.2360** | **Emergency fast lane** — fastest Qwen on Bedrock thanks to MoE routing |
+| Qwen3 32B dense | 32B dense | $0.1545 | $0.6180 | Alternative fast lane; cheaper output but dense → slower per token |
+| **Qwen3 VL 235B A22B** | 235B / 22B active | **$0.5459** | **$2.7398** | **Complex lane + distillation teacher** — includes vision for figure-heavy PDFs |
+| Qwen3 235B A22B 2507 | 235B / 22B active | $0.2266 | $0.9064 | Text-only alternative complex lane, cheaper |
+| Qwen3 Coder Next | n/a | $0.5150 | $1.2360 | Not used (coding specialist) |
 
-| Role | Model | Where | Customization technique |
-|---|---|---|---|
-| Teacher (complex lane) | **Qwen3-VL 235B A22B** via Bedrock `bedrock-mantle` endpoint (`qwen.qwen3-vl-235b-a22b`) | us-west-2 inference | — (not fine-tuned; used as-is) |
-| Student / fast lane (option A) | **Qwen3 32B** via Bedrock OpenAI-compatible endpoint (`qwen.qwen3-32b`) | us-west-2, fine-tuned | **Reinforcement fine-tuning** on Bedrock with a Lambda grader (verifiable reward, e.g., "is the answer grounded in retrieved context?") |
-| Student / fast lane (option B) | **Qwen3-8B** on SageMaker JumpStart | us-west-2, fine-tuned | **SFT + LoRA** via Hugging Face TRL on a SageMaker training job; optional **DPO** round |
-| Embeddings | Cohere Embed v4 on Bedrock | us-west-2 | — |
+Batch inference: 50% off. Flex tier: 50% off. Priority tier: 75% premium.
 
-We recommend **Option B (Qwen3-8B on SageMaker)** as the primary student, because:
-- It's 4x smaller than Qwen3-32B → cheaper and faster to serve.
-- SageMaker TRL gives us the full SFT + DPO + GRPO toolbox per the AWS builder article on tool-calling with GRPO.
-- Qwen3-32B remains a fallback if the 8B student can't hit the quality bar.
+### Regional availability
 
-## 4. Component diagram (text)
+| Region | Qwen3 Next 80B | Qwen3 VL 235B | Qwen3 32B | Price vs Sydney |
+|---|---|---|---|---|
+| **Sydney (`ap-southeast-2`)** | ✅ | ✅ | ✅ | baseline |
+| Singapore (`ap-southeast-1`) | ❌ | ❌ | ❌ | — |
+| Tokyo (`ap-northeast-1`) | ✅ ($0.18/$1.45) | ✅ ($0.64/$3.22) | ✅ | higher |
+| Mumbai (`ap-south-1`) | ✅ ($0.18/$1.41) | ✅ ($0.62/$3.13) | ✅ | similar |
+| us-west-2 / us-east-1 | ✅ ($0.15/$1.20) | ✅ ($0.53/$2.66) | ✅ | cheapest; + fine-tuning endpoint |
+
+**Sydney is the closest APAC Qwen region to Singapore hospitals.** Singapore Bedrock has no Qwen.
+
+## 3. Customization paths
+
+### Path B-1 — Bedrock Reinforcement Fine-Tuning on Qwen3 32B (us-west-2)
+
+Bedrock's native RFT endpoint for Qwen3 32B. From the AWS Bedrock pricing page:
+
+| Item | Price |
+|---|---|
+| Training hours | **$80 / hr** |
+| Post-training inference input | $0.20 / 1M tokens |
+| Post-training inference output | $0.78 / 1M tokens |
+| Trained-model storage | $1.95 / month |
+
+- Fully managed — you provide prompts + reward function, Bedrock generates responses, scores them, trains the model, exposes the fine-tuned ID via the OpenAI-compatible endpoint.
+- Much less moving-parts than SageMaker + TRL.
+- Region pin: `us-west-2` only for the training job, but the resulting custom model can be invoked from the mantle endpoint.
+- Typical run: 6–12 hours for 10–20k-prompt dataset → **~$500–$1,000 per retrain**.
+
+### Path B-2 — SageMaker + Hugging Face TRL GRPO on Qwen3-1.7B / 4B (from AWS builder article)
+
+Kept as an optional path when you want a smaller, self-served student:
+
+- `ml.g6e.8xlarge` training at ~$5.74/hr × 10–15 hr ≈ **$70–$100 per run**.
+- Serve on SageMaker endpoint (e.g. `ml.g5.2xlarge` ~$1.52/hr) **in Singapore** if SG residency for the student is required.
+- Choose when (a) you want weights you can eventually pull off AWS, or (b) you want a sub-4B model for the tightest latency.
+
+### When to use which
+
+| Choose... | ...if |
+|---|---|
+| **No fine-tuning** (Qwen3 Next 80B A3B fast + Qwen3 VL 235B complex) | Phase 1–2. Hosted Bedrock models are likely good enough on RAG alone. |
+| **Path B-1 (Bedrock RFT on Qwen3 32B)** | You want a clinical-domain-tuned model without managing GPU infrastructure, and are willing to serve from us-west-2. |
+| **Path B-2 (SageMaker GRPO on Qwen3-4B)** | You need the student physically in Singapore for data-residency, or want to iterate faster than Bedrock RFT cycles. |
+
+## 4. Component diagram
 
 ```
  Clinician browser
@@ -43,13 +81,14 @@ We recommend **Option B (Qwen3-8B on SageMaker)** as the primary student, becaus
       ├─ LangGraph: retrieve → if/else route
       │
       ├────── retrieval ──────► Bedrock Knowledge Bases on OpenSearch Serverless
-      │                          (Cohere Embed v4 · hybrid BM25+kNN)
+      │                          (Cohere Embed v4, hybrid BM25+kNN)
       │
-      ├─── emergency=true ────► SageMaker real-time endpoint
-      │                          Qwen3-8B fine-tuned student (g5.2xlarge)
+      ├─── emergency=true ────► Bedrock (bedrock-mantle, Sydney)
+      │                          qwen.qwen3-next-80b-a3b  (3B active, ~200 tok/s)
+      │                          OR custom RFT'd Qwen3-32B from us-west-2
       │
-      └─── emergency=false ───► Bedrock `bedrock-mantle` endpoint
-                                  qwen.qwen3-vl-235b-a22b teacher
+      └─── emergency=false ───► Bedrock (bedrock-mantle, Sydney)
+                                  qwen.qwen3-vl-235b-a22b  (vision for figures)
       │
       ▼
  Guardrails (Bedrock Guardrails + citation validator)
@@ -60,67 +99,95 @@ We recommend **Option B (Qwen3-8B on SageMaker)** as the primary student, becaus
 Ingestion (unchanged from Version A):
  S3 raw → EventBridge → Step Functions → BDA parse → chunk → embed (Cohere v4) → KB sync
 
-Training lane (quarterly):
- Clinician Q logs → SageMaker training (TRL SFT + LoRA on Qwen3-8B) → DPO round
-                                  → eval (LLM-as-judge on Qwen3-VL-235B) → promote to endpoint
+Optional customization (quarterly):
+ Path B-1: Bedrock RFT endpoint (us-west-2) on Qwen3 32B with grader Lambda
+ Path B-2: SageMaker training job (`ml.g6e.8xlarge`) on Qwen3-4B with TRL GRPO
 ```
 
-## 5. Fine-tuning workflow (detailed)
+## 5. Regulatory caveat (unchanged)
 
-1. **Harvest prompts**: 10k–30k de-identified clinician questions from invocation logs, plus paraphrases generated from the WHO / protocol corpus.
-2. **Teacher generation (distillation)**: run the Qwen3-VL 235B teacher on Bedrock in batch mode against each `(question, RAG-context)` to produce target answers. 50% batch discount applies.
-3. **Clinician review**: Amazon Ground Truth or a custom UI; 10–20% of pairs get human review. Corrections become higher-weight SFT rows or DPO pairs.
-4. **SFT**: SageMaker training job running `trl sft` on Qwen3-8B, with LoRA. Typical 20k-sample run: 2–4 GPU-hours on `ml.g5.2xlarge`.
-5. **DPO** (optional): `trl dpo` on the pairs collected in step 3.
-6. **Evaluation**: LLM-as-judge using the Qwen3-VL teacher to grade student answers on accuracy, citation coverage, tone, safety.
-7. **Deploy**: SageMaker endpoint (g5.2xlarge) with the fine-tuned 8B model. Alternatively, if Qwen3-32B reinforcement fine-tuning on Bedrock goes better, deploy on `bedrock-mantle` instead.
+- Bedrock Qwen inference **is not in Singapore today**. Sydney is the nearest APAC region. PDPA transfer-limitation obligation applies → cross-border transfer from SG hospital to Sydney AWS region needs comparable-protection assurance (typically contract clause).
+- For PDPA-strict clients: route Version B through the **Bedrock Sydney endpoint**, keep S3 raw storage + OpenSearch Serverless in Singapore, and only ephemeral prompt+response tokens cross the Sydney boundary. The permanent patient data never leaves SG.
+- For fine-tuning: Path B-1 requires us-west-2 (US residency). Path B-2 can stay fully in Singapore via SageMaker SG.
 
-## 6. Latency budget (emergency lane, post-fine-tune)
+## 6. Latency budget (emergency lane)
+
+With **Qwen3 Next 80B A3B** on Bedrock Sydney:
 
 ```
-  20 ms   Semantic cache hit (Layer 1; skip to step 7 if hit)
- 100 ms   Cognito auth + PHI mask
-  70 ms   Hybrid retrieval
- 400 ms   SageMaker endpoint first-token (Qwen3-8B on g5.2xlarge)
-1000 ms   full answer (250 tokens, streaming)
+  25 ms   Tair/ElastiCache semantic cache hit (skip to step 7 if hit)
+ 100 ms   Cognito auth + PHI mask (Lambda in SG)
+  70 ms   Retrieval (OpenSearch Serverless SG)
+  90 ms   cross-region call SG → Sydney (Bedrock)
+ 400 ms   Qwen3 Next first-token (MoE; ~300 ms in-region first-token + crossing)
+1000 ms   Full answer (250 tokens @ ~250 tok/s via MoE)
  110 ms   Guardrails + citation validation
 ───────
-≤ 1,700 ms  p95
+≤ 1,795 ms  p95 emergency budget
 ```
 
-Cohere Embed v4 for the query embedding is ~20 ms extra; Bedrock Prompt Caching (if available for the mantle endpoint — not yet confirmed) would shave more.
+The SG→Sydney RTT (~90 ms each way) is the cross-region tax. If we later pick a custom SageMaker endpoint hosted in Singapore, we save the ~180 ms round-trip.
 
-## 7. Cost (quick order-of-magnitude)
+## 7. Monthly cost (600 k calls, 30/70 split, caching on) — updated
 
-| Item | Cost |
+| Item | Calc | Cost |
+|---|---|---|
+| Fast lane — **Qwen3 Next 80B A3B** (Bedrock Sydney) | 180 k × 65 % × (3k in + 350 out) × $0.1545/$1.236 per 1M | ~$105 |
+| Complex lane — **Qwen3 VL 235B A22B** (Bedrock Sydney) | 420 k × (3k in + 600 out) × $0.5459/$2.7398 per 1M | ~$1,377 |
+| Cohere Embed v4 | ~500 M tokens | ~$60 |
+| Cohere Rerank 3.5 (selective) | | ~$85 |
+| Bedrock Guardrails | per call | ~$180 |
+| OpenSearch Serverless | baseline | ~$350 |
+| Comprehend Medical DetectPHI | | ~$180 |
+| Lambda + API GW + CloudFront + WAF | serverless | ~$150 |
+| S3 + CloudTrail Object Lock + Macie | | ~$120 |
+| ElastiCache Valkey | | ~$80 |
+| Site-to-Site VPN | dual tunnel | ~$80 |
+| **B base — Bedrock-only, no fine-tuning** | | **~$2,767** |
+
+### With customization path B-1 (Bedrock RFT on Qwen3 32B for fast lane)
+
+| Item | Delta |
 |---|---|
-| Qwen3-VL 235B teacher inference (complex lane) | Confirm on Bedrock pricing; expect low-to-mid-single-digit $/1M tokens |
-| Qwen3-8B student on SageMaker endpoint (g5.2xlarge, always-on) | ~$1.20–$1.80/hr → ~$900–$1,300/mo per replica |
-| Training: 20k samples SFT + LoRA | $5–$30 per run |
-| Training: Qwen3-32B reinforcement fine-tuning on Bedrock | billed by tokens + grader executions; estimate on a small pilot first |
-| OpenSearch Serverless | ~$350/mo baseline |
-| Everything else (Lambda, S3, ElastiCache, Guardrails, Comprehend Medical, CloudTrail) | ~$700/mo |
+| RFT training run, amortized (quarterly ~$800) | +$270 |
+| Fast lane switches to custom Qwen3 32B (us-west-2): 117k calls × (3k in + 350 out) × $0.20/$0.78 | +$100 (replaces $105) |
+| Model storage | +$2 |
+| **B total with custom fast-lane model** | **~$3,040** |
 
-Single-replica Qwen3-8B always-on is the expensive line — similar to the Alibaba PAI-EAS case. A small team can get away with auto-scaled inference (scale to zero when idle) using SageMaker Serverless Inference for non-peak traffic.
+Note: the custom model has **cheaper inference than the base Qwen3 Next 80B A3B on output ($0.78 vs $1.24 per 1M)** — so at steady state, switching to the tuned Qwen3-32B actually **saves money** on output-heavy traffic. The payoff depends on traffic volume × answer length.
 
-## 8. What makes this version attractive
+### With customization path B-2 (SageMaker GRPO on Qwen3-4B, SG endpoint)
 
-- Full open-weight ownership (Qwen3-8B weights + LoRA adapter) — portable to on-prem / other clouds later.
-- Three real fine-tuning techniques available on the same platform (SFT, DPO, GRPO) — most flexible AWS path.
-- Under the AWS BAA + HIPAA posture for US clients.
+| Item | Delta |
+|---|---|
+| GRPO training run, amortized (quarterly ~$100) | +$35 |
+| SageMaker endpoint `ml.g5.2xlarge` 24×7 (serverless option cheaper) | +$1,095 always-on |
+| Fast lane replaced by SageMaker endpoint | savings ~$95 |
+| **B total with SG-hosted custom student** | **~$3,802** |
+
+Keep Path B-2 for clients who need the emergency-lane model **physically in SG**. Otherwise Path B-1 is cheaper and simpler.
+
+## 8. Why this is attractive now vs. before
+
+- **No self-hosted Qwen endpoint needed in phase 1–2** — Bedrock's managed `qwen.qwen3-next-80b-a3b` serves the fast lane; `qwen.qwen3-vl-235b-a22b` serves the complex lane. Both are pay-per-token, no always-on GPU.
+- **The MoE models are genuinely fast** — Qwen3 Next 80B activates only 3B per token, similar efficiency profile to Qwen3.5-Flash on Model Studio.
+- **One IAM, one BAA, one service** — everything under Bedrock. No dual SageMaker-plus-Bedrock ops complexity unless we opt in for Path B-2.
+- **Fine-tuning is cheap** — Bedrock RFT $80/hr × ~8 hr = $640 per run, vs the $2,000 custom-model distillation for Claude-family.
+- **Built-in vision** — Qwen3 VL 235B handles figures/tables in the WHO PDFs without a separate multimodal embedding pass.
 
 ## 9. What makes it less attractive
 
-- `us-west-2` pin for both training and inference of Qwen models.
-- More moving parts than Version A (SageMaker + Bedrock + OpenSearch, not just Bedrock).
-- Qwen3 model card availability on Bedrock is newer than Claude's, so fewer battle-tested production deployments to reference.
+- **Sydney residency**, not Singapore, for Bedrock inference. Contract-mitigable for PDPA but not ideal.
+- **Bedrock RFT** pins the fine-tuning to us-west-2 (one-time US residency for training data).
+- **Vision-Language pricing is higher than text-only** — if we don't need figure understanding on every call, split the complex lane to Qwen3 235B A22B 2507 text-only ($0.2266 in / $0.9064 out) and only invoke Qwen3 VL when the retrieved chunks contain figures. Could cut complex-lane cost ~60%.
 
 ## 10. References
 
-- [OpenAI-compatible fine-tuning APIs in Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/fine-tuning-openai-apis.html)
-- [Qwen3-VL 235B A22B model card](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-qwen-qwen3-vl-235b-a22b.html)
-- [Fine-tune small language models for production-grade tool calling with GRPO using Hugging Face TRL on Amazon SageMaker](https://builder.aws.com/content/35x6VR6kZYSn3JgNQmcNmIVK32Y/fine-tune-small-language-models-for-production-grade-tool-calling-with-grpo-using-hugging-face-trl-on-amazon-sagemaker-ai)
-- [SageMaker JumpStart — fine-tune pretrained models](https://docs.aws.amazon.com/sagemaker/latest/dg/jumpstart-fine-tune.html)
-- [Fine-Tuning LLMs with TRL CLI on SageMaker (Hugging Face)](https://huggingface.co/docs/sagemaker/examples/sagemaker-sdk-fine-tune-trl-cli)
+- [Amazon Bedrock Pricing — Qwen section (verified 10 May 2026)](https://aws.amazon.com/bedrock/pricing/)
+- [Qwen3 VL 235B A22B model card](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-qwen-qwen3-vl-235b-a22b.html)
+- [Qwen3 Next 80B A3B model card](https://docs.aws.amazon.com/en_us/bedrock/latest/userguide/model-card-qwen-qwen3-next-80b-a3b.html)
+- [Qwen3 32B model card](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-qwen-qwen3-32b.html)
+- [OpenAI-compatible fine-tuning APIs in Amazon Bedrock (Reinforcement Fine-Tuning)](https://docs.aws.amazon.com/bedrock/latest/userguide/fine-tuning-openai-apis.html)
+- [Fine-tune small language models for production-grade tool calling with GRPO using Hugging Face TRL on Amazon SageMaker (AWS Builder)](https://builder.aws.com/content/35x6VR6kZYSn3JgNQmcNmIVK32Y/fine-tune-small-language-models-for-production-grade-tool-calling-with-grpo-using-hugging-face-trl-on-amazon-sagemaker-ai)
 
 *Content above is rephrased for compliance with licensing restrictions.*

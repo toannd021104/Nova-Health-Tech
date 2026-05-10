@@ -101,14 +101,17 @@ Plus Model Studio's HTTP API offers token-billed fine-tuning for Qwen-Plus / Qwe
 - For the production 2-second SLA, Bedrock Prompt Caching + semantic cache + the right region keep Haiku 4.5 under 2s **without fine-tuning at all**. Fine-tuning is a phase-3 quality-and-tone lever, not a latency lever.
 - **Written plan, not executed**: the existing running demo is plain RAG. No training has been run. If we commit to the Nova-Lite distillation path, the training job is the next delivery.
 
-### Version B — AWS with Qwen (new)
+### Version B — AWS with Qwen (new, simplified)
 
-- **Base**: Qwen3-32B via the new Bedrock `bedrock-mantle` OpenAI-compatible endpoint (us-west-2). Larger than needed; likely the teacher.
-- **Student**: Qwen3-8B on SageMaker (JumpStart deploy) or on Bedrock custom inference. Fine-tune with **SFT + optional DPO** using Hugging Face TRL on a SageMaker training job.
-- **Alternative**: use Bedrock's OpenAI-compatible **reinforcement fine-tuning** directly on Qwen3 32B with a Lambda-grader (e.g., citation-correctness reward). Good fit for the "grounded answers only" guardrail objective.
+- **Base models on Bedrock Sydney (no SageMaker needed for serving):**
+  - Fast lane: **Qwen3 Next 80B A3B** via `qwen.qwen3-next-80b-a3b` — MoE with 3B active per token, `$0.1545 in / $1.2360 out` per 1M.
+  - Complex lane: **Qwen3 VL 235B A22B** via `qwen.qwen3-vl-235b-a22b` — vision-enabled, 22B active, `$0.5459 / $2.7398`. Split to Qwen3 235B text-only (`$0.2266 / $0.9064`) for non-figure queries.
+- **Customization (when needed):**
+  - **Path B-1 — Bedrock Reinforcement Fine-Tuning on Qwen3 32B** (us-west-2 only). $80/hr training, then $0.20/$0.78 per 1M on custom-model inference. Fully managed — no GPU cluster to run.
+  - **Path B-2 — SageMaker + TRL GRPO on Qwen3-1.7B/4B** (AWS builder article). Runs `ml.g6e.8xlarge` in SG, serves from SageMaker SG endpoint. Use when the student must physically live in Singapore for PDPA.
 - Vector store: OpenSearch Serverless (same as Version A).
-- Embeddings: Cohere Embed v4 on Bedrock (already validated in Singapore in Version A).
-- Serving region: us-west-2 for fine-tuning; Singapore for inference only if Qwen3 inference endpoints become available there, else keep it in us-west-2 with PDPA-appropriate contracts. **This is the main regulatory caveat of the Qwen-on-AWS path** vs Version A.
+- Embeddings: Cohere Embed v4 on Bedrock.
+- Serving region: Sydney for Bedrock Qwen; Singapore for all other AWS services; us-west-2 only during the Bedrock RFT training job.
 
 ### Version C — Alibaba Cloud (Qwen, Singapore)
 

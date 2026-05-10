@@ -12,21 +12,25 @@ Verified against AWS profile `gapv50k` using `aws bedrock list-foundation-models
 
 This changes the verdict: **Version A with Nova Micro on the fast lane is the cheapest SG-native option.** See `docs/architecture/regional_availability.md` for the full verification and §1 below for the re-ranked totals.
 
-## 1. Quick verdict (re-ranked for SG residency, updated for Qwen3.5-Plus)
+## 1. Quick verdict (re-ranked for SG residency, updated for Qwen3.5-Plus + Bedrock Qwen3 Next)
 
-| | **Version A — AWS + Claude** (Singapore) | **Version B — AWS + Qwen** (Sydney Bedrock + SageMaker SG) | **Version C — Alibaba + Qwen** (Singapore) |
+| | **Version A — AWS + Claude** (Singapore) | **Version B — AWS + Qwen** (Sydney Bedrock) | **Version C — Alibaba + Qwen** (Singapore) |
 |---|---|---|---|
-| **Fast-lane model options** | **Nova Micro (cheapest, SG)** OR Haiku 4.5 (quality, SG) | Qwen3-32B Sydney (no SG residency) OR fine-tuned Qwen3-4B on SageMaker SG endpoint | **Qwen3.5-Flash** OR fine-tuned Qwen3-8B |
-| **Complex-lane model options** | Sonnet 4.5 OR Nova Pro | Qwen3-235B Sydney | **Qwen3.5-Plus** (newer Feb-2026 release, replaces Qwen-Max) |
-| **Singapore data residency** | ✅ | ⚠️ only if SageMaker endpoint hosts the model; Bedrock Qwen is Sydney | ✅ |
-| **Monthly pilot total (500 physicians, base)** | **~$2,755 / mo (A1+: Nova Micro + Nova Pro)** or ~$7,095 / mo (A2: Haiku 4.5 + Sonnet 4.5) | ~$2,300 / mo (Sydney Bedrock) + ~$1,095 / mo if SG-hosted student required | **~$1,880 / mo (Qwen3.5-Flash + Qwen3.5-Plus)** |
-| **Post-customization total** | ~$2,000 / mo (Nova Micro unchanged — customization may not be needed) | ~$2,000 / mo (after GRPO on SageMaker SG with serverless inference) | ~$1,940 / mo (after SFT+LoRA on PAI) |
-| **Customization cost per run** | ~$2,000 (Bedrock Model Distillation, optional) | **~$70–100** (SageMaker TRL GRPO on ml.g6e.8xlarge) | **~$15–40** (PAI Model Gallery Qwen3 LoRA) |
-| **Data-residency posture** | Singapore, PDPA-native | Sydney Bedrock or SG SageMaker (split) | Singapore, PDPA-native |
+| **Fast-lane model options** | **Nova Micro (cheapest, SG)** OR Haiku 4.5 (quality, SG) | **Qwen3 Next 80B A3B** (Sydney; MoE, 3B active) OR Qwen3 32B dense OR custom RFT'd Qwen3-32B | **Qwen3.5-Flash** OR fine-tuned Qwen3-8B |
+| **Complex-lane model options** | Sonnet 4.5 OR Nova Pro | **Qwen3 VL 235B A22B** (Sydney; with vision) OR Qwen3 235B A22B 2507 (text-only, cheaper) | **Qwen3.5-Plus** (newer Feb-2026 release, replaces Qwen-Max) |
+| **Customization** | Bedrock Model Distillation (Sonnet → Nova Lite, ~$2k/run) | **Bedrock Reinforcement Fine-Tuning on Qwen3 32B** (us-west-2, $80/hr ≈ $640/run) OR SageMaker GRPO on Qwen3-4B (~$100/run) | PAI SFT+LoRA on Qwen3-8B (~$15–40/run) |
+| **Singapore data residency** | ✅ | ⚠️ Bedrock Qwen is Sydney; PDPA contract-mitigable | ✅ |
+| **Monthly pilot total (500 physicians, base)** | **~$2,755 / mo (A1+: Nova Micro + Nova Pro)** or ~$7,095 / mo (A2: Haiku 4.5 + Sonnet 4.5) | **~$2,767 / mo** (Bedrock-only, no SageMaker) | **~$1,880 / mo (Qwen3.5-Flash + Qwen3.5-Plus)** |
+| **Post-customization total** | ~$5,570 / mo (A2 after Nova Lite distillation) | **~$3,040 / mo** (after Bedrock RFT on Qwen3 32B) | ~$1,940 / mo (after SFT+LoRA on PAI) |
+| **Data-residency posture** | Singapore, PDPA-native | Sydney Bedrock (PDPA-mitigable); SG only if SageMaker path | Singapore, PDPA-native |
 
-**Headline (re-ranked)**: Version C is now the cheapest SG-native option at ~$1,880/mo base thanks to Qwen3.5-Plus pricing. Version A1+ (Nova Micro + Nova Pro) is a close second at ~$2,755/mo and wins on "one AWS BAA covers everything." Version B loses once SG residency is required.
+**Headline (re-ranked)**:
+1. **Version C (~$1,880/mo)** — cheapest SG-native, Qwen3.5-Plus replaced Qwen-Max for 3× savings on complex lane.
+2. **Version A1+ (~$2,755/mo)** — cheapest fully AWS-BAA-covered SG-native, pending Nova Micro/Pro clinical quality benchmark.
+3. **Version B (~$2,767/mo)** — now simpler: pure Bedrock, no SageMaker needed in phase 1. Qwen3 Next 80B A3B + Qwen3 VL 235B. Sydney residency.
+4. **Version A2 (~$7,095/mo)** — running demo today (Haiku 4.5 + Sonnet 4.5). Quality-first baseline.
 
-**About Qwen3.6-27B** (released 22 Apr 2026): coding-agent specialist. Nova should not use it — lower general-knowledge scores than Qwen3.5-Plus/Qwen3.5-397B, and it's not yet exposed as a Model Studio API endpoint. Revisit if Alibaba adds it to Model Studio with medical benchmarks.
+**About Qwen3.6-27B** (released 22 Apr 2026): coding-agent specialist. Nova should not use it — lower general-knowledge scores than Qwen3.5-Plus/Qwen3.5-397B, not on Model Studio API, not on Bedrock. Re-evaluate when it gets hosted with medical benchmarks.
 
 ## 2. Assumptions shared across all three versions
 
@@ -70,27 +74,38 @@ Nova Micro is roughly **30× cheaper than Haiku 4.5 on input, 35× cheaper on ou
 
 Batch at 50 % off. Prompt-cache read at ~10 % of standard input; cache write at a small premium.
 
-### Version B — AWS Bedrock (Sydney `ap-southeast-2`) + SageMaker
+### Version B — AWS Bedrock (Sydney `ap-southeast-2`) — all Qwen served via Bedrock
 
-Qwen is **not available in Singapore Bedrock**. Nearest APAC region is Sydney. Fine-tuning via Bedrock's OpenAI-compatible endpoint is `us-west-2` only; GRPO via SageMaker TRL can run in Singapore.
+Qwen is **not in Singapore Bedrock**; nearest APAC region is Sydney. Bedrock hosts four Qwen3 models managed-serverless, so Version B no longer needs SageMaker for phase 1–2 serving. SageMaker is an optional path for smaller-model fine-tuning only.
 
-**Bedrock inference** (Sydney pricing from the AWS Bedrock pricing page, Qwen section):
+**Bedrock inference (Sydney pricing from the AWS Bedrock pricing page, verified 10 May 2026):**
 
 | Model | Input | Output | Batch input | Batch output | Role |
 |---|---|---|---|---|---|
-| **Qwen3 32B** | **$0.1545** | **$0.6180** | $0.0773 | $0.3090 | Fast-lane base (Sydney — not SG-native) |
-| **Qwen3 235B A22B (2507)** | **$0.2266** | **$0.9064** | $0.1133 | $0.4532 | Complex lane + distillation teacher (Sydney) |
-| Qwen3 Coder 30B A3B | $0.1545 | $0.6180 | $0.0773 | $0.3090 | Not used here |
+| **Qwen3 Next 80B A3B** | **$0.1545** | **$1.2360** | $0.0773 | $0.6180 | **Fast lane** — MoE, 3B active per token, fastest Qwen on Bedrock |
+| Qwen3 32B dense | $0.1545 | $0.6180 | $0.0773 | $0.3090 | Alternative fast lane; cheaper output but dense |
+| **Qwen3 VL 235B A22B** | **$0.5459** | **$2.7398** | $0.2730 | $1.3699 | **Complex lane + distillation teacher** — with vision, 22B active |
+| Qwen3 235B A22B 2507 | $0.2266 | $0.9064 | $0.1133 | $0.4532 | Alternative complex lane (text-only, cheaper) |
+| Qwen3 Coder Next | $0.5150 | $1.2360 | — | — | Not used (coding specialist) |
 
-**SageMaker (for GRPO+RLVR fine-tuning per the AWS builder article), Singapore `ap-southeast-1`:**
+**Bedrock Reinforcement Fine-Tuning (us-west-2 only, for Qwen3 32B):**
+
+| Item | Price | Role |
+|---|---|---|
+| Training hours | **$80/hr** | Fine-tune a clinical-domain student |
+| Post-training inference input | $0.20 per 1M tokens | Custom model invocation |
+| Post-training inference output | $0.78 per 1M tokens | Custom model invocation |
+| Trained-model storage | $1.95 / month | Per model |
+
+**SageMaker (optional alternative path for Qwen3-1.7B/4B GRPO per the AWS builder article):**
 
 | Resource | Price | Role |
 |---|---|---|
-| `ml.g6e.8xlarge` training job | ~$5.74/hr (L40S GPU) | GRPO+RLVR training, 10–15 hrs per run |
-| `ml.g5.2xlarge` inference endpoint | ~$1.52/hr | Serve Qwen3-4B fine-tuned student (SG-native) |
-| SageMaker Serverless Inference | pay per inference-ms + memory | Lower idle cost if traffic is bursty |
+| `ml.g6e.8xlarge` training job (L40S GPU) | ~$5.74/hr | GRPO+RLVR on smaller Qwen; 10–15 hr per run |
+| `ml.g5.2xlarge` SageMaker endpoint in SG | ~$1.52/hr | Serve the student in-region (PDPA-native) |
+| SageMaker Serverless Inference | per inference-ms | Scale-to-zero off-peak |
 
-**SG-residency variant of Version B:** train on SageMaker SG + host student on SageMaker SG endpoint. The Bedrock-managed Qwen3 models in Sydney can only be used if the client accepts Sydney residency, or for batch training-data generation that's subsequently scrubbed.
+Choose SageMaker only when (a) the student must physically live in Singapore for PDPA, or (b) a sub-4B model is needed for tightest latency.
 
 ### Version C — Alibaba Model Studio (Singapore region, per 1 M tokens)
 
@@ -136,11 +151,15 @@ Shows what one `/chat` request costs on each version after Layer-2 prompt cachin
 | Step | Cost |
 |---|---|
 | Same infra as A | ~$5 × 10⁻⁴ combined |
-| **Qwen3 32B** (3 k in + 350 out) | `(3 × $0.1545 / 1,000) + (0.35 × $0.6180 / 1,000)` = **$6.8 × 10⁻⁴** |
-| **Qwen3 235B** (3 k in + 600 out) | `(3 × $0.2266 / 1,000) + (0.6 × $0.9064 / 1,000)` = **$1.2 × 10⁻³** |
+| **Qwen3 Next 80B A3B** (3 k in + 350 out) | `(3 × $0.1545 / 1,000) + (0.35 × $1.2360 / 1,000)` = **$8.9 × 10⁻⁴** |
+| **Qwen3 VL 235B A22B** (3 k in + 600 out) | `(3 × $0.5459 / 1,000) + (0.6 × $2.7398 / 1,000)` = **$3.3 × 10⁻³** |
+| Qwen3 235B A22B 2507 text-only (3 k + 600) | `(3 × $0.2266 / 1,000) + (0.6 × $0.9064 / 1,000)` = **$1.2 × 10⁻³** |
+| Custom RFT Qwen3-32B (3 k + 350) | `(3 × $0.20 / 1,000) + (0.35 × $0.78 / 1,000)` = **$8.7 × 10⁻⁴** |
 | Guardrails + audit | ~$3 × 10⁻⁴ |
 
-**Emergency call ≈ $0.0015 · Complex call ≈ $0.002** (plus $1,095/mo amortized SageMaker SG endpoint if we need SG residency, see row below).
+**Emergency call ≈ $0.0009 · Complex call (VL) ≈ $0.0033, (text) ≈ $0.0012**
+
+If we split the complex lane so that only figure-bearing retrieval hits Qwen3-VL and the rest goes to Qwen3 235B text-only, complex-call cost drops to ~$0.0015.
 
 ### Version C (Alibaba Qwen — Qwen3.5-Plus for complex, Qwen3.5-Flash for fast)
 
@@ -196,12 +215,14 @@ Nova Pro can't match Sonnet 4.5 on complex clinical reasoning depth, but if it c
 | Post-distill Nova Lite replaces Sonnet on ~40 % of complex traffic | savings | −$2,200 |
 | **A2 post-customization** | | **~$5,565** |
 
-### Version B — AWS + Qwen (Sydney Bedrock + optional SageMaker SG)
+### Version B — AWS + Qwen (Sydney Bedrock only, no SageMaker)
+
+Now that Bedrock hosts four Qwen3 models in Sydney, Version B is fully Bedrock-hosted in phase 1–2. SageMaker is only needed if a client requires the student physically in Singapore.
 
 | Item | Calc | Cost |
 |---|---|---|
-| Fast lane — Qwen3 32B (Bedrock Sydney on-demand) | 180 k × 65 % × $0.0015 | ~$175 |
-| Complex lane — Qwen3 235B (Bedrock Sydney on-demand) | 420 k × $0.002 | ~$840 |
+| Fast lane — **Qwen3 Next 80B A3B** (Bedrock Sydney) | 180 k × 65 % × $0.0009 | ~$105 |
+| Complex lane — **Qwen3 VL 235B A22B** (Bedrock Sydney) | 420 k × $0.0033 | ~$1,377 |
 | Cohere Embed v4 | ~500 M tokens | ~$60 |
 | Cohere Rerank 3.5 (selective) | | ~$85 |
 | Bedrock Guardrails | per call | ~$180 |
@@ -211,14 +232,33 @@ Nova Pro can't match Sonnet 4.5 on complex clinical reasoning depth, but if it c
 | S3 + CloudTrail Object Lock + Macie | | ~$120 |
 | ElastiCache Valkey | | ~$80 |
 | Site-to-Site VPN | dual tunnel | ~$80 |
-| **B base (accepting Sydney residency)** | | **~$2,300** |
-| Phase-3 GRPO+RLVR training (Qwen3-4B, 15 epochs) | ~12 hr × $5.74 + teacher-gen batch | ~$80–100 per run |
-| SageMaker SG endpoint for fine-tuned student (`ml.g5.2xlarge` always-on) | 720 hr × $1.52 | ~$1,095 |
-| Savings — student replaces Qwen3 32B on ~85 % of emergency lane | | **−$150** |
-| **B with custom student always-on (SG-residency variant)** | | **~$3,245** |
-| **B with serverless inference (scale-to-zero off-peak)** | ~300 hr × $1.52 | **~$1,950** |
+| **B base (Bedrock-only, no fine-tuning)** | | **~$2,767** |
+| Phase-3 Bedrock RFT training (Qwen3-32B, ~8 hr × $80) | ~$640 per run, quarterly | +~$215 |
+| Fast lane switches to custom Qwen3-32B (us-west-2) with cheaper output | | ~neutral or saves ~$20 |
+| Model storage | | +~$2 |
+| **B with Bedrock-RFT'd custom model (path B-1)** | | **~$2,985–$3,040** |
 
-Important: "B base" at $2,300 only applies if the client accepts **Sydney** residency for Qwen calls. Strictly-SG clients are on the $3,245 variant (SageMaker SG endpoint) unless we serve the fast lane from Nova Micro as a hybrid — which defeats the purpose of Version B.
+**Splitting the complex lane:** Most RAG retrievals don't involve figures. If we route only figure-bearing queries to Qwen3 VL and the rest to Qwen3 235B A22B 2507 (text-only at $0.2266/$0.9064), the complex lane cost drops:
+
+| Split variant | Complex-lane cost |
+|---|---|
+| 100 % Qwen3 VL 235B | ~$1,377 |
+| 80 % text-only / 20 % VL | ~$400 (text) + ~$275 (VL) = **~$675** |
+
+**Using the split, B base drops to ~$2,065/mo — below Version C base.**
+
+### Optional SG-residency variant (path B-2, SageMaker)
+
+Same phase-3 custom student, but hosted in Singapore on SageMaker:
+
+| Item | Cost |
+|---|---|
+| GRPO training on `ml.g6e.8xlarge` (quarterly ~$100) | amortized +$35 |
+| SageMaker SG endpoint `ml.g5.2xlarge` always-on (`720 hr × $1.52`) | +$1,095 |
+| Savings on fast lane (replaces Bedrock Qwen3 Next calls) | −$95 |
+| **B path B-2 total** | **~$3,800** |
+
+Use path B-2 only when the client mandates SG residency for the student model.
 
 ### Version C — Alibaba + Qwen (Singapore)
 
