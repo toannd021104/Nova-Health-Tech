@@ -311,141 +311,92 @@ ASCII equivalent (for text-only renderers):
 
 ![Data pipeline architecture](../architecture/diagrams/v_c_data_pipeline.svg)
 
-### 4.1 Data sources inventory
+### 4.1 Data sources
 
-| Source | Access method | Structure | Volume | Freshness need |
-|---|---|---|---|---|
-| **Internal clinical trial reports** | Data plane: SharePoint Online via [Microsoft Graph webhook](https://learn.microsoft.com/en-us/graph/api/subscription-post-subscriptions) or SharePoint Server / SMB pull, both traversing Site-to-Site IPsec VPN ([§7.6.2](#762-data-plane--bulk-phi-transfer-site-to-site-ipsec-vpn-baseline)) | Legacy PDFs, inconsistent tagging, 10–200 pages each | Hundreds of documents per hospital tenant | Weekly reconciliation + webhook on change |
-| **Internal treatment protocols** | Same as above | PDFs + DOCX; often include horizontal/vertical tables and text-based flowcharts | Dozens per tenant | Same |
-| **[WHO guidelines](https://www.who.int/publications)** | HTTP download from WHO publications index; RSS webhook for living guidelines | 100+ page PDFs with dense tables and figures | ~300 guideline corpus | Monthly day 1 + RSS webhook |
-| **[WHO ICD-11 API](https://id.who.int/swagger/index.html)** | [Registered OAuth2 client](https://icd.who.int/icdapi) | Structured JSON | ~100k classification entities | Daily delta pull |
-| **[PubMed E-utilities](https://www.ncbi.nlm.nih.gov/books/NBK25500/)** | Runtime tool call from the Agent | XML to JSON | On-demand (agentic RAG tool) | Real-time (no ingest) |
-| **Manual upload** ([Upload Portal](#45-data-refresh-and-synchronization)) | Curator uploads via internal portal over Site-to-Site IPsec VPN (data plane, §7.6.2); OIDC via hospital IdP | Any format | Ad-hoc | Immediate |
-| **EHR data (runtime only, not indexed)** | [SMART App Launch v2](http://docs.smarthealthit.org/) + FHIR R4 | Structured FHIR resources | Per patient per session | Runtime fetch |
-
-**Inventory source of truth**: every document's provenance is tracked via `document_id = hash(source + URI)` and `revision = hash(bytes)`. See §4.6.
-
-### 4.2 Ingestion & ETL pipeline
-
-```
-[Source] to OSS raw bucket /raw/<source>/<document_id>/<revision>.pdf
-        to ObjectCreated event
-        to Function Workflow:
-            1. Security Center malware scan
-            2. DataWorks SDDP PHI scan (quarantine on hit)
-            3. DocMind parse (complex pages to Qwen-VL-Max)
-            4. Hierarchical chunker (1500/300 tokens, 15% overlap, section-aware)
-            5. text-embedding-v4 for text chunks
-            6. tongyi-embedding-vision-plus for figure-bearing chunks
-            7. Upsert into OpenSearch Vector Search Edition
-            8. Trigger AnalyticDB PG graph extraction via adbpg_graphrag.upload
-            9. Flush Tair semantic-cache keys tagged source:<document_id>
-        to ActionTrail audit entry (immutable)
-```
-
-**Idempotency**: `document_id + revision` is the dedupe key. Unchanged documents skip the embed+graph steps entirely to zero wasted spend on reruns.
-
-**Parallelism**: Function Workflow fans out one execution per ObjectCreated; concurrency limit 50 to respect Model Studio RPM caps.
-
-### 4.3 OCR and document parsing strategy (legacy PDFs)
-
-Three strategies evaluated for the mix of body text, horizontal and vertical tables, text-based flowcharts, and figures:
-
-| Strategy | Description | Status |
-|---|---|---|
-| A. Managed parse plus managed RAG | DocMind for body text and simple tables, Qwen-VL-Max for complex pages, Model Studio KB for retrieval | Chosen, primary |
-| B. Open-source parser ([Unstructured](https://unstructured.io) / [LlamaParse](https://docs.llamaindex.ai/en/stable/module_guides/loading/connector/llama_parse/) / [Docling](https://github.com/DS4SD/docling)) plus self-managed vector DB | Max control, cheapest per page | Not used |
-| C. Multimodal page-image embeddings | Preserves figures and tables exactly, page-level citations | Fallback, used with A for figure-heavy queries via `tongyi-embedding-vision-plus` |
-
-**Parsing rules:**
-- Default parser: DocMind (handles body text + simple tables across hundreds of pages)
-- **Complex pages** (multi-page tables, flowcharts, figures) are flagged and routed to Qwen-VL-Max with a structured-output prompt that emits markdown preserving table structure
-- Each parsed chunk retains its `source`, `page`, and `section_heading` metadata for citations
-- Figure-bearing chunks carry a `has_figure=true` flag and are embedded with both `text-embedding-v4` AND `tongyi-embedding-vision-plus` so the retriever can match by either modality
-
-### 4.4 Chunking, embedding, and indexing strategy
-
-**Chunking**: hierarchical, section-aware:
-
-```
-Parent chunk: 1500 tokens (passed to LLM)
-Child chunk:   300 tokens (embedded + indexed)
-Overlap:       15%
-Boundaries:    respect section headings and table boundaries
-```
-
-When a child chunk matches the query, the parent is retrieved: this gives the LLM enough context while keeping embedding granularity fine.
-
-**Embeddings** ([Alibaba Model Studio pricing](https://www.alibabacloud.com/help/en/model-studio/model-pricing) verified 10 May 2026):
-
-| Use | Model | Dims | Price | Notes |
-|---|---|---|---|---|
-| Text chunks | [`text-embedding-v4`](https://www.alibabacloud.com/help/en/model-studio/text-embedding-v4) | 64–2048 (use 1024) | $0.07 / 1M tokens | 8192-token context, 10-batch cap |
-| Figure-bearing chunks | [`tongyi-embedding-vision-plus`](https://www.alibabacloud.com/help/en/model-studio/multimodal-embeddings) | 1152 | $0.09 / 1M text tokens + per-image | Available in Singapore International |
-| Rerank top-20 | [`qwen3-rerank`](https://www.alibabacloud.com/help/en/model-studio/rerank) | n/a | $0.10 / 1M tokens | 500-doc per-call cap |
-
-`qwen3-vl-embedding` (fused single-vector multimodal) and `qwen3-vl-rerank` would give a single fused vector but are **Chinese Mainland only**: not on Singapore International (DNS-verified). Version C uses separate text + image vector fields and merges at rerank time. Slightly lower cross-modal recall on the rare purely-visual question; no PDPA cost.
-
-**Indexing**: [OpenSearch Vector Search Edition](https://www.alibabacloud.com/help/en/open-search/vector-search-edition/product-overview) HA Edition, dual-zone in Singapore:
-
-- HNSW index on `chunk_text_vec` (1024 dims)
-- HNSW index on `chunk_mm_vec` (1152 dims) for figure-bearing chunks
-- BM25 inverted index on raw text
-- Metadata fields: `source`, `document_id`, `revision`, `document_type`, `publication_date`, `review_date`, `specialty`, `evidence_grade`, `page`, `section_heading`, `has_table`, `has_figure`, `tenant_id`
-
-### 4.5 Data refresh and synchronization (WHO monthly updates)
-
-| Source | Cadence | Trigger | Service |
+| Source | Access method | Volume | Freshness |
 |---|---|---|---|
-| WHO ICD-11 API | Daily 02:00 SGT | [CloudOps Scheduler](https://www.alibabacloud.com/help/en/cloudops-orchestration-service) cron | Function Compute |
-| WHO guideline PDFs | Monthly day 1 02:30 SGT + RSS webhook | Cron + API Gateway webhook | FC + DocMind |
-| Internal trials (SharePoint) | Weekly Sun 03:00 SGT + [Graph subscription](https://learn.microsoft.com/en-us/graph/api/subscription-post-subscriptions) | Cron + API Gateway | FC |
-| Treatment protocols | Same as internal trials | Same | Same |
-| Manual upload | Any time | Upload Portal over Site-to-Site IPsec VPN; OIDC via hospital IdP | SAE container to OSS |
-| Monthly full reconciliation | Day 1 04:00 SGT | Cron | Function Workflow |
+| Internal clinical trial reports | SharePoint Online (Graph webhook) or SharePoint Server / SMB (both over IPsec VPN, §7.6.2) | Hundreds per tenant | Weekly + webhook |
+| Internal treatment protocols | Same as above | Dozens per tenant | Same |
+| WHO guidelines | HTTP download; RSS webhook for living guidelines | ~300 corpus | Monthly + RSS |
+| WHO ICD-11 API | Registered OAuth2 client | ~100k entities | Daily delta |
+| PubMed E-utilities | Runtime agent tool | On-demand | Real-time |
+| Manual upload (Upload Portal) | Internal portal over IPsec VPN; OIDC via hospital IdP | Ad-hoc | Immediate |
+| EHR data (runtime only) | SMART App Launch v2 on FHIR R4 | Per session | Runtime fetch |
 
-**WHO monthly-update path in detail**:
+Provenance tracked via `document_id = hash(source + URI)` and `revision = hash(bytes)`.
 
-1. Cron fires at 02:30 SGT on day 1 of each month
-2. FC downloads WHO publications index, diffs against prior state, enumerates new or revised documents
-3. Each candidate PDF is downloaded to OSS `/raw/who/<document_id>/<revision>.pdf`
-4. ObjectCreated event fires the ingestion Workflow
-5. DocMind parses; complex pages routed to Qwen-VL-Max
-6. Chunks embedded (text-embedding-v4 + tongyi-embedding-vision-plus for figures) and upserted into OpenSearch
-7. `adbpg_graphrag.upload` re-extracts entities/relations for the new content
-8. Tair semantic-cache keys tagged `source:who` are invalidated
-9. Audit entry written
-
-**Living WHO guidelines** (e.g. COVID-19 therapeutics) publish via RSS rather than on the monthly cycle. RSS webhook to API Gateway to FC triggers the same pipeline within minutes of publication.
-
-**Failure handling**: retry policy 3× with exponential backoff; persistent failures page the on-call engineer and are logged with document_id for manual review. A missed WHO webhook is caught by the monthly full reconciliation.
-
-### 4.6 Data governance and lineage
-
-Every ingested chunk carries:
+### 4.2 Ingestion pipeline
 
 ```
-chunk_id        : hash(document_id + revision + chunk_index)
-document_id     : hash(source + URI)
-revision        : hash(bytes)
-source          : who | icd11 | internal-trials | protocols | manual
-publication_date: ISO 8601 (from document metadata)
-review_date     : ISO 8601 (for WHO "review by" field)
-evidence_grade  : A/B/C/D when present in source
-specialty       : routing tag (e.g. cardiology-internal)
-tenant_id       : hospital identifier for multi-tenant isolation
-ingest_ts       : UTC timestamp
-ingest_run_id   : Function Workflow execution id (traceable in ActionTrail)
+[Source] to OSS /raw/<source>/<document_id>/<revision>.pdf
+        to ObjectCreated to Function Workflow:
+            Security Center malware scan
+            DataWorks SDDP PHI scan (quarantine on hit)
+            DocMind parse (complex pages to Qwen-VL-Max)
+            Hierarchical chunker (1500/300 tokens, 15% overlap)
+            text-embedding-v4 (text) + tongyi-embedding-vision-plus (figures)
+            Upsert OpenSearch + adbpg_graphrag.upload
+            Flush Tair cache tagged source:<document_id>
+        to ActionTrail audit (immutable)
 ```
 
-**Lineage questions answered by this schema**:
-- *"What document, page, and revision did this citation come from?"*: `document_id`, `page`, `revision`
-- *"Which clinician interactions used the stale pre-July WHO chunk?"*: query ActionTrail for `chunk_id` in retrieved context
-- *"Did PHI from tenant A leak into tenant B's index?"*: `tenant_id` on every chunk; cross-tenant queries are blocked at the retrieval filter level
+Idempotent on `document_id + revision`. Unchanged documents skip embed + graph steps.
 
-**Right to delete / rectify** (PDPA + GDPR): deleting a patient's record from the internal trial bucket triggers a cascading purge of all chunks with matching `document_id`, plus a Tair flush of tagged keys. No chunk survives when its source document is withdrawn.
+### 4.3 Document parsing
 
-**Retention**: raw bucket documents are held for 6 years by default (aligned with audit retention). RAG index entries are tied to document lifecycle: purged when the source document is.
+Legacy PDFs contain body text plus horizontal and vertical tables, text-based flowcharts, and figures.
+
+| Strategy | Usage |
+|---|---|
+| DocMind (managed parse) | Primary, all documents |
+| Qwen-VL-Max | Complex pages flagged by DocMind (multi-page tables, flowcharts, figures) |
+| Multimodal page-image embeddings via `tongyi-embedding-vision-plus` | Fallback for figure-heavy queries |
+
+Chunks keep `source`, `page`, `section_heading` metadata. Figure-bearing chunks carry `has_figure=true` and dual text + multimodal embeddings.
+
+### 4.4 Chunking, embedding, indexing
+
+Chunking: hierarchical, section-aware. Parent 1500 tokens (passed to LLM), child 300 tokens (embedded + indexed), 15 percent overlap, respects section and table boundaries.
+
+Embeddings:
+
+| Use | Model | Dims | Price |
+|---|---|---|---|
+| Text chunks | `text-embedding-v4` | 1024 | $0.07 / 1M tokens |
+| Figure-bearing chunks | `tongyi-embedding-vision-plus` | 1152 | $0.09 / 1M text + per-image |
+| Rerank top-20 | `qwen3-rerank` | n/a | $0.10 / 1M tokens |
+
+Indexing in [OpenSearch Vector Search Edition](https://www.alibabacloud.com/help/en/open-search/vector-search-edition/product-overview) HA dual-zone:
+
+- HNSW on `chunk_text_vec` (1024 dim) and `chunk_mm_vec` (1152 dim)
+- BM25 inverted index on raw text
+- Metadata: `source`, `document_id`, `revision`, `document_type`, `publication_date`, `review_date`, `specialty`, `evidence_grade`, `page`, `section_heading`, `has_table`, `has_figure`, `tenant_id`
+
+### 4.5 Refresh schedule
+
+| Source | Cadence | Trigger |
+|---|---|---|
+| WHO ICD-11 API | Daily 02:00 SGT | CloudOps Scheduler cron |
+| WHO guideline PDFs | Monthly day 1 02:30 SGT + RSS | Cron + API Gateway webhook |
+| Internal trials, protocols | Weekly Sun 03:00 SGT + Graph subscription | Cron + API Gateway |
+| Manual upload | Any time | Upload Portal over IPsec VPN |
+| Full reconciliation | Monthly day 1 04:00 SGT | Cron |
+
+Retry policy: 3 attempts with exponential backoff. Persistent failures page on-call.
+
+### 4.6 Governance and lineage
+
+Every chunk carries: `chunk_id`, `document_id`, `revision`, `source`, `publication_date`, `review_date`, `evidence_grade`, `specialty`, `tenant_id`, `ingest_ts`, `ingest_run_id`.
+
+Lineage queries supported:
+
+- Citation traceability: `document_id`, `page`, `revision`
+- Historical interactions on a given chunk: query ActionTrail by `chunk_id`
+- Cross-tenant isolation: `tenant_id` on every chunk; retrieval filter enforces it
+
+Right to delete: removing a source document cascades to OpenSearch, the graph, and Tair.
+
+Retention: raw documents 6 years by default. RAG index entries tied to document lifecycle.
 
 ---
 
@@ -464,74 +415,66 @@ Both are used for different purposes: RAG for factual grounding, fine-tuning for
 
 **Never train on PHI.** Training data is de-identified via DataWorks SDDP before any fine-tuning pipeline can read it.
 
-### 5.2 Vector database design and retrieval strategy
+### 5.2 Vector and graph stores
 
 ![RAG architecture: ingest + query paths](../architecture/diagrams/v_c_rag_architecture.svg)
 
-**Vector store**: [OpenSearch Vector Search Edition](https://www.alibabacloud.com/help/en/open-search/vector-search-edition/product-overview) HA Edition, dual-zone in Singapore.
-- Algorithm: HNSW (M=16, efConstruction=200, efSearch=80)
-- Dim cap on HNSW: 4–16,384 (both 1024 and 1152 fit)
-- Dual-zone deployment for cross-zone DR
+| Store | Service | Parameters |
+|---|---|---|
+| Vector | OpenSearch Vector Search HA, dual-zone | HNSW (M=16, efConstruction=200, efSearch=80); 1024-dim text + 1152-dim multimodal |
+| Graph | AnalyticDB for PostgreSQL 7.0 (≥7.2.1.4) with `adbpg_graphrag` | 4-core 32 GB vector-optimized, 3 zones in SG |
 
-**Graph store**: [AnalyticDB for PostgreSQL](https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql) 7.0, minor version ≥ 7.2.1.4, with `adbpg_graphrag` extension. 4-core 32 GB vector-optimized instance minimum (3 zones in SG).
-
-**Retrieval plan by lane**:
+Retrieval by lane:
 
 ```
-Emergency lane (≤ 2 s SLA):
+Emergency lane:
   Tair semantic cache lookup
-    hit to return cached answer
-    miss to hybrid BM25 + kNN on OpenSearch (top 20, pre-filtered by review_date ≥ NOW-18m)
-         to qwen3-rerank to top 5
-         to LLM generation
+    hit: return cached answer
+    miss: hybrid BM25 + kNN on OpenSearch (top 20, review_date >= NOW-18m)
+          qwen3-rerank to top 5
+          LLM generation
 
-Complex lane (≤ 6 s target):
-  Tair semantic cache lookup (rare hit; content is novel)
-  Model Studio Agent routes through the 4 tools:
-    - kb_retrieve      (hybrid BM25 + kNN, same as emergency)
-    - graph_retrieve   (adbpg_graphrag.query for multi-hop entity queries)
-    - icd11_lookup     (live WHO API)
-    - pubmed_search    (live NCBI E-utilities)
+Complex lane:
+  Tair cache lookup (low hit rate; content is novel)
+  Model Studio Agent invokes tools:
+    kb_retrieve      hybrid BM25 + kNN
+    graph_retrieve   adbpg_graphrag.query, multi-hop
+    icd11_lookup     live WHO API
+    pubmed_search    live NCBI E-utilities
   Agent synthesizes with full tool trace for citation
 ```
 
-Multi-hop graph retrieval complements vector retrieval on queries like "what diseases can drug X cause in patients with condition Y, and how would I adjust dosing".
+### 5.3 Hybrid search
 
-### 5.3 Hybrid search (semantic + keyword)
-
-One query, two signals. OpenSearch Vector Search Edition executes BM25 and HNSW in parallel and fuses scores via [Reciprocal Rank Fusion](https://dl.acm.org/doi/10.1145/1571941.1572114):
+OpenSearch fuses BM25 and HNSW via Reciprocal Rank Fusion:
 
 ```
-bm25_scores   = BM25 search on raw text (weight 0.4)
-vector_scores = HNSW search on chunk_text_vec (weight 0.6, cosine)
-fused_scores  = RRF(bm25_scores, vector_scores, k=60)
+bm25_scores   = BM25 (weight 0.4)
+vector_scores = HNSW on chunk_text_vec (weight 0.6, cosine)
+fused_scores  = RRF(k=60)
 top_k         = fused_scores.top(20)
 reranked      = qwen3-rerank(query, top_k).top(5)
 ```
 
-**Pre-filters applied before the ANN search**:
-- `review_date >= NOW - 18 months` (stale-guard; override per tenant)
-- `tenant_id = <current-tenant>` (multi-tenant isolation)
-- `specialty IN <router_output.secondary>` (when router gives a specialty hint)
+Pre-filters before ANN search: `review_date >= NOW - 18 months`, `tenant_id = <current-tenant>`, `specialty IN <router_output.secondary>`.
 
-**Query expansion**: if the detector classifier finds a disease mention, `icd11_expand_query(term)` returns synonyms + ICD-11 code; these are added to the BM25 query to boost recall on clinical vocabulary that doesn't appear verbatim in the source corpus.
+Query expansion: on a detected disease mention, `icd11_expand_query(term)` injects synonyms and ICD-11 codes into the BM25 query.
 
-### 5.4 Citation and source traceability
+### 5.4 Citation traceability
 
-Every answer must include inline `[n]` citations that map to retrieved chunks. A **citation validator** runs between the LLM output and the client:
+Every answer includes inline `[n]` citations that map to retrieved chunks. A citation validator runs before the client response:
 
 ```python
-def validate_citations(answer: str, retrieved_chunks: list[Chunk]) -> bool:
-    cited_ids = extract_citation_ids(answer)
-    for cid in cited_ids:
+def validate_citations(answer, retrieved_chunks):
+    for cid in extract_citation_ids(answer):
         if cid not in [c.chunk_id for c in retrieved_chunks]:
             return False  # hallucinated citation
     return True
 ```
 
-**Fail action**: block the response, log the attempt, return a templated "I cannot answer this from the current context" message. Response content contains a hallucinated citation in < 1% of cases in internal testing but is caught before the clinician sees it.
+Fail action: block the response, log the attempt, return "I cannot answer this from the current context".
 
-**Citation payload in the UI**:
+Citation payload in the UI:
 
 ```json
 {
@@ -543,22 +486,17 @@ def validate_citations(answer: str, retrieved_chunks: list[Chunk]) -> bool:
 }
 ```
 
-The UI renders citations as clickable links that open the source PDF at the right page (for WHO public docs) or a gated preview (for internal trials, requires the `curator:read` scope).
-
-### 5.5 Knowledge freshness and versioning
+### 5.5 Freshness and versioning
 
 | Timescale | Mechanism |
 |---|---|
-| Minutes | Tair semantic-cache invalidation on every successful upsert |
+| Minutes | Tair cache invalidation on every successful upsert |
 | Hours | Daily ICD-11 delta pull (02:00 SGT) |
-| Days | Weekly SharePoint reconciliation; RSS webhook catches living WHO updates |
-| Months | Monthly WHO guideline refresh; monthly full reconciliation; monthly DPO retrain on new clinician feedback |
-| Quarters | Quarterly full SFT+LoRA retrain on accumulated data |
+| Days | Weekly SharePoint reconciliation; RSS webhook for living WHO updates |
+| Months | Monthly WHO refresh, full reconciliation, DPO micro-run |
+| Quarters | Full SFT + LoRA retrain |
 
-**Versioning**:
-- Every chunk carries a `revision` hash. The same chunk with a newer revision replaces the old one in-place, but the audit log preserves which `revision` was used on any given interaction.
-- Model versions are pinned (`qwen-plus-2025-02`, `qwen-flash-2025-02`). A model-version bump flushes the entire semantic cache (cached answers are model-specific) and runs the full eval harness before serving production traffic.
-- Prompt templates are version-controlled in Git (`prompts/emergency_v3.md`, `prompts/router_v2.md`) and referenced by hash in the audit log.
+Chunk revisions are hashed; new `revision` replaces old in place while audit log preserves which version was used. Model and prompt versions are pinned; a version bump flushes the semantic cache and triggers the eval harness.
 
 ---
 
