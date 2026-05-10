@@ -14,7 +14,7 @@ Remote: https://github.com/toannd021104/Nova-Health-Tech.git
 - **Two POCs scaffolded** in `poc/`:
   - `poc/aws_claude/` — Version A, non-fine-tuned, base Claude + Amazon-only AI stack + Redis, ~$165 for 10-day / 100-question demo
   - `poc/aws_qwen/` — Version B, includes SFT training on Qwen3-4B, ~$197 for the same demo (Scenario A)
-- **40-department Vietnamese-hospital topology** mapped to routing labels in `docs/architecture/technology_options.md` §3b
+- **40-department Vietnamese-hospital topology** mapped to routing labels in `docs/rag_and_pipelines.md` §Multi-agent topology
 - **36 real PDFs** downloaded into `data/clinical-trials/departments/` via `scripts/download_department_refs.py` (PubMed Central open access); gitignored but easy to re-fetch
 
 ## User's hard constraints (do not violate)
@@ -33,7 +33,7 @@ Remote: https://github.com/toannd021104/Nova-Health-Tech.git
 | **One product, no staged rollout** | No "phase 1 / 2 / 3" language anywhere. Launch = all features active; what comes after is "continuous operations" (monthly DPO, quarterly SFT) |
 | **Don't use subprocess + PowerShell for AWS CLI** | Use boto3 directly. PowerShell treats AWS CLI stderr as errors. |
 | **No fake data** in `/data/` — use `/reference/` for the user's local copyrighted reference docs (gitignored) |
-| **Multi-agent topology mirrors a Vietnamese tertiary hospital** — the UI does NOT expose the 40-department list. Router classifies the prompt. Full Vietnamese → English mapping is in `docs/architecture/technology_options.md` §3b. |
+| **Multi-agent topology mirrors a Vietnamese tertiary hospital** — the UI does NOT expose the 40-department list. Router classifies the prompt. Full Vietnamese → English mapping is in `docs/rag_and_pipelines.md` §Multi-agent topology. |
 
 ## Credentials the user shared during the conversation
 
@@ -55,36 +55,17 @@ If the new session needs any of these secrets, ask the user to paste them into t
 
 ## Open work items for the new session
 
-### 1. Technical proposal documents (user's main ask for the new session)
+### 1. Technical proposal documents — DONE
 
-The user wants three separate proposal documents, one per version:
+The three per-version proposal documents are now the committed source of truth:
 
-| Doc | Outline |
+| Doc | Covers |
 |---|---|
-| `docs/proposals/AWS_Claude_proposal.md` | Version A — AWS + Claude. Pull from `docs/architecture/AWS_architecture.md` + `docs/pricing/cost_analysis.md` §6 Version A tables + `docs/architecture/fine_tuning_and_distillation.md` Version A section. |
-| `docs/proposals/AWS_Qwen_proposal.md` | Version B — AWS + Qwen. Pull from `docs/architecture/AWS_Qwen_architecture.md` + cost_analysis §6 Version B + fine_tuning_and_distillation Version B. |
-| `docs/proposals/Alibaba_Qwen_proposal.md` | Version C — Alibaba + Qwen. Pull from `docs/architecture/Alibaba_architecture.md` + cost_analysis §6 Version C. |
+| `docs/proposals/version_a_aws_claude.md` | Version A — AWS + Claude. Both A1+ (Nova Micro + Nova Pro) and A2 (Haiku 4.5 + Sonnet 4.5) sub-variants. |
+| `docs/proposals/version_b_aws_qwen.md` | Version B — AWS + Qwen (Bedrock Sydney). Base + path B-1 (Bedrock RFT on Qwen3-32B) + optional path B-2 (SageMaker GRPO). |
+| `docs/proposals/version_c_alibaba_qwen.md` | Version C — Alibaba + Qwen (SG). Recommended default. |
 
-Each proposal should cover the five brief bullets plus multi-agent topology:
-- Data pipeline structure
-- Model orchestration (including the 40-department multi-agent)
-- Security architecture (incl. 6-year audit)
-- Deployment approach (incl. hybrid VPN, EHR SMART on FHIR, SharePoint Graph)
-- Performance optimization (3-layer caching, streaming, reserved throughput)
-- Cost (monthly + per-call)
-- Compliance (PDPA / HIPAA / HCSA when relevant)
-
-**Suggested structure for each proposal:**
-1. Executive summary (1 page)
-2. Technical architecture with component diagram
-3. Data pipeline (ingestion + RAG + GraphRAG)
-4. Model orchestration (router + 40 specialists + emergency bypass)
-5. Fine-tuning / distillation path
-6. Security + compliance
-7. Cost + ROI
-8. Deployment plan
-9. Roadmap (what "continuous operations" looks like)
-10. References
+Each covers: executive summary, region + residency, component diagram, data pipeline, model orchestration (40-department multi-agent), fine-tuning, security, cost, performance budget, continuous ops, flagged limitations, pre-launch build, when-to-pick.
 
 ### 2. Finish the POC deploys (parallel with the proposals)
 
@@ -101,13 +82,9 @@ Currently `poc/aws_qwen/deploy.py` and `poc/aws_claude/deploy.py` are `--stage b
 
 Both POCs ingest the same `data/clinical-trials/departments/` corpus but each has its own FAISS indexes (embedded with Titan v2, so the vectors are interchangeable — you could share a bucket, but separate keeps the demo tidy).
 
-### 3. Known inconsistencies to double-check after the proposals
+### 3. Consolidation complete
 
-- Cost tables in `docs/pricing/cost_analysis.md` still reflect Cohere reranker on Versions A and B. Swap to Amazon Rerank 1.0 (cross-region Tokyo) and adjust the line items. Rerank is $0.001 / query on standard tier, so the change is small but needs to be reflected for the proposals.
-- `docs/architecture/AWS_architecture.md` still says "Cohere Embed v4" and "Cohere Rerank 3.5" in §4 and §5.2 — update to Titan Embed v2 + Amazon Rerank 1.0.
-- `docs/architecture/AWS_Qwen_architecture.md` same thing.
-- `docs/architecture/rag_strategy.md` still mentions Cohere rerank for the AWS track — align.
-- `docs/architecture/workflow_detailed.md` §Step 4 mentions Cohere Rerank — update.
+All 17 original architecture + compliance + pricing docs have been consolidated into the 8 new files listed above. Deletion done. Inline citations adopted per user's request — reference links appear near the specific claim they support, not bundled at end-of-section.
 
 ### 4. A pre-launch build plan document
 
@@ -120,29 +97,24 @@ User said "phase 1 / 2 / 3" shouldn't appear in the production docs, but the **p
 
 ## Key files the new session must read
 
-Sorted by importance:
+Docs consolidated from 17 files into 8. Sorted by importance:
 
 1. `README.md` — project overview, read order, decision matrix
-2. `docs/architecture/technology_options.md` — per-domain options + **full 40-department topology**
-3. `docs/architecture/AWS_architecture.md` — Version A (Claude)
-4. `docs/architecture/AWS_Qwen_architecture.md` — Version B (AWS Qwen)
-5. `docs/architecture/Alibaba_architecture.md` — Version C
-6. `docs/architecture/rag_strategy.md` — managed GraphRAG, hybrid retrieval, multimodal embedding choice per cloud
-7. `docs/architecture/fine_tuning_and_distillation.md` — per-version student model plan
-8. `docs/architecture/model_customization_research.md` — what's actually fine-tunable on each cloud
-9. `docs/architecture/caching_strategy.md` — 3 layers (semantic Redis, prompt/prefix, reserved)
-10. `docs/architecture/framework_choice.md` — Bedrock Agents / Model Studio Application vs LangGraph
-11. `docs/architecture/ingestion_and_identity.md` — scheduled ingestion, upload portal, VPN, IdP
-12. `docs/architecture/corporate_integration.md` — EHR SMART on FHIR + SharePoint Graph
-13. `docs/architecture/regional_availability.md` — what's available in Singapore
-14. `docs/compliance/security_compliance.md` — PDPA / HIPAA / HCSA / 6-year retention
-15. `docs/pricing/cost_analysis.md` — monthly + per-call math
-16. `docs/architecture/workflow_detailed.md` — numbered runtime + ingestion flow
-17. `docs/architecture/diagrams/aws_workflow.svg` — architecture SVG
-18. `poc/README.md` — POC overview with both variants
-19. `poc/aws_claude/README.md` — Version A POC, ~$165
-20. `poc/aws_qwen/README.md` — Version B POC, ~$197–$804
-21. `data/clinical-trials/departments/README.md` — 36 PDFs, Vietnamese → English mapping
+2. `docs/overview.md` — 3-version big picture + decision tree + common design
+3. `docs/proposals/version_c_alibaba_qwen.md` — **Version C (recommended default, SG-native, zero cross-region)**
+4. `docs/proposals/version_a_aws_claude.md` — Version A (AWS + Claude/Nova, SG-native chat)
+5. `docs/proposals/version_b_aws_qwen.md` — Version B (AWS + Qwen, Bedrock Sydney)
+6. `docs/rag_and_pipelines.md` — shared RAG + ingestion + 40-department multi-agent + framework + caching + EHR
+7. `docs/customization.md` — SFT / DPO / GRPO / distillation per version
+8. `docs/regional_services.md` — live-verified AWS + Alibaba service availability matrix
+9. `docs/compliance.md` — PDPA / HIPAA / HCSA / FDA / EU AI Act / 6-year retention
+10. `docs/architecture/diagrams/aws_workflow.svg` — architecture SVG
+11. `poc/README.md` — POC overview with both variants
+12. `poc/aws_claude/README.md` — Version A POC, ~$165
+13. `poc/aws_qwen/README.md` — Version B POC, ~$197–$804
+14. `data/clinical-trials/departments/README.md` — 36 PDFs, Vietnamese → English mapping
+
+Reference-link style across new docs: **inline citations near the specific claim**, not bundled at end-of-section. End-of-doc references kept short (authoritative sources only).
 
 ## How to continue in a fresh Kiro session
 
@@ -151,7 +123,7 @@ Paste this at the top of the new session:
 
 I'm continuing work on toannd021104/Nova-Health-Tech, branch
 proposal/genai-architecture. Read SESSION_HANDOFF.md first, then
-README.md, then docs/architecture/technology_options.md §3b.
+README.md, then docs/overview.md.
 
 Current task: draft the three technical proposal documents
 (docs/proposals/AWS_Claude_proposal.md,

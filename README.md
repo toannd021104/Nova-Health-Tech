@@ -1,63 +1,46 @@
 # Nova Health Tech — Clinical GenAI Assistant
 
-Production proposal for Nova Health Tech's clinical decision-support GenAI assistant, with a build-ready AWS plan and a parallel Alibaba Cloud (Qwen) plan. **Primary region: Singapore on both clouds.**
+Production proposal for Nova Health Tech's clinical decision-support GenAI assistant. Three architecture versions, all **primary region Singapore**: Version A (AWS + Claude), Version B (AWS + Qwen), Version C (Alibaba + Qwen).
 
 ## Scope
 
-- **AI service — production.** Real hundreds-of-documents RAG (WHO guidelines + internal clinical trial reports + treatment protocols + WHO ICD-11 API), managed parsing for complex PDFs (horizontal/vertical tables, text-based flowcharts, figures), fine-tuned small-model student distilled from a large-model teacher for the 2-second emergency SLA, scheduled ingestion + internal upload portal over Site-to-Site VPN, hospital-IdP federation, full compliance posture (Singapore PDPA + HCSA; HIPAA when US clients are onboarded).
-- **Web UI — demo.** A lightweight publicly-accessible web page with a right-hand AI assistant panel, good for stakeholder verification. See `aws-demo/`.
+- **AI service — production.** Hundreds-of-documents RAG (WHO guidelines + internal clinical trial reports + treatment protocols + WHO ICD-11 API), managed parsing for complex PDFs (horizontal/vertical tables, text-based flowcharts, figures), fine-tuned small-model student distilled from a large-model teacher for the 2-second emergency SLA, scheduled ingestion + internal upload portal over Site-to-Site VPN, hospital-IdP federation, full compliance posture (Singapore PDPA + HCSA; HIPAA when US clients are onboarded).
+- **Web UI — demo.** A lightweight publicly-accessible web page with a right-hand AI assistant panel for stakeholder verification. See `aws-demo/`.
 
 ## Map
 
 ```
 .
-├── README.md                                           ← this file
-├── askAli_AI_Assistant.txt                             ← vendor research (kept for reviewers)
+├── README.md                                          ← this file
+├── SESSION_HANDOFF.md                                 ← context for continuing in a new Kiro session
+├── askAli_AI_Assistant.txt                            ← vendor research (kept for reviewers)
 │
-├── poc/                                                ← 10-day interview POC (AWS + Qwen, Version B)
-│   ├── README.md                                        ← scope + ~$197 cost math for 100 questions (multi-agent + SFT + RAG + GraphRAG + Redis)
-│   ├── app/                                             ← FastAPI + LangGraph + FAISS + Redis cache
-│   │   ├── agents/__init__.py                           ← 12 demo departments (Vietnamese→English) bound to Qwen models
-│   │   ├── router.py                                    ← Qwen3 32B department classifier
-│   │   ├── graph.py                                     ← PHI → cache → lane → router → retrieve+rerank+graph → generate → cache-write
-│   │   ├── rag.py                                       ← Titan Embed v2 + FAISS + Amazon Rerank 1.0
-│   │   ├── graphrag.py                                  ← Bedrock KB GraphRAG on Neptune Analytics
-│   │   ├── cache.py                                     ← ElastiCache Redis OSS Layer-1 semantic cache
-│   │   ├── server.py                                    ← FastAPI (Mangum wrapper for Lambda)
-│   │   └── static/                                      ← light-theme chat UI with emergency toggle
-│   ├── deploy.py                                        ← build-only → FAISS + Lambda zip
-│   ├── teardown.py
-│   └── requirements.txt
+├── docs/                                              ← proposal docs (consolidated to 8)
+│   ├── overview.md                                     ← 3-version big picture + decision tree
+│   ├── rag_and_pipelines.md                            ← shared RAG + ingestion + multi-agent + framework + caching + EHR
+│   ├── customization.md                                ← SFT / DPO / GRPO / distillation per version
+│   ├── regional_services.md                            ← live-verified AWS + Alibaba service availability matrix
+│   ├── compliance.md                                   ← PDPA / HIPAA / HCSA / FDA / EU AI Act / audit 6-yr
+│   ├── proposals/
+│   │   ├── version_a_aws_claude.md                     ← Version A — AWS + Claude (SG)
+│   │   ├── version_b_aws_qwen.md                       ← Version B — AWS + Qwen (Bedrock Sydney)
+│   │   └── version_c_alibaba_qwen.md                   ← Version C — Alibaba + Qwen (SG) [recommended default]
+│   └── architecture/
+│       └── diagrams/
+│           └── aws_workflow.svg                        ← numbered workflow diagram
 │
-├── data/                                               ← REAL source data for RAG ingestion
+├── poc/                                               ← 10-day interview POC
+│   ├── README.md                                       ← scope + cost math for 100 questions
+│   ├── aws_claude/                                     ← Version A POC (~$165, no fine-tuning)
+│   └── aws_qwen/                                       ← Version B POC (~$197, includes SFT on Qwen3-4B)
+│
+├── data/                                              ← REAL source data for RAG
 │   ├── README.md
-│   ├── who/                                            ← 8 WHO guideline PDFs (100+ pages, text + tables + figures)
-│   ├── icd11/                                          ← LIVE WHO ICD-11 data (via the API)
-│   │   ├── mms_root.json
-│   │   ├── entities/*.json                             ← 316 real entities (chapter-level walk)
-│   │   └── search_*.json                               ← sepsis / stroke / MI
-│   └── clinical-trials/protocols/                      ← drop internal trial PDFs here
-│   └── clinical-trials/departments/                    ← 36 open-access PMC papers mapped to 12 demo departments (radiology has figure-heavy PDFs)
-│
-├── docs/
-│   ├── architecture/
-│   │   ├── AWS_architecture.md                         ← production AWS design (Singapore, no Opus, no Outposts)
-│   │   ├── Alibaba_architecture.md                     ← parallel Qwen design (Singapore)
-│   │   ├── technology_options.md                       ← per-domain options (Data / Retrieval / Orchestration / Training / Integration / Perf / Observability), multi-agent + Agentic RAG + GraphRAG
-│   │   ├── workflow_detailed.md                        ← step-by-step runtime + ingestion walkthrough
-│   │   ├── rag_strategy.md                             ← 3 RAG strategies for complex PDFs; one chosen
-│   │   ├── fine_tuning_and_distillation.md             ← teacher→student distillation + tone via hyperparams
-│   │   ├── caching_strategy.md                         ← 3-layer cache (semantic / prompt-context / reserved)
-│   │   ├── framework_choice.md                         ← Bedrock Agents + Model Studio Application (chosen) vs LangGraph/LlamaIndex
-│   │   ├── regional_availability.md                    ← which models actually work in Singapore (verified 10 May 2026)
-│   │   ├── corporate_integration.md                    ← EHR (SMART on FHIR) + SharePoint (Graph webhooks) + upload portal
-│   │   ├── ingestion_and_identity.md                   ← scheduled ingestion, upload portal, Site-to-Site VPN, IdP federation
-│   │   └── diagrams/
-│   │       └── aws_workflow.svg                        ← the numbered workflow diagram
-│   ├── compliance/
-│   │   └── security_compliance.md                      ← PDPA / HCSA / HIPAA(6-yr) / FDA / ISO / EU AI Act
-│   └── pricing/
-│       └── cost_analysis.md                            ← cost sheet with caching + batch + distillation
+│   ├── who/                                            ← 8 WHO guideline PDFs
+│   ├── icd11/                                          ← 316 live entity JSONs via WHO ICD-11 API
+│   └── clinical-trials/
+│       ├── protocols/                                  ← drop internal trial PDFs here
+│       └── departments/                                ← 36 open-access PMC papers for 12 demo departments
 │
 ├── scripts/
 │   ├── download_who_icd.py                             ← live WHO ICD-11 API (OAuth2)
@@ -65,12 +48,12 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 │   ├── download_department_refs.py                     ← PMC open-access PDFs per department
 │   └── ingest_to_bedrock_kb.py                         ← push /data to S3 + trigger KB sync
 │
-└── aws-demo/                                           ← simple public web UI + Lambda → Bedrock (verification demo)
+└── aws-demo/                                          ← simple public web UI + Lambda → Bedrock
     ├── frontend/
     ├── backend/
     ├── template.yaml
     ├── README.md
-    └── ec2/                                            ← DEPLOYED demo on t4g.small in Singapore (LangGraph + FAISS)
+    └── ec2/                                            ← DEPLOYED demo on t4g.small SG (LangGraph + FAISS)
         ├── deploy.py
         ├── setup_instance.py
         ├── user_data.sh
@@ -85,46 +68,51 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 
 ## Read order
 
-1. `docs/architecture/AWS_architecture.md` — the build target (Singapore, Haiku-first, Site-to-Site VPN).
-2. `docs/architecture/technology_options.md` — per-domain options menu: data pipeline, retrieval (incl. Agentic RAG + KG-RAG), orchestration (incl. multi-agent specialist), training, integration, performance, observability.
-3. `docs/architecture/workflow_detailed.md` — the numbered end-to-end flow (matches the SVG).
-4. `docs/architecture/diagrams/aws_workflow.svg` — one-page visual architecture.
-5. `docs/architecture/corporate_integration.md` — EHR / SMART on FHIR, SharePoint / Microsoft Graph, upload portal.
-6. `docs/architecture/ingestion_and_identity.md` — scheduled ingestion, hospital IdP federation, VPN details.
-7. `docs/architecture/rag_strategy.md` — handling the WHO PDFs and the ICD-11 API.
-8. `docs/architecture/fine_tuning_and_distillation.md` — 2-second SLA without losing accuracy.
-9. `docs/architecture/caching_strategy.md` — three cache layers.
-10. `docs/architecture/framework_choice.md` — why Bedrock Agents + Model Studio Application are primary.
-11. `docs/architecture/Alibaba_architecture.md` — parallel Qwen plan.
-12. `docs/compliance/security_compliance.md` — regulation coverage, 6-year retention.
-13. `docs/pricing/cost_analysis.md` — cost sheet with caching / batch / distillation applied.
+1. [`docs/overview.md`](docs/overview.md) — 3-version big picture + decision tree + common design
+2. [`docs/proposals/version_c_alibaba_qwen.md`](docs/proposals/version_c_alibaba_qwen.md) — recommended default (SG-native, cheapest, zero cross-region)
+3. [`docs/proposals/version_a_aws_claude.md`](docs/proposals/version_a_aws_claude.md) — AWS + Claude/Nova
+4. [`docs/proposals/version_b_aws_qwen.md`](docs/proposals/version_b_aws_qwen.md) — AWS + Qwen (Sydney)
+5. [`docs/rag_and_pipelines.md`](docs/rag_and_pipelines.md) — shared RAG, ingestion, multi-agent, framework, caching, EHR integration
+6. [`docs/customization.md`](docs/customization.md) — SFT / DPO / GRPO / distillation per version
+7. [`docs/regional_services.md`](docs/regional_services.md) — live-verified service availability matrix
+8. [`docs/compliance.md`](docs/compliance.md) — PDPA / HIPAA / HCSA / FDA / EU AI Act / audit retention
 
 ## Key production decisions (summary)
 
-| Decision | AWS choice | Alibaba choice |
+| Decision | AWS (Versions A + B) | Alibaba (Version C) |
 |---|---|---|
-| **Region** | `ap-southeast-1` (Singapore) — HIPAA-eligible, PDPA-native | Singapore Model Studio + PAI + OpenSearch Vector |
-| **Cross-border transfer** | None by default; stays in Singapore | None by default; stays in Singapore |
-| **Hospital integration** | Site-to-Site VPN (IPsec IKEv2). No Outposts, no Direct Connect | Site-to-Site VPN on VPN Gateway. No Apsara Stack unless requested |
-| **AI framework** | Bedrock Agents + Knowledge Bases (primary); LangChain only for semantic cache + memory | Model Studio **Agent application** for chat, **Workflow application** for emergency lane; LangChain only for cache + memory |
-| **Fast-lane model (emergency, ≤ 2 s)** | Claude Haiku 4.5 (custom fine-tuned Nova Lite student active from launch) — or Nova Micro for the cheapest SG-native variant | Qwen3.5-Flash (custom fine-tuned Qwen3-8B student on PAI-EAS active from launch) |
-| **Complex-lane / teacher model** | Claude Sonnet 4.5 — or Nova Pro for the Nova-only variant | Qwen3.5-Plus (Feb 2026 release; replaces Qwen-Max) |
-| **Claude Opus** | Not used (overkill, price hard to justify) | N/A |
-| **Text embeddings** | Cohere Embed v4 on Bedrock (running demo) | text-embedding-v4 ($0.07/1M) |
-| **Multimodal embeddings (figures)** | Amazon Nova Multimodal Embeddings | tongyi-embedding-vision-plus (SG International, 1152-dim). `qwen3-vl-embedding` with `enable_fusion=True` is Chinese Mainland only. |
-| **Reranker (Alibaba)** | Cohere Rerank 3.5 on Bedrock | qwen3-rerank ($0.10/1M, 500-doc cap) |
-| **Vector store** | OpenSearch Serverless (hybrid kNN + BM25) | OpenSearch Vector Search Edition |
-| **Knowledge-Graph RAG (global / multi-hop queries)** | Bedrock Knowledge Bases GraphRAG on Neptune Analytics (managed) | AnalyticDB for PostgreSQL GraphRAG service (managed) |
-| **PDF parsing** | Bedrock Data Automation (advanced parsing) | DocMind + Qwen-VL-Max for complex pages |
-| **Semantic cache (Layer 1)** | ElastiCache Valkey + RediSearch, LangChain `RedisSemanticCache` | Tair + TairVector, same LangChain pattern |
-| **Prompt/prefix cache (Layer 2)** | Bedrock Prompt Caching for Claude 4.x / Nova (Version A). Not available for Qwen3 on Bedrock → Version B uses vLLM APC / SGLang RadixAttention on self-hosted path, no Layer 2 on Bedrock default. | Qwen Context Cache (implicit from day 1 + explicit) |
-| **Reserved capacity (Layer 3, peak only)** | Bedrock Reserved Tier | Qwen PTU |
-| **Batch (offline teacher + eval)** | Bedrock Batch (50% off) | Model Studio Batch (50% off) |
-| **Tone consistency** | Distillation + `temperature=0.1, top_p=0.7, top_k=40`, fixed system prompt | Same + `seed=42` (Qwen supports seed) |
-| **Identity — clinicians** | Cognito federated (SAML/OIDC) to each hospital's IdP (EntraID / Okta / ADFS) | Alibaba IDaaS federated to hospital IdP |
+| **Region** | `ap-southeast-1` (Singapore); Qwen falls back to Sydney `ap-southeast-2` | Singapore International (SG-native) |
+| **Cross-region hops at query time** | 2 (Tokyo embed+rerank) for A · 2–3 (Sydney chat + Tokyo) for B | **0** |
+| **Hospital integration** | AWS Site-to-Site VPN (IKEv2) — no Outposts / Direct Connect | Alibaba VPN Gateway IPsec — no Apsara Stack |
+| **AI framework** | Bedrock Agents + Knowledge Bases | Model Studio Agent + Workflow Applications |
+| **Fast-lane model** | Claude Haiku 4.5 or Amazon Nova Micro (A) · Qwen3 Next 80B A3B MoE (B) | Qwen3.5-Flash |
+| **Complex-lane model** | Claude Sonnet 4.5 or Amazon Nova Pro (A) · Qwen3 VL 235B A22B (B) | Qwen3.5-Plus |
+| **Claude Opus** | Not used | N/A |
+| **Text embeddings** | Amazon Titan Embed Text v2 (Tokyo) | text-embedding-v4 |
+| **Multimodal embeddings (figures)** | Amazon Nova Multimodal Embeddings (us-east-1) | tongyi-embedding-vision-plus (SG Intl) |
+| **Reranker** | Amazon Rerank 1.0 (Tokyo) | qwen3-rerank |
+| **Vector store** | OpenSearch Serverless | OpenSearch Vector Search Edition |
+| **Managed GraphRAG** | Bedrock KB GraphRAG on Neptune Analytics | AnalyticDB PG GraphRAG service |
+| **PDF parsing** | Bedrock Data Automation (Sydney) | DocMind + Qwen-VL-Max |
+| **Cache Layer 1 (semantic)** | ElastiCache Redis OSS + RediSearch (LangChain RedisSemanticCache) | Tair (Redis-compatible, NOT Valkey) + TairVector |
+| **Cache Layer 2 (prefix)** | Bedrock Prompt Caching (Claude + Nova; NOT Qwen3) | Qwen Context Cache (implicit + explicit) |
+| **Customization** | Bedrock Model Distillation (Sonnet → Nova Lite, A) · Bedrock RFT on Qwen3-32B (B) | PAI Model Gallery Qwen3-8B SFT + LoRA + GRPO |
+| **Tone consistency** | Fixed system prompt + `temperature=0.1` | Same + `seed=42` |
+| **Identity — clinicians** | Cognito federated to hospital IdP (SAML/OIDC) | IDaaS EIAM 2.0 federated to hospital IdP |
 | **Identity — Nova staff** | IAM Identity Center ↔ Nova EntraID | Cloud SSO + RAM ↔ Nova EntraID |
-| **Audit log retention** | CloudTrail → S3 Object Lock, **6 years** (HIPAA §164.530(j)) | ActionTrail → SLS → OSS WORM, **6 years** |
-| **WHO ICD-11 API** | Monthly ingest + runtime tool call + query expansion | Same pattern |
+| **Audit log retention** | CloudTrail → S3 Object Lock **6 years** (HIPAA §164.530(j)) | ActionTrail → SLS → OSS WORM **6 years** |
+| **WHO ICD-11 API** | Monthly ingest + runtime tool + query expansion | Same pattern |
+| **Emergency routing** | Pure if/else on explicit UI toggle — no classifier LLM call | Same |
+| **Launch scope** | One product, all features on day one; no phases | Same |
+
+## Verdict (ranked by total monthly cost, SG residency)
+
+| Rank | Version | ~$/mo | SG-native for query path |
+|---|---|---|---|
+| 1 | Version C (Alibaba) | ~$2,220 | ✅ zero cross-region hops |
+| 2 | Version A1+ (Nova Micro + Nova Pro) | ~$2,955 | ✅ chat; Tokyo embed+rerank |
+| 3 | Version B (Qwen Sydney) | ~$2,967 | ⚠️ Sydney chat |
+| 4 | Version A2 (Haiku 4.5 + Sonnet 4.5) | ~$7,295 | ✅ chat; Tokyo embed+rerank |
 
 ## Running the pieces
 

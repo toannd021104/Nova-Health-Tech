@@ -1,6 +1,6 @@
 # Department reference corpus
 
-Open-access PubMed Central PDFs (fetched via `scripts/download_department_refs.py`) mapped to the 12-department demo subset used in the POC. The production build scales to the full 40-department Vietnamese-hospital topology documented in `docs/architecture/technology_options.md` §3b.
+Open-access PubMed Central PDFs (fetched via `scripts/download_department_refs.py`) mapped to the 12-department demo subset used in the POC. The production build scales to the full 40-department Vietnamese-hospital topology documented in `docs/rag_and_pipelines.md` §Multi-agent topology.
 
 Each PDF is a real English review / guideline article. We use PMC IDs as filenames so the provenance stays traceable in the RAG citations.
 
@@ -40,7 +40,7 @@ departments/
 | Khoa Sơ sinh (merged here) | `pediatrics` | Pediatrics + Neonatology |
 | Khoa Chẩn đoán hình ảnh | `radiology` | Diagnostic Radiology (vision agent) |
 
-The full 40-department mapping is in `docs/architecture/technology_options.md` §3b.
+The full 40-department mapping is in `docs/rag_and_pipelines.md` §Multi-agent topology.
 
 ## Source
 

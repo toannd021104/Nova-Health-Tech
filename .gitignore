@@ -55,3 +55,7 @@ reference/
 poc/build/
 poc/*.zip
 /tmp/poc-build-*/
+
+# Cloud access key exports (never commit secrets)
+AccessKey.csv
+*AccessKey*.csv

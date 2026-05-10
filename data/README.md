@@ -29,7 +29,7 @@ data/
 | `B09514-eng.pdf` | WHO Guidelines for malaria (Aug 2025) |
 | `B09540-eng.pdf` | Therapeutics and COVID-19 living guideline |
 
-These PDFs contain the mix (horizontal and vertical tables, text-based decision flowcharts, some figures) that drives the RAG strategy decision in `docs/architecture/rag_strategy.md`.
+These PDFs contain the mix (horizontal and vertical tables, text-based decision flowcharts, some figures) that drives the RAG strategy decision in `docs/rag_and_pipelines.md` §RAG strategy.
 
 ## ICD-11 data
 

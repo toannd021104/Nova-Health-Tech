@@ -145,13 +145,13 @@ That's **~$32 cheaper** than the Qwen POC Scenario A (~$197) because we skip the
 | Per-query LLM + rerank | $1.33 | $0.37 |
 | **TOTAL (10 days, 100 q)** | **~$165** | **~$197** |
 
-Claude POC is cheaper **only because it skips training**. Per-query Claude costs ~3.6× more than per-query Qwen (Claude Sonnet 4.5 vs Qwen3 VL 235B A22B). If the reviewer extrapolates to production volume (600 k queries/month), the Qwen POC is dramatically cheaper long-term — which is exactly the cost argument in `docs/pricing/cost_analysis.md`.
+Claude POC is cheaper **only because it skips training**. Per-query Claude costs ~3.6× more than per-query Qwen (Claude Sonnet 4.5 vs Qwen3 VL 235B A22B). If the reviewer extrapolates to production volume (600 k queries/month), the QwenThe Qwen POC is dramatically cheaper long-term — which is exactly the cost argument in `docs/proposals/version_b_aws_qwen.md` §9.
 
 ## 4. Why there's no SFT in this POC
 
 Two real reasons:
 
-1. **Claude 4.5 itself is not fine-tunable on Bedrock.** Only Claude 3 Haiku (2024-03-07) is, and using it would regress us to an older model family. See `docs/architecture/model_customization_research.md` §3.
+1. **Claude 4.5 itself is not fine-tunable on Bedrock.** Only Claude 3 Haiku (2024-03-07) is, and using it would regress us to an older model family. See `docs/customization.md` §3 AWS Bedrock — custom model fine-tuning.
 2. **The production Version A ships with a distilled Nova Lite student** (Sonnet → Nova Lite via Bedrock Model Distillation, $1.5–2.5k per run). The POC deliberately doesn't include it so the reviewer sees the "pure prompt-engineering + RAG + caching" baseline. The Qwen POC is where they see live fine-tuning.
 
 If the reviewer specifically asks for distillation here, adding it is a ~$670 line item (Bedrock Model Distillation Sonnet → Nova Lite), pushing the POC to ~$835 for the 10 days — still cheaper than the Qwen Scenario C at $804 only by accident.

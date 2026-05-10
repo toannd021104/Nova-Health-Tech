@@ -39,7 +39,7 @@ Each POC deploys to its own tag set (`Owner=nova-health-poc-claude` vs `Owner=no
 | Per-query inference (100 q) | $1.33 | $0.37 |
 | **Total** | **~$165** | **~$197** |
 
-Per-query cost is where the two diverge most: **Claude Sonnet 4.5 is ~3.6× more expensive per complex-lane call than Qwen3 VL 235B A22B**, but Bedrock Prompt Caching (enabled by default for Claude 4.x) brings it down to $1.33 for the 100-question demo. Extrapolated to production (600 k queries / month), Qwen is dramatically cheaper — see `docs/pricing/cost_analysis.md`.
+Per-query cost is where the two diverge most: **Claude Sonnet 4.5 is ~3.6× more expensive per complex-lane call than Qwen3 VL 235B A22B**, but Bedrock Prompt Caching (enabled by default for Claude 4.x) brings it down to $1.33 for the 100-question demo. ExtrapolScaled to production (600 k queries / month), Qwen is dramatically cheaper — see cost breakdowns in `docs/proposals/version_a_aws_claude.md` §8 and `docs/proposals/version_b_aws_qwen.md` §9.
 
 ## Folder layout
 

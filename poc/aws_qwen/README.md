@@ -48,7 +48,7 @@ Cross-region latency: SG→Sydney ~90 ms, SG→Tokyo ~70 ms. Both are comfortabl
 
 | Capability | POC implementation |
 |---|---|
-| Multi-agent topology | 12 department agents (Emergency, Cardiology-Internal, Pulmonology, Gastroenterology, Nephrology, Endocrinology, Neurology, Infectious Disease, Oncology, Obstetrics, Pediatrics, Radiology). Full Vietnamese → English mapping in `docs/architecture/technology_options.md` §3b. |
+| Multi-agent topology | 12 department agents (Emergency, Cardiology-Internal, Pulmonology, Gastroenterology, Nephrology, Endocrinology, Neurology, Infectious Disease, Oncology, Obstetrics, Pediatrics, Radiology). Full Vietnamese → English mapping in `docs/rag_and_pipelines.md` §Multi-agent topology. |
 | Router | **Qwen3 32B dense** on Bedrock Sydney — structured JSON output, temperature 0, ~150 ms |
 | Emergency lane | Pure if/else bypasses router → **Qwen3 Next 80B A3B** (MoE, 3B active, fastest Qwen on Bedrock) |
 | Complex-lane specialist | **Qwen3 VL 235B A22B** for all specialists (handles Radiology image attachments natively — no separate vision model needed) |
@@ -189,7 +189,7 @@ Data prep (pre-training):
 - **Teacher** = Qwen3 VL 235B A22B on Bedrock Sydney, generates target answers with Nova's system prompt applied.
 - Clinician review on 10 % sample — approved rows become SFT training data.
 
-Training config (matches `docs/architecture/fine_tuning_and_distillation.md` §4):
+Training config (matches `docs/customization.md` §6 Hyperparameters):
 - LoRA rank 16, alpha 32, dropout 0.05
 - `learning_rate 2e-4`, 3 epochs, warmup ratio 0.03, bf16
 - Batch size per device 4, gradient accumulation 4

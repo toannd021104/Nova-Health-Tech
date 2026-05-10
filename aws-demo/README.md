@@ -1,6 +1,6 @@
 # Nova Health Tech — AWS Demo Web UI (publicly accessible for verification)
 
-Lightweight clinician-facing web app with a right-hand AI assistant panel. Use this to sanity-check the AI service behind it. The UI is intentionally simple; the **production** design of the AI service itself is in `docs/architecture/AWS_architecture.md`.
+Lightweight clinician-facing web app with a right-hand AI assistant panel. Use this to sanity-check the AI service behind it. The UI is intentionally simple; the **production** design of the AI service itself is in `docs/proposals/version_a_aws_claude.md`.
 
 ## What it shows
 
@@ -17,7 +17,7 @@ The demo deploys without:
 - Bedrock Knowledge Base wiring for real RAG (answers come from Claude's training data, not from WHO + internal trials).
 - VPC isolation, WAF, CloudTrail → S3 Object Lock.
 
-Wire those up per `docs/architecture/AWS_architecture.md` before putting the UI in front of any clinician with real data.
+Wire those up per `docs/proposals/version_a_aws_claude.md` before putting the UI in front of any clinician with real data.
 
 ## Files
 
