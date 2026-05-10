@@ -59,7 +59,8 @@ Parallel production design using Qwen and Alibaba Cloud managed services in the 
  Layer 1 │    Layer 2   │  Generation                    │ Function Workflow        │
  Tair    │    Qwen      │  (Model Studio / PAI-EAS):     │  DocMind parse → chunk → │
  +Tair   │    Context   │    Qwen-Flash (fast lane)      │  embed → KB sync         │
- Vector  │    Cache     │    Qwen-Max (complex + teacher)│                          │
+ Vector  │    Cache     │    Qwen3.5-Plus (complex +     │                          │
+                              │              │     teacher, Feb 2026 release) │                          │
  semantic│              │    Qwen3-8B student (phase 3)  │ + Security Center scan   │
  cache   │              │  + Content Moderation          │ + SDDP PHI scan          │
          │              │                                └──────────┬───────────────┘
@@ -107,7 +108,7 @@ A small FC classifier (Qwen3.5-Flash, ~200 ms) picks the lane:
 | Question class | Model | Hyperparameters | Guardrail | Latency target |
 |---|---|---|---|---|
 | Emergency / acute | **Qwen3.5-Flash** (streaming) with optional Qwen3-8B distillation student behind a feature flag | `temperature=0.1, top_p=0.7, top_k=40, seed=42` | Strict PHI + emergency disclaimer | **≤ 2 s** |
-| Complex differential | **Qwen-Max (Qwen3-Max)** (streaming) | `temperature=0.2, top_p=0.9` | Standard | 3–6 s |
+| Complex differential | **Qwen3.5-Plus** (Feb 2026 release; replaced Qwen-Max here) (streaming) | `temperature=0.2, top_p=0.9` | Standard | 3–6 s |
 | Literature / citation | Qwen3.5-Flash, grounded-only mode | `temperature=0.1, top_p=0.7, top_k=40` | No-hallucination | 1.5–2 s |
 | Patient-education phrasing | Qwen3.5-Flash with tone preset | `temperature=0.2, top_p=0.9` | Standard + tone | 1–2 s |
 
@@ -152,8 +153,8 @@ All tools are read-only.
 
 | Phase | Weeks | Deliverable | Typical cost |
 |---|---|---|---|
-| 1 | 1–6 | Scheduled WHO + ICD-11 ingestion live, upload portal live, RAG with Qwen-Flash (fast) + Qwen-Max (complex) | Low hundreds of USD/mo |
-| 2 | 7–10 | Distill Qwen3-8B student from Qwen-Max outputs; LoRA on PAI Model Gallery | ~$30–100 per retrain |
+| 1 | 1–6 | Scheduled WHO + ICD-11 ingestion live, upload portal live, RAG with Qwen3.5-Flash (fast) + **Qwen3.5-Plus** (complex) | Low hundreds of USD/mo |
+| 2 | 7–10 | Distill Qwen3-8B student from Qwen3.5-Plus outputs; LoRA on PAI Model Gallery | ~$30–100 per retrain |
 | 3 | 11–14 | Student at 100% via PAI-EAS; enable Qwen Context Cache (implicit + explicit); PTU on emergency lane | Marginal; PTU only when sustained TPM high |
 | 4 | quarterly | Retrain with new WHO + clinician data | < $100 per retrain |
 

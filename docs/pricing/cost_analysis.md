@@ -12,18 +12,21 @@ Verified against AWS profile `gapv50k` using `aws bedrock list-foundation-models
 
 This changes the verdict: **Version A with Nova Micro on the fast lane is the cheapest SG-native option.** See `docs/architecture/regional_availability.md` for the full verification and §1 below for the re-ranked totals.
 
-## 1. Quick verdict (re-ranked for SG residency)
+## 1. Quick verdict (re-ranked for SG residency, updated for Qwen3.5-Plus)
 
 | | **Version A — AWS + Claude** (Singapore) | **Version B — AWS + Qwen** (Sydney Bedrock + SageMaker SG) | **Version C — Alibaba + Qwen** (Singapore) |
 |---|---|---|---|
-| **Fast-lane model options** | **Nova Micro (cheapest, SG)** OR Haiku 4.5 (quality, SG) | Qwen3-32B Sydney (no SG residency) OR fine-tuned Qwen3-4B on SageMaker SG endpoint | Qwen3.5-Flash OR fine-tuned Qwen3-8B |
+| **Fast-lane model options** | **Nova Micro (cheapest, SG)** OR Haiku 4.5 (quality, SG) | Qwen3-32B Sydney (no SG residency) OR fine-tuned Qwen3-4B on SageMaker SG endpoint | **Qwen3.5-Flash** OR fine-tuned Qwen3-8B |
+| **Complex-lane model options** | Sonnet 4.5 OR Nova Pro | Qwen3-235B Sydney | **Qwen3.5-Plus** (newer Feb-2026 release, replaces Qwen-Max) |
 | **Singapore data residency** | ✅ | ⚠️ only if SageMaker endpoint hosts the model; Bedrock Qwen is Sydney | ✅ |
-| **Monthly pilot total (500 physicians, base)** | **~$2,400 / mo (Nova Micro)** or ~$7,100 / mo (Haiku 4.5) | ~$2,300 / mo base (Sydney Bedrock) + ~$1,095 / mo if SG-hosted student required | **~$3,340 / mo** |
-| **Post-customization total** | ~$2,000 / mo (Nova Micro unchanged — customization may not be needed) | ~$2,000 / mo (after GRPO on SageMaker SG with serverless inference) | ~$2,400 / mo (after SFT+LoRA on PAI) |
+| **Monthly pilot total (500 physicians, base)** | **~$2,755 / mo (A1+: Nova Micro + Nova Pro)** or ~$7,095 / mo (A2: Haiku 4.5 + Sonnet 4.5) | ~$2,300 / mo (Sydney Bedrock) + ~$1,095 / mo if SG-hosted student required | **~$1,880 / mo (Qwen3.5-Flash + Qwen3.5-Plus)** |
+| **Post-customization total** | ~$2,000 / mo (Nova Micro unchanged — customization may not be needed) | ~$2,000 / mo (after GRPO on SageMaker SG with serverless inference) | ~$1,940 / mo (after SFT+LoRA on PAI) |
 | **Customization cost per run** | ~$2,000 (Bedrock Model Distillation, optional) | **~$70–100** (SageMaker TRL GRPO on ml.g6e.8xlarge) | **~$15–40** (PAI Model Gallery Qwen3 LoRA) |
 | **Data-residency posture** | Singapore, PDPA-native | Sydney Bedrock or SG SageMaker (split) | Singapore, PDPA-native |
 
-Headline: if Nova Micro on the fast lane passes the clinical quality benchmark, Version A is both the cheapest and the most compliant. Version B loses its cost advantage once the SG-SageMaker-endpoint requirement kicks in. Version C remains the best cost-ceiling-constrained option with full SG residency.
+**Headline (re-ranked)**: Version C is now the cheapest SG-native option at ~$1,880/mo base thanks to Qwen3.5-Plus pricing. Version A1+ (Nova Micro + Nova Pro) is a close second at ~$2,755/mo and wins on "one AWS BAA covers everything." Version B loses once SG residency is required.
+
+**About Qwen3.6-27B** (released 22 Apr 2026): coding-agent specialist. Nova should not use it — lower general-knowledge scores than Qwen3.5-Plus/Qwen3.5-397B, and it's not yet exposed as a Model Studio API endpoint. Revisit if Alibaba adds it to Model Studio with medical benchmarks.
 
 ## 2. Assumptions shared across all three versions
 
@@ -91,14 +94,18 @@ Qwen is **not available in Singapore Bedrock**. Nearest APAC region is Sydney. F
 
 ### Version C — Alibaba Model Studio (Singapore region, per 1 M tokens)
 
+**Updated 10 May 2026**: switch the complex lane from `Qwen-Max` to `Qwen3.5-Plus` (released Feb 2026 — newer, cheaper, better benchmarks). `Qwen-Max` retired as the default.
+
 | Model | Input | Output | Role |
 |---|---|---|---|
-| Qwen3.5-Flash | $0.10 | $0.40 | Emergency fast-lane base |
-| Qwen-Plus | $0.40 | $1.20 | Alternate mid-tier teacher |
-| Qwen-Max (Qwen3-Max) | $1.20 | $6.00 | Complex lane + distillation teacher |
+| **Qwen3.5-Flash** | **$0.10** (0–128K) | **$0.40** (0–128K) | **Emergency fast-lane base** (1M context, same as Qwen-Plus level quality) |
+| **Qwen3.5-Plus** | **$0.40** (0–256K) | **$2.40** (0–256K) | **Complex lane + distillation teacher** (newer than Qwen-Max, ~3× cheaper input, ~2.5× cheaper output, 1M context, multimodal) |
+| Qwen3-Max | $1.20 | $6.00 | Older — kept as fallback for visual-reasoning-heavy questions |
 | Qwen3-8B on PAI-EAS | $1.0–$2.0/hr (A10 small GPU) | — | Fine-tuned student, serve full-time |
 | text-embedding-v4 | ~$0.07 per 1 M | — | Text embeddings |
 | qwen3-vl-embedding | token+image metered | — | Figure-bearing chunks |
+
+**Qwen3.6-27B (released 22 Apr 2026) — NOT chosen for Nova.** It's a coding-specialized dense model; SWE-bench leader but **lower general-knowledge scores than Qwen3.5-27B** (MMLU-Pro 86.2 vs 86.1 similar, but knowledge tasks favor Qwen3.5-397B's 87.8). Clinical triage needs knowledge + reasoning, not code synthesis. Also not yet listed in Model Studio pricing — open weights on HuggingFace only. Re-evaluate when Alibaba publishes an API endpoint.
 
 Batch 50 % off. Implicit context-cache hits bill at 20 % of normal input price.
 
@@ -135,16 +142,16 @@ Shows what one `/chat` request costs on each version after Layer-2 prompt cachin
 
 **Emergency call ≈ $0.0015 · Complex call ≈ $0.002** (plus $1,095/mo amortized SageMaker SG endpoint if we need SG residency, see row below).
 
-### Version C (Alibaba Qwen)
+### Version C (Alibaba Qwen — Qwen3.5-Plus for complex, Qwen3.5-Flash for fast)
 
 | Step | Cost |
 |---|---|
 | Same infra as A/B, FC/API GW/etc | ~$4 × 10⁻⁴ combined |
 | **Qwen3.5-Flash** (3 k in + 350 out, cache 50 % off) | `(3 × $0.10/1 M × 0.5) + (0.35 × $0.40 / 1 M)` ≈ **$3.5 × 10⁻⁴** |
-| **Qwen-Max** (3 k in + 600 out, cache 50 % off) | `(3 × $1.20/1 M × 0.5) + (0.6 × $6.00/1 M)` ≈ **$5.4 × 10⁻³** |
+| **Qwen3.5-Plus** (3 k in + 600 out, cache 50 % off) | `(3 × $0.40/1 M × 0.5) + (0.6 × $2.40/1 M)` ≈ **$2.0 × 10⁻³** |
 | Content Moderation + audit | ~$2 × 10⁻⁴ |
 
-**Emergency call ≈ $0.0008 · Complex call ≈ $0.006**
+**Emergency call ≈ $0.0008 · Complex call ≈ $0.0026** (Qwen3.5-Plus roughly 2.5× cheaper per complex call than the earlier Qwen-Max choice at $0.006)
 
 ## 6. Monthly pilot cost (600 k calls, 30/70 emergency/complex)
 
@@ -215,10 +222,12 @@ Important: "B base" at $2,300 only applies if the client accepts **Sydney** resi
 
 ### Version C — Alibaba + Qwen (Singapore)
 
+Post-Qwen3.5 update: complex lane now uses **Qwen3.5-Plus** (Feb 2026 release) instead of Qwen-Max. 3× cheaper input / 2.5× cheaper output for equivalent or better benchmarks.
+
 | Item | Calc | Cost |
 |---|---|---|
-| Fast lane — Qwen3.5-Flash | 180 k × 65 % × $0.0008 | ~$95 |
-| Complex lane — Qwen-Max | 420 k × $0.006 | ~$2,520 |
+| Fast lane — Qwen3.5-Flash | 180 k × 65 % × $0.0004 (3k in + 350 out @ tier 1) | ~$47 |
+| Complex lane — **Qwen3.5-Plus** (vs Qwen-Max) | 420 k × $0.0026 (3k in + 600 out @ tier 1) | **~$1,105** (was $2,520 on Qwen-Max) |
 | text-embedding-v4 | ~500 M tokens | ~$35 |
 | qwen3-vl-embedding (figures) | metered | ~$60 |
 | Content Moderation 2.0 | per call | ~$50 |
@@ -228,13 +237,13 @@ Important: "B base" at $2,300 only applies if the client accepts **Sydney** resi
 | OSS + ActionTrail + SLS WORM | | ~$70 |
 | Tair (Redis-compatible) | | ~$60 |
 | IPsec VPN Gateway | | ~$60 |
-| **Base monthly** | | **~$3,340** |
+| **Base monthly (Qwen3.5-Plus)** | | **~$1,880** |
 | Phase-3 SFT+LoRA training (Qwen3-8B) | 2–4 GPU-hr × $1–2 on PAI | ~$15–40 per run |
 | PAI-EAS hosting fine-tuned Qwen3-8B (A10 GPU, always-on) | | ~$720–1,500 |
-| Replace Qwen-Max with student on 60 % of complex lane | | **−$1,500** |
-| **With custom student always-on** | | **~$2,400–2,900** |
+| Replace Qwen3.5-Plus with student on 60 % of complex lane | | **−$660** |
+| **With custom student always-on** | | **~$1,940–2,720** |
 
-Alibaba's advantage is the Qwen3-8B on PAI-EAS fits comfortably on a single A10 — cheaper steady-state than the SageMaker endpoint in Version B despite similar capabilities.
+Alibaba's advantage is now even stronger: Qwen3-8B on PAI-EAS fits on a single A10 **and** Qwen3.5-Plus complex-lane pricing is cheaper than the Bedrock Qwen3-235B in Sydney.
 
 ## 7. Customization cost per run (phase-3 retrain, quarterly)
 
