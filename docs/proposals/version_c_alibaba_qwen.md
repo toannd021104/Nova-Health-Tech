@@ -9,7 +9,7 @@
 
 ## Cover summary
 
-One-page visual: [`../architecture/diagrams/v_c_cover_summary.svg`](../architecture/diagrams/v_c_cover_summary.svg)
+![Cover summary](../architecture/diagrams/v_c_cover_summary.svg)
 
 | Property | Value |
 |---|---|
@@ -169,9 +169,9 @@ Industry baseline: [**ISO 27001 / 27017 / 27018 / 27701**](https://www.iso.org/s
 
 ### 3.1 High-level architecture
 
-High-level diagram: [`../architecture/diagrams/v_c_high_level_architecture.svg`](../architecture/diagrams/v_c_high_level_architecture.svg)
+![High-level architecture](../architecture/diagrams/v_c_high_level_architecture.svg)
 
-ASCII equivalent:
+ASCII equivalent (for text-only renderers):
 
 ```
               ┌──────────────────────────────────────────────────────────────┐
@@ -287,6 +287,8 @@ ASCII equivalent:
 ---
 
 ## 4. Data Pipeline Architecture
+
+![Data pipeline architecture](../architecture/diagrams/v_c_data_pipeline.svg)
 
 Shared design in [`../rag_and_pipelines.md`](../rag_and_pipelines.md). This section covers Version C specifics.
 
@@ -445,6 +447,8 @@ Both are used, but for different purposes. RAG is the primary mechanism for fact
 
 ### 5.2 Vector database design and retrieval strategy
 
+![RAG architecture — ingest + query paths](../architecture/diagrams/v_c_rag_architecture.svg)
+
 Design in [`../architecture/diagrams/v_c_rag_architecture.svg`](../architecture/diagrams/v_c_rag_architecture.svg).
 
 **Vector store**: [OpenSearch Vector Search Edition](https://www.alibabacloud.com/help/en/open-search/vector-search-edition/product-overview) HA Edition, dual-zone in Singapore.
@@ -542,6 +546,8 @@ The UI renders citations as clickable links that open the source PDF at the righ
 ---
 
 ## 6. Model Orchestration
+
+![Model orchestration — if/else + 40-dept multi-agent](../architecture/diagrams/v_c_model_orchestration.svg)
 
 Framework decision, model lineup, and routing. Diagram: [`../architecture/diagrams/v_c_model_orchestration.svg`](../architecture/diagrams/v_c_model_orchestration.svg).
 
@@ -698,6 +704,8 @@ session_id = sha256(clinician_id | tenant_id | patient_fhir_id | login_time)
 
 ## 7. Corporate Integration Architecture
 
+![Corporate integration — EHR / IAM / SharePoint / external APIs](../architecture/diagrams/v_c_corporate_integration.svg)
+
 Shared design in [`../rag_and_pipelines.md` §Corporate integration](../rag_and_pipelines.md#6-corporate-integration).
 
 ### 7.1 EHR / EMR integration (HL7 FHIR, CDS Hooks)
@@ -815,6 +823,8 @@ Subscriptions renew automatically via lifecycle job. `clientState` validated on 
 ---
 
 ## 8. Security Architecture
+
+![Security architecture — PHI flow + zero-trust VPC + audit](../architecture/diagrams/v_c_security_architecture.svg)
 
 Shared design in [`../compliance.md`](../compliance.md). This section covers the Version-C-specific mechanisms.
 
@@ -968,6 +978,8 @@ Defense in depth across three layers:
 
 ## 9. Deployment Architecture
 
+![Deployment architecture — single-region, multi-AZ, serverless-first](../architecture/diagrams/v_c_deployment_architecture.svg)
+
 ### 9.1 Cloud deployment model and rationale
 
 **Public cloud only, single-region Singapore International.** No hybrid, no on-prem, no Apsara Stack in the baseline deployment.
@@ -1088,6 +1100,8 @@ Training run on PAI (quarterly SFT, monthly DPO micro-runs)
 
 ## 10. Performance Optimization
 
+![Latency budget — emergency p95 bars](../architecture/diagrams/v_c_latency_budget.svg)
+
 The 2-second emergency SLA is a hard business requirement. This section shows how we hit it. Diagram: [`../architecture/diagrams/v_c_latency_budget.svg`](../architecture/diagrams/v_c_latency_budget.svg).
 
 ### 10.1 Latency budget breakdown (targeting 2-second emergency response)
@@ -1125,6 +1139,8 @@ The 2-second emergency SLA is a hard business requirement. This section shows ho
 **Complex-lane budget** is 6,000 ms — more room for multi-tool agent synthesis (graph_retrieve + icd11_lookup + pubmed_search can take 3–5 seconds combined).
 
 ### 10.2 Caching strategy
+
+![Three-layer cache strategy](../architecture/diagrams/v_c_cache_strategy.svg)
 
 Three layers, each handling a different cache-hit class. Diagram: [`../architecture/diagrams/v_c_cache_strategy.svg`](../architecture/diagrams/v_c_cache_strategy.svg).
 
@@ -1832,16 +1848,20 @@ Version C is the cheapest and the only fully SG-native option.
 
 ### 16.A Architecture diagrams
 
-All diagrams live in [`../architecture/diagrams/`](../architecture/diagrams/). Canonical SVG sources:
+All diagrams live in [`../architecture/diagrams/`](../architecture/diagrams/) and are embedded inline in each section. Canonical SVG sources:
 
-| Diagram | File |
-|---|---|
-| Cover one-page summary | [`v_c_cover_summary.svg`](../architecture/diagrams/v_c_cover_summary.svg) |
-| High-level architecture | [`v_c_high_level_architecture.svg`](../architecture/diagrams/v_c_high_level_architecture.svg) |
-| RAG architecture (hybrid + GraphRAG) | [`v_c_rag_architecture.svg`](../architecture/diagrams/v_c_rag_architecture.svg) |
-| Model orchestration + routing | [`v_c_model_orchestration.svg`](../architecture/diagrams/v_c_model_orchestration.svg) |
-| Cache strategy (3 layers) | [`v_c_cache_strategy.svg`](../architecture/diagrams/v_c_cache_strategy.svg) |
-| Latency budget breakdown | [`v_c_latency_budget.svg`](../architecture/diagrams/v_c_latency_budget.svg) |
+| # | Diagram | Referenced in | File |
+|---|---|---|---|
+| 1 | Cover one-page summary | Top of this document | [`v_c_cover_summary.svg`](../architecture/diagrams/v_c_cover_summary.svg) |
+| 2 | High-level architecture | §3.1 | [`v_c_high_level_architecture.svg`](../architecture/diagrams/v_c_high_level_architecture.svg) |
+| 3 | Data pipeline architecture | §4 | [`v_c_data_pipeline.svg`](../architecture/diagrams/v_c_data_pipeline.svg) |
+| 4 | RAG architecture (hybrid + GraphRAG) | §5.2 | [`v_c_rag_architecture.svg`](../architecture/diagrams/v_c_rag_architecture.svg) |
+| 5 | Model orchestration + routing | §6 | [`v_c_model_orchestration.svg`](../architecture/diagrams/v_c_model_orchestration.svg) |
+| 6 | Corporate integration | §7 | [`v_c_corporate_integration.svg`](../architecture/diagrams/v_c_corporate_integration.svg) |
+| 7 | Security architecture (PHI flow + zero-trust VPC + audit) | §8 | [`v_c_security_architecture.svg`](../architecture/diagrams/v_c_security_architecture.svg) |
+| 8 | Deployment architecture (single-region multi-AZ) | §9 | [`v_c_deployment_architecture.svg`](../architecture/diagrams/v_c_deployment_architecture.svg) |
+| 9 | Latency budget breakdown | §10.1 | [`v_c_latency_budget.svg`](../architecture/diagrams/v_c_latency_budget.svg) |
+| 10 | Cache strategy (3 layers) | §10.2 | [`v_c_cache_strategy.svg`](../architecture/diagrams/v_c_cache_strategy.svg) |
 
 ### 16.B Technology vendor comparison matrix
 

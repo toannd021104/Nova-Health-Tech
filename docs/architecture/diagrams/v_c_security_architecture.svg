@@ -1,0 +1,228 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1360 900" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+    <marker id="arr-phi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/></marker>
+    <marker id="arr-tok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker>
+    <marker id="arr-aud" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker>
+    <style>
+      .box       { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.2; rx:8; ry:8; }
+      .box-phi   { fill:#fef2f2; stroke:#dc2626; stroke-width:1.5; }
+      .box-tok   { fill:#f0fdf4; stroke:#16a34a; stroke-width:1.5; }
+      .box-kms   { fill:#fff7ed; stroke:#fb923c; }
+      .box-net   { fill:#eff6ff; stroke:#60a5fa; }
+      .box-aud   { fill:#f5f3ff; stroke:#7c3aed; stroke-width:1.5; }
+      .box-id    { fill:#fefce8; stroke:#facc15; }
+      .subnet    { fill:#f1f5f9; stroke:#94a3b8; stroke-width:1; stroke-dasharray:4 3; rx:8; ry:8; }
+      .vpc       { fill:none; stroke:#1d4ed8; stroke-width:2; stroke-dasharray:6 3; rx:10; ry:10; }
+      .group     { fill:#f8fafc; stroke:#94a3b8; stroke-dasharray:4 3; stroke-width:1.2; rx:12; ry:12; }
+      .title     { font-weight:700; fill:#0f172a; }
+      .lbl-sm    { fill:#64748b; font-size:10.5px; }
+      .edge      { stroke:#64748b; stroke-width:1.3; fill:none; }
+      .edge-phi  { stroke:#dc2626; stroke-width:1.8; fill:none; }
+      .edge-tok  { stroke:#16a34a; stroke-width:1.8; fill:none; }
+      .edge-aud  { stroke:#7c3aed; stroke-width:1.6; fill:none; }
+    </style>
+  </defs>
+
+  <text x="680" y="28" text-anchor="middle" font-size="17" class="title">Security Architecture — PHI Flow + Zero-Trust VPC + Audit (§8)</text>
+  <text x="680" y="48" text-anchor="middle" class="lbl-sm">Raw PHI (red) never crosses FC boundary · Tokenized form (green) is what the LLM sees · All events audited (purple) to 6-year WORM</text>
+
+  <!-- LEGEND -->
+  <g transform="translate(20,70)">
+    <rect width="140" height="14" class="box-phi"/><text x="8" y="11" class="lbl-sm">Raw PHI path</text>
+    <rect y="18" width="140" height="14" class="box-tok"/><text x="8" y="29" class="lbl-sm">Tokenized path</text>
+    <rect y="36" width="140" height="14" class="box-aud"/><text x="8" y="47" class="lbl-sm">Audit path</text>
+    <rect y="54" width="140" height="14" class="box-net"/><text x="8" y="65" class="lbl-sm">Network subnet</text>
+    <rect y="72" width="140" height="14" class="box-kms"/><text x="8" y="83" class="lbl-sm">Key / secret store</text>
+  </g>
+
+  <!-- LEFT: ENTRY -->
+  <rect x="190" y="70" width="240" height="480" class="group"/>
+  <text x="210" y="92" class="title">Entry tier</text>
+
+  <rect x="210" y="110" width="200" height="60" class="box box-phi"/>
+  <text x="310" y="132" text-anchor="middle" class="title">Clinician browser / EHR</text>
+  <text x="310" y="150" text-anchor="middle" class="lbl-sm">TLS 1.3 · request may</text>
+  <text x="310" y="162" text-anchor="middle" class="lbl-sm">contain raw PHI</text>
+
+  <rect x="210" y="190" width="200" height="50" class="box box-net"/>
+  <text x="310" y="212" text-anchor="middle" class="title">CDN + Anti-DDoS + WAF</text>
+  <text x="310" y="230" text-anchor="middle" class="lbl-sm">OWASP rules · rate limit</text>
+
+  <rect x="210" y="260" width="200" height="50" class="box box-net"/>
+  <text x="310" y="282" text-anchor="middle" class="title">API Gateway</text>
+  <text x="310" y="300" text-anchor="middle" class="lbl-sm">IDaaS JWT authorizer</text>
+
+  <rect x="210" y="330" width="200" height="90" class="box box-id"/>
+  <text x="310" y="352" text-anchor="middle" class="title">IDaaS EIAM 2.0</text>
+  <text x="310" y="370" text-anchor="middle" class="lbl-sm">SAML/OIDC federation</text>
+  <text x="310" y="384" text-anchor="middle" class="lbl-sm">to hospital IdP · MFA</text>
+  <text x="310" y="402" text-anchor="middle" class="lbl-sm">Session 60 min · step-up</text>
+  <text x="310" y="416" text-anchor="middle" class="lbl-sm">MFA on admin:*</text>
+
+  <rect x="210" y="440" width="200" height="90" class="box"/>
+  <text x="310" y="462" text-anchor="middle" class="title">RBAC scopes</text>
+  <text x="310" y="480" text-anchor="middle" class="lbl-sm">chat:clinical</text>
+  <text x="310" y="494" text-anchor="middle" class="lbl-sm">curator:upload / delete</text>
+  <text x="310" y="508" text-anchor="middle" class="lbl-sm">kb:read · admin:*</text>
+
+  <!-- MIDDLE: VPC with subnets -->
+  <rect x="460" y="70" width="680" height="620" class="vpc"/>
+  <text x="800" y="90" text-anchor="middle" class="title" fill="#1d4ed8">VPC · nova-prod-sg · default-deny security groups</text>
+
+  <!-- PRIVATE APP SUBNET -->
+  <rect x="480" y="110" width="320" height="260" class="subnet"/>
+  <text x="500" y="132" class="title">/23 private-app subnet (sg-app)</text>
+  <text x="500" y="150" class="lbl-sm">no Internet egress · NAT only to WHO + PubMed</text>
+
+  <rect x="500" y="170" width="280" height="180" class="box box-phi"/>
+  <text x="640" y="194" text-anchor="middle" class="title">Function Compute /chat</text>
+  <text x="640" y="214" text-anchor="middle" class="lbl-sm">1. IDaaS JWT validate (+tenant_id claim)</text>
+  <text x="640" y="232" text-anchor="middle" class="lbl-sm">2. DataWorks SDDP scan PHI</text>
+  <text x="640" y="250" text-anchor="middle" class="lbl-sm">3. Replace PHI with KMS-backed tokens</text>
+  <text x="640" y="268" text-anchor="middle" class="lbl-sm">   &lt;NRIC_0&gt; &lt;MRN_0&gt; &lt;NAME_0&gt; ...</text>
+  <text x="640" y="292" text-anchor="middle" class="lbl-sm" fill="#dc2626">RAW PHI NEVER EXITS THIS BOUNDARY</text>
+  <text x="640" y="312" text-anchor="middle" class="lbl-sm">4. Build tokenized prompt</text>
+  <text x="640" y="330" text-anchor="middle" class="lbl-sm">5. Call Model Studio via PrivateLink</text>
+
+  <!-- PRIVATE DATA SUBNET -->
+  <rect x="820" y="110" width="300" height="260" class="subnet"/>
+  <text x="840" y="132" class="title">/23 private-data subnet (sg-data)</text>
+  <text x="840" y="150" class="lbl-sm">inbound from sg-app ONLY (port-scoped)</text>
+
+  <rect x="840" y="170" width="130" height="70" class="box box-tok"/>
+  <text x="905" y="190" text-anchor="middle" class="title">OpenSearch</text>
+  <text x="905" y="208" text-anchor="middle" class="lbl-sm">Vector Search HA</text>
+  <text x="905" y="222" text-anchor="middle" class="lbl-sm">KMS BYOK · TLS 1.3</text>
+
+  <rect x="980" y="170" width="130" height="70" class="box box-tok"/>
+  <text x="1045" y="190" text-anchor="middle" class="title">AnalyticDB PG</text>
+  <text x="1045" y="208" text-anchor="middle" class="lbl-sm">GraphRAG · KMS BYOK</text>
+  <text x="1045" y="222" text-anchor="middle" class="lbl-sm">schema ACLs</text>
+
+  <rect x="840" y="250" width="130" height="70" class="box box-tok"/>
+  <text x="905" y="270" text-anchor="middle" class="title">Tair</text>
+  <text x="905" y="288" text-anchor="middle" class="lbl-sm">Redis OSS-compatible</text>
+  <text x="905" y="302" text-anchor="middle" class="lbl-sm">Tokenized cache only</text>
+
+  <rect x="980" y="250" width="130" height="70" class="box box-tok"/>
+  <text x="1045" y="270" text-anchor="middle" class="title">OSS raw bucket</text>
+  <text x="1045" y="288" text-anchor="middle" class="lbl-sm">KMS BYOK</text>
+  <text x="1045" y="302" text-anchor="middle" class="lbl-sm">VPC endpoint only</text>
+
+  <!-- KMS + Credentials Manager -->
+  <rect x="480" y="390" width="300" height="90" class="box box-kms"/>
+  <text x="630" y="412" text-anchor="middle" class="title">KMS + Credentials Manager</text>
+  <text x="630" y="430" text-anchor="middle" class="lbl-sm">Customer-managed keys · 90-day rotation</text>
+  <text x="630" y="446" text-anchor="middle" class="lbl-sm">WHO ICD-11 OAuth (90d) · Graph creds (90d)</text>
+  <text x="630" y="462" text-anchor="middle" class="lbl-sm">Model Studio API keys (60d) · webhook signing</text>
+
+  <rect x="800" y="390" width="320" height="90" class="box box-net"/>
+  <text x="960" y="412" text-anchor="middle" class="title">Model Studio via PrivateLink</text>
+  <text x="960" y="430" text-anchor="middle" class="lbl-sm">No public Internet for LLM calls</text>
+  <text x="960" y="446" text-anchor="middle" class="lbl-sm">TLS 1.3 · Content Moderation 2.0 (green)</text>
+  <text x="960" y="462" text-anchor="middle" class="lbl-sm">Sees only tokenized prompt</text>
+
+  <!-- DLP layers -->
+  <rect x="480" y="500" width="640" height="80" class="box box-phi"/>
+  <text x="800" y="522" text-anchor="middle" class="title">DLP — defense in depth</text>
+  <text x="800" y="542" text-anchor="middle" class="lbl-sm">Input DLP: SDDP scan on every message · Model-context DLP: LLM only sees tokens</text>
+  <text x="800" y="558" text-anchor="middle" class="lbl-sm">Output DLP: regex + SDDP on LLM response before leaving FC</text>
+  <text x="800" y="574" text-anchor="middle" class="lbl-sm">Egress DLP: NAT Gateway with IP allow-list (WHO + PubMed only)</text>
+
+  <!-- MGMT SUBNET -->
+  <rect x="480" y="600" width="640" height="80" class="subnet"/>
+  <text x="500" y="622" class="title">/24 private-mgmt subnet (sg-mgmt)</text>
+  <text x="500" y="640" class="lbl-sm">Admin jump host — OIDC + hardware MFA · Nova admin VPN only</text>
+  <text x="500" y="656" class="lbl-sm">Break-glass: two-admin approval + auto-pages security</text>
+
+  <!-- RIGHT: AUDIT PIPELINE -->
+  <rect x="1170" y="70" width="180" height="620" class="group"/>
+  <text x="1190" y="92" class="title">Audit pipeline</text>
+
+  <rect x="1190" y="110" width="140" height="60" class="box box-aud"/>
+  <text x="1260" y="132" text-anchor="middle" class="title">ActionTrail</text>
+  <text x="1260" y="150" text-anchor="middle" class="lbl-sm">Control plane</text>
+  <text x="1260" y="162" text-anchor="middle" class="lbl-sm">API audit</text>
+
+  <rect x="1190" y="190" width="140" height="60" class="box box-aud"/>
+  <text x="1260" y="212" text-anchor="middle" class="title">Model Studio obs</text>
+  <text x="1260" y="230" text-anchor="middle" class="lbl-sm">Invocation logs</text>
+  <text x="1260" y="242" text-anchor="middle" class="lbl-sm">tokenized only</text>
+
+  <rect x="1190" y="270" width="140" height="60" class="box box-aud"/>
+  <text x="1260" y="292" text-anchor="middle" class="title">FC app logs</text>
+  <text x="1260" y="310" text-anchor="middle" class="lbl-sm">Per-chat record</text>
+  <text x="1260" y="322" text-anchor="middle" class="lbl-sm">hashes + tokens</text>
+
+  <rect x="1190" y="350" width="140" height="60" class="box box-aud"/>
+  <text x="1260" y="372" text-anchor="middle" class="title">ARMS traces</text>
+  <text x="1260" y="390" text-anchor="middle" class="lbl-sm">OpenTelemetry</text>
+  <text x="1260" y="402" text-anchor="middle" class="lbl-sm">Distributed spans</text>
+
+  <rect x="1190" y="430" width="140" height="80" class="box box-aud"/>
+  <text x="1260" y="452" text-anchor="middle" class="title">SLS</text>
+  <text x="1260" y="470" text-anchor="middle" class="lbl-sm">90-day hot tier</text>
+  <text x="1260" y="486" text-anchor="middle" class="lbl-sm">append-only shards</text>
+  <text x="1260" y="500" text-anchor="middle" class="lbl-sm">monotonic seq</text>
+
+  <rect x="1190" y="530" width="140" height="100" class="box box-aud"/>
+  <text x="1260" y="552" text-anchor="middle" class="title">OSS WORM</text>
+  <text x="1260" y="570" text-anchor="middle" class="lbl-sm">Object Lock</text>
+  <text x="1260" y="584" text-anchor="middle" class="lbl-sm">6-year retention</text>
+  <text x="1260" y="600" text-anchor="middle" class="lbl-sm">HIPAA §164.530(j)</text>
+  <text x="1260" y="614" text-anchor="middle" class="lbl-sm">no deletion possible</text>
+
+  <rect x="1190" y="650" width="140" height="40" class="box"/>
+  <text x="1260" y="674" text-anchor="middle" class="lbl-sm">SIEM export (nightly)</text>
+
+  <!-- Hospital VPN block -->
+  <rect x="20" y="600" width="420" height="90" class="group"/>
+  <text x="40" y="622" class="title">Hospital ↔ SG · Site-to-Site IPsec VPN</text>
+  <text x="40" y="642" class="lbl-sm">IKEv2 · AES-256-GCM · SHA-2 · dual-tunnel HA</text>
+  <text x="40" y="658" class="lbl-sm">Customer Gateway on hospital router · VPN Gateway in SG VPC</text>
+  <text x="40" y="674" class="lbl-sm">Only egress path: SharePoint + EHR FHIR + Upload Portal</text>
+
+  <!-- ARROWS: PHI path -->
+  <path d="M410 140 L480 185" class="edge-phi" marker-end="url(#arr-phi)"/>
+  <text x="437" y="152" class="lbl-sm" fill="#dc2626">PHI in</text>
+
+  <!-- FC → LLM as tokens (green) -->
+  <path d="M780 260 L800 420" class="edge-tok" marker-end="url(#arr-tok)"/>
+  <text x="790" y="335" class="lbl-sm" fill="#16a34a">tokens only</text>
+
+  <!-- FC → Data stores (tokens) -->
+  <path d="M780 210 L840 200" class="edge-tok" marker-end="url(#arr-tok)"/>
+  <path d="M780 290 L840 280" class="edge-tok" marker-end="url(#arr-tok)"/>
+
+  <!-- FC → KMS -->
+  <path d="M640 350 L630 390" class="edge" marker-end="url(#arr)"/>
+  <text x="635" y="375" class="lbl-sm">fetch key</text>
+
+  <!-- Audit fan-in -->
+  <path d="M780 210 L1190 140" class="edge-aud" marker-end="url(#arr-aud)"/>
+  <path d="M1120 420 L1190 220" class="edge-aud" marker-end="url(#arr-aud)"/>
+  <path d="M780 310 L1190 300" class="edge-aud" marker-end="url(#arr-aud)"/>
+  <path d="M1260 170 L1260 190" class="edge-aud" marker-end="url(#arr-aud)"/>
+  <path d="M1260 250 L1260 270" class="edge-aud" marker-end="url(#arr-aud)"/>
+  <path d="M1260 330 L1260 350" class="edge-aud" marker-end="url(#arr-aud)"/>
+  <path d="M1260 410 L1260 430" class="edge-aud" marker-end="url(#arr-aud)"/>
+  <path d="M1260 510 L1260 530" class="edge-aud" marker-end="url(#arr-aud)"/>
+  <path d="M1260 630 L1260 650" class="edge-aud" marker-end="url(#arr-aud)"/>
+
+  <!-- Hospital → VPN -->
+  <path d="M440 645 L480 640" class="edge" marker-end="url(#arr)"/>
+
+  <!-- Footer -->
+  <rect x="20" y="720" width="1320" height="160" class="group"/>
+  <text x="40" y="742" class="title">Threat-model coverage (§8.1)</text>
+  <g font-size="12" fill="#334155">
+    <text x="40" y="764">• Prompt injection / PHI exfil → SDDP runtime + output DLP + Content Moderation + prompt-injection filter</text>
+    <text x="40" y="782">• Cross-tenant leakage → tenant_id pre-filter at OpenSearch + chunk-level tenant_id + separate KB namespaces</text>
+    <text x="40" y="800">• Hallucinated recommendation → citation validator + grounding ≥ 0.7 + guardrail block</text>
+    <text x="40" y="818">• Stolen token → IDaaS 60-min sessions + step-up MFA + ActionTrail anomaly detection</text>
+    <text x="40" y="836">• Insider exfil → separation of duties + break-glass two-admin approval + ARMS + WORM audit</text>
+    <text x="40" y="854">• Data residency drift → Model Studio International excludes CN Mainland + contract clause + ActionTrail region audit</text>
+    <text x="40" y="872">• Supply-chain / parser exploit → Security Center scan + Alibaba-managed DocMind · Model-version pinning with quarterly red-team</text>
+  </g>
+</svg>

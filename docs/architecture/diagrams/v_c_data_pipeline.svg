@@ -1,0 +1,215 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1360 820" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+    <marker id="arr-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker>
+    <marker id="arr-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/></marker>
+    <style>
+      .box      { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.2; rx:8; ry:8; }
+      .box-src  { fill:#f0fdf4; stroke:#4ade80; }
+      .box-proc { fill:#eff6ff; stroke:#60a5fa; }
+      .box-llm  { fill:#fff7ed; stroke:#fb923c; }
+      .box-data { fill:#fefce8; stroke:#facc15; }
+      .box-sec  { fill:#fef2f2; stroke:#dc2626; }
+      .box-audit{ fill:#f5f3ff; stroke:#7c3aed; }
+      .group    { fill:#f8fafc; stroke:#94a3b8; stroke-dasharray:4 3; stroke-width:1.2; rx:12; ry:12; }
+      .title    { font-weight:700; fill:#0f172a; }
+      .lbl-sm   { fill:#64748b; font-size:10.5px; }
+      .edge     { stroke:#64748b; stroke-width:1.3; fill:none; }
+      .edge-g   { stroke:#16a34a; stroke-width:1.8; fill:none; }
+      .edge-r   { stroke:#dc2626; stroke-width:1.6; fill:none; stroke-dasharray:5 3; }
+    </style>
+  </defs>
+
+  <text x="680" y="28" text-anchor="middle" font-size="17" class="title">Data Pipeline Architecture — Ingestion, ETL, Governance (§4)</text>
+  <text x="680" y="48" text-anchor="middle" class="lbl-sm">Source → OSS raw → Security scan → Parse → Chunk → Embed → Index · idempotent upsert via document_id + revision</text>
+
+  <!-- SOURCES column -->
+  <rect x="20" y="80" width="230" height="620" class="group"/>
+  <text x="40" y="102" class="title">Sources</text>
+
+  <rect x="40" y="120" width="190" height="60" class="box box-src"/>
+  <text x="135" y="140" text-anchor="middle" class="title">WHO guidelines</text>
+  <text x="135" y="158" text-anchor="middle" class="lbl-sm">Monthly day 1 02:30 SGT</text>
+  <text x="135" y="172" text-anchor="middle" class="lbl-sm">+ RSS webhook (living)</text>
+
+  <rect x="40" y="200" width="190" height="60" class="box box-src"/>
+  <text x="135" y="220" text-anchor="middle" class="title">WHO ICD-11 API</text>
+  <text x="135" y="238" text-anchor="middle" class="lbl-sm">Daily 02:00 SGT · OAuth2</text>
+  <text x="135" y="252" text-anchor="middle" class="lbl-sm">Delta by releaseId</text>
+
+  <rect x="40" y="280" width="190" height="60" class="box box-src"/>
+  <text x="135" y="300" text-anchor="middle" class="title">Internal trials</text>
+  <text x="135" y="318" text-anchor="middle" class="lbl-sm">SharePoint over VPN</text>
+  <text x="135" y="332" text-anchor="middle" class="lbl-sm">Graph webhook + weekly</text>
+
+  <rect x="40" y="360" width="190" height="60" class="box box-src"/>
+  <text x="135" y="380" text-anchor="middle" class="title">Treatment protocols</text>
+  <text x="135" y="398" text-anchor="middle" class="lbl-sm">Same as trials</text>
+  <text x="135" y="412" text-anchor="middle" class="lbl-sm">PDFs + DOCX</text>
+
+  <rect x="40" y="440" width="190" height="60" class="box box-src"/>
+  <text x="135" y="460" text-anchor="middle" class="title">Upload Portal</text>
+  <text x="135" y="478" text-anchor="middle" class="lbl-sm">SAE container · VPN</text>
+  <text x="135" y="492" text-anchor="middle" class="lbl-sm">Presigned OSS PUT</text>
+
+  <rect x="40" y="520" width="190" height="60" class="box box-src"/>
+  <text x="135" y="540" text-anchor="middle" class="title">PubMed E-utilities</text>
+  <text x="135" y="558" text-anchor="middle" class="lbl-sm">Runtime tool only</text>
+  <text x="135" y="572" text-anchor="middle" class="lbl-sm">Not ingested</text>
+
+  <rect x="40" y="600" width="190" height="60" class="box box-src"/>
+  <text x="135" y="620" text-anchor="middle" class="title">EHR (FHIR R4)</text>
+  <text x="135" y="638" text-anchor="middle" class="lbl-sm">Runtime only</text>
+  <text x="135" y="652" text-anchor="middle" class="lbl-sm">SMART on FHIR</text>
+
+  <!-- OSS RAW -->
+  <rect x="280" y="80" width="240" height="620" class="group"/>
+  <text x="300" y="102" class="title">OSS raw bucket (SG)</text>
+
+  <rect x="300" y="130" width="200" height="70" class="box box-data"/>
+  <text x="400" y="152" text-anchor="middle" class="title">/raw/scheduled/*</text>
+  <text x="400" y="170" text-anchor="middle" class="lbl-sm">who · icd11 · trials</text>
+  <text x="400" y="186" text-anchor="middle" class="lbl-sm">protocols</text>
+
+  <rect x="300" y="220" width="200" height="70" class="box box-data"/>
+  <text x="400" y="242" text-anchor="middle" class="title">/raw/manual/*</text>
+  <text x="400" y="260" text-anchor="middle" class="lbl-sm">Upload Portal uploads</text>
+  <text x="400" y="276" text-anchor="middle" class="lbl-sm">10-min presigned TTL</text>
+
+  <rect x="300" y="310" width="200" height="180" class="box box-data"/>
+  <text x="400" y="332" text-anchor="middle" class="title">Idempotency keys</text>
+  <text x="400" y="358" text-anchor="middle" class="lbl-sm">document_id</text>
+  <text x="400" y="372" text-anchor="middle" class="lbl-sm">= hash(source + URI)</text>
+  <text x="400" y="396" text-anchor="middle" class="lbl-sm">revision</text>
+  <text x="400" y="410" text-anchor="middle" class="lbl-sm">= hash(bytes)</text>
+  <text x="400" y="436" text-anchor="middle" class="lbl-sm">Unchanged docs skip</text>
+  <text x="400" y="452" text-anchor="middle" class="lbl-sm">embed + graph steps</text>
+  <text x="400" y="472" text-anchor="middle" class="lbl-sm">→ zero wasted spend</text>
+
+  <rect x="300" y="510" width="200" height="60" class="box"/>
+  <text x="400" y="530" text-anchor="middle" class="title">ObjectCreated event</text>
+  <text x="400" y="548" text-anchor="middle" class="lbl-sm">fires Function Workflow</text>
+
+  <rect x="300" y="590" width="200" height="100" class="box box-audit"/>
+  <text x="400" y="612" text-anchor="middle" class="title">Metadata schema</text>
+  <text x="400" y="630" text-anchor="middle" class="lbl-sm">source · document_id</text>
+  <text x="400" y="644" text-anchor="middle" class="lbl-sm">revision · specialty</text>
+  <text x="400" y="658" text-anchor="middle" class="lbl-sm">review_date · tenant_id</text>
+  <text x="400" y="672" text-anchor="middle" class="lbl-sm">evidence_grade · page</text>
+
+  <!-- PIPELINE STEPS -->
+  <rect x="550" y="80" width="560" height="620" class="group"/>
+  <text x="570" y="102" class="title">Function Workflow (managed state machine)</text>
+
+  <rect x="570" y="120" width="520" height="70" class="box box-sec"/>
+  <text x="830" y="142" text-anchor="middle" class="title">Step 1 — Security scans (fail → quarantine)</text>
+  <text x="830" y="160" text-anchor="middle" class="lbl-sm">Security Center malware scan · DataWorks SDDP PHI scan</text>
+  <text x="830" y="176" text-anchor="middle" class="lbl-sm">Hit → /raw/_quarantine · admin pager · excluded from index</text>
+
+  <rect x="570" y="200" width="520" height="90" class="box box-proc"/>
+  <text x="830" y="222" text-anchor="middle" class="title">Step 2 — DocMind parse</text>
+  <text x="830" y="240" text-anchor="middle" class="lbl-sm">Body text + simple tables + headers (hundreds of pages)</text>
+  <text x="830" y="256" text-anchor="middle" class="lbl-sm">Complex pages flagged → Qwen-VL-Max</text>
+  <text x="830" y="272" text-anchor="middle" class="lbl-sm">(multi-page tables · text-based flowcharts · figures)</text>
+
+  <rect x="570" y="300" width="520" height="80" class="box box-proc"/>
+  <text x="830" y="322" text-anchor="middle" class="title">Step 3 — Hierarchical chunker</text>
+  <text x="830" y="340" text-anchor="middle" class="lbl-sm">Parent 1500 tokens · Child 300 tokens · 15% overlap</text>
+  <text x="830" y="356" text-anchor="middle" class="lbl-sm">Section-aware (respects headings, table boundaries)</text>
+  <text x="830" y="372" text-anchor="middle" class="lbl-sm">has_figure flag on figure-bearing chunks</text>
+
+  <rect x="570" y="390" width="250" height="100" class="box box-llm"/>
+  <text x="695" y="412" text-anchor="middle" class="title">Step 4a — Text embed</text>
+  <text x="695" y="430" text-anchor="middle" class="lbl-sm">text-embedding-v4</text>
+  <text x="695" y="446" text-anchor="middle" class="lbl-sm">1024-dim · 8192 ctx</text>
+  <text x="695" y="462" text-anchor="middle" class="lbl-sm">Batch mode · 50% off</text>
+  <text x="695" y="478" text-anchor="middle" class="lbl-sm">$0.07 / 1M tokens</text>
+
+  <rect x="840" y="390" width="250" height="100" class="box box-llm"/>
+  <text x="965" y="412" text-anchor="middle" class="title">Step 4b — Multimodal embed</text>
+  <text x="965" y="430" text-anchor="middle" class="lbl-sm">tongyi-embedding-vision-plus</text>
+  <text x="965" y="446" text-anchor="middle" class="lbl-sm">1152-dim · figure chunks</text>
+  <text x="965" y="462" text-anchor="middle" class="lbl-sm">$0.09/1M text + per-image</text>
+  <text x="965" y="478" text-anchor="middle" class="lbl-sm">Separate vector field</text>
+
+  <rect x="570" y="500" width="250" height="90" class="box box-data"/>
+  <text x="695" y="522" text-anchor="middle" class="title">Step 5a — OpenSearch upsert</text>
+  <text x="695" y="540" text-anchor="middle" class="lbl-sm">Vector Search HA · dual-zone</text>
+  <text x="695" y="556" text-anchor="middle" class="lbl-sm">HNSW (M=16, ef=80) on both</text>
+  <text x="695" y="572" text-anchor="middle" class="lbl-sm">text + multimodal fields</text>
+
+  <rect x="840" y="500" width="250" height="90" class="box box-data"/>
+  <text x="965" y="522" text-anchor="middle" class="title">Step 5b — Graph extraction</text>
+  <text x="965" y="540" text-anchor="middle" class="lbl-sm">adbpg_graphrag.upload()</text>
+  <text x="965" y="556" text-anchor="middle" class="lbl-sm">Qwen3.5-Plus extracts entities</text>
+  <text x="965" y="572" text-anchor="middle" class="lbl-sm">+ relations · 3-zone HA</text>
+
+  <rect x="570" y="600" width="520" height="80" class="box box-audit"/>
+  <text x="830" y="622" text-anchor="middle" class="title">Step 6 — Cache invalidation + audit</text>
+  <text x="830" y="640" text-anchor="middle" class="lbl-sm">Tair semantic-cache flush: keys tagged source:&lt;document_id&gt;</text>
+  <text x="830" y="656" text-anchor="middle" class="lbl-sm">ActionTrail audit record: {ingest_run_id, document_id, revision, chunks_changed}</text>
+  <text x="830" y="672" text-anchor="middle" class="lbl-sm">ARMS alert on failure · retry 3× with exponential backoff</text>
+
+  <!-- OUTPUT / GOVERNANCE column -->
+  <rect x="1140" y="80" width="200" height="620" class="group"/>
+  <text x="1160" y="102" class="title">Governance</text>
+
+  <rect x="1160" y="130" width="160" height="140" class="box box-audit"/>
+  <text x="1240" y="152" text-anchor="middle" class="title">Lineage</text>
+  <text x="1240" y="172" text-anchor="middle" class="lbl-sm">Every chunk carries:</text>
+  <text x="1240" y="188" text-anchor="middle" class="lbl-sm">chunk_id</text>
+  <text x="1240" y="202" text-anchor="middle" class="lbl-sm">document_id</text>
+  <text x="1240" y="216" text-anchor="middle" class="lbl-sm">revision · tenant_id</text>
+  <text x="1240" y="232" text-anchor="middle" class="lbl-sm">specialty · grade</text>
+  <text x="1240" y="248" text-anchor="middle" class="lbl-sm">ingest_run_id</text>
+  <text x="1240" y="262" text-anchor="middle" class="lbl-sm">ingest_ts</text>
+
+  <rect x="1160" y="290" width="160" height="120" class="box"/>
+  <text x="1240" y="312" text-anchor="middle" class="title">Right to delete</text>
+  <text x="1240" y="332" text-anchor="middle" class="lbl-sm">(PDPA · GDPR)</text>
+  <text x="1240" y="350" text-anchor="middle" class="lbl-sm">Cascade purge</text>
+  <text x="1240" y="366" text-anchor="middle" class="lbl-sm">by document_id</text>
+  <text x="1240" y="386" text-anchor="middle" class="lbl-sm">→ OSS · OpenSearch</text>
+  <text x="1240" y="400" text-anchor="middle" class="lbl-sm">· graph · cache</text>
+
+  <rect x="1160" y="430" width="160" height="110" class="box box-audit"/>
+  <text x="1240" y="452" text-anchor="middle" class="title">Retention</text>
+  <text x="1240" y="472" text-anchor="middle" class="lbl-sm">Raw: 6 years default</text>
+  <text x="1240" y="488" text-anchor="middle" class="lbl-sm">Audit: 6-year WORM</text>
+  <text x="1240" y="506" text-anchor="middle" class="lbl-sm">Index: tied to source</text>
+  <text x="1240" y="522" text-anchor="middle" class="lbl-sm">Purged on withdrawal</text>
+
+  <rect x="1160" y="560" width="160" height="130" class="box box-audit"/>
+  <text x="1240" y="582" text-anchor="middle" class="title">Monitoring</text>
+  <text x="1240" y="602" text-anchor="middle" class="lbl-sm">ARMS traces on</text>
+  <text x="1240" y="616" text-anchor="middle" class="lbl-sm">every ingest_run_id</text>
+  <text x="1240" y="636" text-anchor="middle" class="lbl-sm">SLO: weekly drift</text>
+  <text x="1240" y="652" text-anchor="middle" class="lbl-sm">KL divergence</text>
+  <text x="1240" y="672" text-anchor="middle" class="lbl-sm">Monthly reconciliation</text>
+
+  <!-- ARROWS: Sources → OSS -->
+  <path d="M230 150 L300 155" class="edge-g" marker-end="url(#arr-g)"/>
+  <path d="M230 230 L300 165" class="edge-g" marker-end="url(#arr-g)"/>
+  <path d="M230 310 L300 175" class="edge-g" marker-end="url(#arr-g)"/>
+  <path d="M230 390 L300 185" class="edge-g" marker-end="url(#arr-g)"/>
+  <path d="M230 470 L300 250" class="edge-g" marker-end="url(#arr-g)"/>
+
+  <!-- OSS → Workflow -->
+  <path d="M500 540 L570 155" class="edge-g" marker-end="url(#arr-g)"/>
+
+  <!-- Workflow pipeline flow -->
+  <path d="M830 190 L830 200" class="edge" marker-end="url(#arr)"/>
+  <path d="M830 290 L830 300" class="edge" marker-end="url(#arr)"/>
+  <path d="M830 380 L830 390" class="edge" marker-end="url(#arr)"/>
+  <path d="M695 490 L695 500" class="edge" marker-end="url(#arr)"/>
+  <path d="M965 490 L965 500" class="edge" marker-end="url(#arr)"/>
+  <path d="M830 590 L830 600" class="edge" marker-end="url(#arr)"/>
+
+  <!-- Quarantine arrow -->
+  <path d="M570 155 Q400 155 350 180" class="edge-r" marker-end="url(#arr-r)"/>
+  <text x="430" y="115" class="lbl-sm" fill="#dc2626">quarantine on PHI/malware hit</text>
+
+  <!-- Governance links -->
+  <path d="M1090 635 L1160 635" class="edge" marker-end="url(#arr)"/>
+  <path d="M1090 540 L1160 485" class="edge" marker-end="url(#arr)"/>
+</svg>
