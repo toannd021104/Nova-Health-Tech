@@ -168,7 +168,7 @@ There is **no pilot / PoC / staged rollout**. When Version C goes live, every ca
 | Qwen3.5-Flash on the emergency lane + Qwen3.5-Plus on the complex lane | ✅ on |
 | **Fine-tuned Qwen3-8B student on PAI-EAS** (SFT + LoRA distilled from Qwen3.5-Plus) | ✅ **trained before launch, serving the emergency lane in production** |
 | Multi-agent specialist topology (GP / triage + Emergency + ID + Oncology + Cardiology + Pediatrics + Pharmacology) on complex lane (Model Studio Agent + Workflow Application) | ✅ on (toggleable per hospital client) |
-| Optional LazyGraphRAG over the WHO + protocol corpus | ✅ on |
+| Managed GraphRAG (AnalyticDB for PostgreSQL GraphRAG service) on the WHO + protocol corpus | ✅ on |
 | Layer-1 Tair semantic cache + Layer-2 Qwen Context Cache (implicit + explicit on the system-prompt prefix) | ✅ on |
 | Qwen Provisioned Throughput Units on the emergency lane | ✅ on (sized to peak TPM) |
 | Content Moderation 2.0 + DataWorks SDDP PHI mask + grounding + citation validator | ✅ on |
@@ -182,7 +182,7 @@ After launch the team runs:
 | Cadence | Action |
 |---|---|
 | Daily 02:00 SGT | WHO ICD-11 delta ingest; Tair semantic-cache invalidation for affected `source:*` tags |
-| Monthly day 1 02:30 SGT | WHO guideline PDF refresh + LazyGraphRAG re-index |
+| Monthly day 1 02:30 SGT | WHO guideline PDF refresh + incremental re-index of the AnalyticDB PG GraphRAG graph |
 | Weekly Sun | SharePoint / trial-report reconciliation pass (safety net for missed webhooks) |
 | Monthly | DPO micro-run on the past month's clinician preference pairs on PAI (~$15–40 per run). Same canary evaluation as launch. |
 | Quarterly | Full student retrain (Qwen3-8B SFT + LoRA) on accumulated new clinician data + latest WHO releases; re-qualify with eval harness; promote after it matches or beats current student on the holdout. GRPO round available ad-hoc for tool-calling regressions. |

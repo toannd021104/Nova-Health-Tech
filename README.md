@@ -97,6 +97,7 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 | **Multimodal embeddings (figures)** | Amazon Nova Multimodal Embeddings | tongyi-embedding-vision-plus (SG International, 1152-dim). `qwen3-vl-embedding` with `enable_fusion=True` is Chinese Mainland only. |
 | **Reranker (Alibaba)** | Cohere Rerank 3.5 on Bedrock | qwen3-rerank ($0.10/1M, 500-doc cap) |
 | **Vector store** | OpenSearch Serverless (hybrid kNN + BM25) | OpenSearch Vector Search Edition |
+| **Knowledge-Graph RAG (global / multi-hop queries)** | Bedrock Knowledge Bases GraphRAG on Neptune Analytics (managed) | AnalyticDB for PostgreSQL GraphRAG service (managed) |
 | **PDF parsing** | Bedrock Data Automation (advanced parsing) | DocMind + Qwen-VL-Max for complex pages |
 | **Semantic cache (Layer 1)** | ElastiCache Valkey + RediSearch, LangChain `RedisSemanticCache` | Tair + TairVector, same LangChain pattern |
 | **Prompt/prefix cache (Layer 2)** | Bedrock Prompt Caching for Claude 4.x / Nova (Version A). Not available for Qwen3 on Bedrock → Version B uses vLLM APC / SGLang RadixAttention on self-hosted path, no Layer 2 on Bedrock default. | Qwen Context Cache (implicit from day 1 + explicit) |

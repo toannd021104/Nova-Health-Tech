@@ -11,7 +11,7 @@ The seven domains below map directly to the brief's five bullets (Data pipeline,
 
 ## Launch model — one product, everything on
 
-There is **no pilot, PoC, or staged rollout**. When we cut over, every capability in this doc is active on day one — including the distilled/fine-tuned student on the fast lane, the multi-agent specialist topology on the complex lane, LazyGraphRAG over the WHO corpus, all three cache layers, guardrails, audit, and the EHR launch. Anything that involves training a model is trained during a **pre-launch build window** (roughly 6–10 weeks of engineering), not after.
+There is **no pilot, PoC, or staged rollout**. When we cut over, every capability in this doc is active on day one — including the distilled/fine-tuned student on the fast lane, the multi-agent specialist topology on the complex lane, the managed GraphRAG service on the WHO + protocol corpus, all three cache layers, guardrails, audit, and the EHR launch. Anything that involves training a model is trained during a **pre-launch build window** (roughly 6–10 weeks of engineering), not after.
 
 What runs after launch is **continuous operations**, not a "phase":
 
@@ -19,7 +19,7 @@ What runs after launch is **continuous operations**, not a "phase":
 |---|---|---|
 | Daily | WHO ICD-11 delta ingest; cache invalidation | Keeps index current with the API |
 | Weekly | SharePoint / trial-report reconciliation | Safety net for missed Graph webhooks |
-| Monthly | WHO guideline refresh + LazyGraphRAG re-index; DPO micro-run on the month's clinician preference pairs | Matches WHO's monthly cadence; tone drift correction |
+| Monthly | WHO guideline refresh + managed GraphRAG incremental re-index; DPO micro-run on the month's clinician preference pairs | Matches WHO's monthly cadence; tone drift correction |
 | Quarterly | Full student retrain (SFT + optional GRPO); re-qualify on eval harness; promote via 5% canary | Prevent drift; incorporate accumulated new data |
 | Event-driven | Red-team re-run + retrain after any guardrail incident | Close adversarial gaps fast |
 
@@ -64,19 +64,21 @@ This is the big question: plain vector RAG, hybrid RAG, agentic RAG, or knowledg
 | **A. Plain vector RAG (kNN only)** | Semantic similarity retrieval | Simple, fast (< 80 ms), cheap | Misses exact-term queries (drug names, ICD codes), no reasoning over relationships | Baseline | Low | Not chosen |
 | **B. Hybrid RAG (BM25 + kNN + rerank)** | Adds keyword exact match and rerank precision | Best general-purpose; covers drug names, codes, and semantics; 5–15 % recall lift over plain vector | Slightly slower (~100 ms); rerank adds cost | Baseline + `qwen3-rerank` $0.10/1M | Low | **Default for emergency lane + citation / literature lane** |
 | **C. Agentic RAG (iterative retrieve → reason → retrieve)** | Multi-hop: "what does treatment X do for patient with condition Y and allergy Z?" | Higher answer quality on multi-hop; the agent can call PubMed / ICD-11 / SharePoint as separate tools and compose | 3–10× more tokens, 2–5× latency vs one-pass (per the 2026 production guide) | ~$0.006–0.015 per complex call vs $0.0026 one-pass | Medium | **Default for complex differential lane (non-emergency)** |
-| **D. Knowledge-Graph RAG (GraphRAG / LightRAG / LazyGraphRAG)** | "Global" questions that span the whole corpus: "what are the main themes across all WHO sepsis guidelines?" | Answers global queries vector RAG cannot; disambiguates entities (sepsis vs septic shock vs severe sepsis) | KG construction cost is real; Microsoft GraphRAG indexing ~$20–80 per 100 MB of text; LazyGraphRAG drops this 700×; small-LLM KG-RAG shows mixed gains per Apr 2026 paper | LazyGraphRAG ~0.1 % of full GraphRAG query cost, same quality on global queries | **High** for GraphRAG; **Medium** for LazyGraphRAG / LightRAG | **Optional** layer for complex lane; use LazyGraphRAG on the WHO + guideline corpus, not on PubMed |
-| **E. Agentic Medical Graph-RAG (AMG-RAG, MedGraphRAG)** | Automates continuous MKG updates + integrates reasoning + PubMed live | Research-leading on MedQA benchmarks; designed for clinical use | Most complex of the lot; more research than production | Research-tier cost; no managed offering yet | **Very High** | Research-tier — not included in the launch build |
+| **D. Knowledge-Graph RAG — managed service per cloud** | "Global" questions that span the whole corpus: "what are the main themes across all WHO sepsis guidelines?" Entity disambiguation (sepsis vs septic shock vs severe sepsis) | Managed extraction, graph store, and hybrid graph+vector retrieval — no self-hosted Neo4j / NetworkX to babysit. Answers global queries plain RAG can't. Built-in on both clouds. | Graph construction bills for the LLM calls that extract entities/relations; retrieval adds graph-traversal latency (usually 100–300 ms) on top of vector kNN. | Ingest: one-time per document (LLM token cost for extraction). Query: graph traversal is roughly 2–3× base vector cost per lookup. | Medium (managed) vs High (self-hosted) | **Launch default on both clouds — Alibaba AnalyticDB for PostgreSQL GraphRAG service (Version C), Amazon Bedrock Knowledge Bases GraphRAG on Neptune Analytics (Versions A and B)** |
+| **E. Agentic Medical Graph-RAG (AMG-RAG, MedGraphRAG) — research-tier** | Automates continuous MKG updates + integrates reasoning + PubMed live | Research-leading on MedQA benchmarks; designed for clinical use | Most complex of the lot; more research than production; no managed offering | Research-tier cost | **Very High** | Research — not included in the launch build |
+| **F. Open-source LazyGraphRAG / LightRAG (self-hosted)** | Same pattern as D, but you run it | Portable; no vendor lock-in; the Microsoft LazyGraphRAG paper shows ~700× cheaper query cost than full GraphRAG on global queries | You own the pipeline — entity extractor version bumps, graph store ops, reindex schedule | LazyGraphRAG paper reports ~0.1 % of full-GraphRAG indexing cost | High | **Only if the managed D is unavailable** (e.g. an on-prem Apsara Stack or a hospital that forbids the managed service) |
 
 ### Our stack
 
 - **Emergency lane**: **B — hybrid RAG one-pass**. Speed-first.
-- **Complex lane**: **B + C — agentic RAG by default**, with a tool for KG search if D is available. The agent's tools:
-  - `kb_retrieve(topic, source, max_age_days)` — hybrid on Model Studio KB
+- **Complex lane**: **B + C + D** — hybrid retrieval plus agentic multi-hop plus graph traversal. Which one wins per query is picked by the agent's planner. Tools exposed to the agent:
+  - `kb_retrieve(topic, source, max_age_days)` — hybrid BM25 + kNN on the vector KB
+  - `graph_retrieve(entity, relation?, hops=2)` — managed GraphRAG service on the same corpus (Alibaba AnalyticDB PG GraphRAG for Version C, Bedrock Knowledge Bases GraphRAG for Versions A and B)
   - `icd11_lookup(term, mode)` — runtime WHO ICD-11 API
   - `pubmed_search(query, max_results)` — runtime E-utilities (free tier key)
-  - `graph_query(subject, relation, object)` — optional, only if D is deployed
-- **Optional D**: **LazyGraphRAG over the WHO + internal guideline corpus** (not PubMed). Indexed monthly during the ingestion job. Turn on if the eval harness shows the agent struggles on "summarize across all the living WHO hepatitis guidelines" style questions.
+- **Indexing cadence for D**: the graph is built at ingestion time over the WHO + internal guideline corpus (not PubMed — PubMed stays runtime-only). Every monthly WHO refresh and every SharePoint webhook triggers an incremental graph update. Both managed services handle re-indexing automatically.
 - **Not E** — research-tier only; revisit once AMG-RAG has a managed offering and a stable eval harness.
+- **Option F (self-hosted LazyGraphRAG / LightRAG / Microsoft GraphRAG)** is held in reserve for on-prem or Apsara Stack deployments where the managed service isn't available.
 
 ### Why agentic RAG is worth the cost on the complex lane
 
@@ -86,7 +88,7 @@ This is the big question: plain vector RAG, hybrid RAG, agentic RAG, or knowledg
 
 The emergency lane is single-hop ("sepsis bundle dose?"). The complex lane is multi-hop ("54-year-old with eGFR 35 and a sulfa allergy, what antibiotic for UTI?") — the agent pays for itself.
 
-Sources: [Agentic RAG: The 2026 Production Guide](https://www.marsdevs.com/guides/agentic-rag-2026-guide), [Agentic Medical Knowledge Graphs (AMG-RAG)](https://arxiv.org/abs/2502.13010), [MedGraphRAG](https://arxiv.org/abs/2408.04187), [LazyGraphRAG (Microsoft Research)](https://www.microsoft.com/en-us/research/blog/lazygraphrag-setting-a-new-standard-for-quality-and-cost/), [KG-RAG with small LLMs, Apr 2026](https://arxiv.org/html/2504.10982v5).
+Sources: [AnalyticDB for PostgreSQL — GraphRAG service (Alibaba Cloud docs)](https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql/user-guide/use-the-graphrag-service), [Amazon Bedrock Knowledge Bases GraphRAG on Neptune Analytics (AWS GA March 2025)](https://aws.amazon.com/blogs/machine-learning/announcing-general-availability-of-amazon-bedrock-knowledge-bases-graphrag-with-amazon-neptune-analytics/), [Agentic RAG: The 2026 Production Guide](https://www.marsdevs.com/guides/agentic-rag-2026-guide), [Agentic Medical Knowledge Graphs (AMG-RAG)](https://arxiv.org/abs/2502.13010), [MedGraphRAG](https://arxiv.org/abs/2408.04187), [LazyGraphRAG — fallback for self-hosted](https://www.microsoft.com/en-us/research/blog/lazygraphrag-setting-a-new-standard-for-quality-and-cost/).
 
 ---
 
@@ -281,7 +283,8 @@ Sources: [ARMS LLM Trace Explorer](https://www.alibabacloud.com/help/en/arms/app
 │    DocMind advanced parse → chunk → text-embedding-v4 (text) /          │
 │    tongyi-embedding-vision-plus (figures) → OpenSearch Vector Search    │
 │    + AnalyticDB PG hybrid option (BM25 + kNN + sparse)                  │
-│    Optional LazyGraphRAG index over WHO + guideline corpus              │
+│    + AnalyticDB PG GraphRAG service (managed entity+relation graph      │
+│      over the WHO + internal guideline corpus)                          │
 └──────────────────────────────────┬──────────────────────────────────────┘
                                    │
 ┌──────────────────────────────────┴──────────────────────────────────────┐
@@ -296,9 +299,9 @@ Sources: [ARMS LLM Trace Explorer](https://www.alibabacloud.com/help/en/arms/app
 │     GP / triage agent (Qwen3.5-Flash) → picks specialist                │
 │     Specialist agent (Qwen3.5-Plus) with tools:                         │
 │       - kb_retrieve(topic, source, max_age_days)                        │
+│       - graph_retrieve(entity, hops=2)  # managed GraphRAG service      │
 │       - icd11_lookup(term, mode)                                        │
 │       - pubmed_search(query)                                            │
-│       - graph_query(s,r,o) if LazyGraphRAG deployed                     │
 │     Moderator step: ground-check + citation validator                   │
 │                                                                         │
 │   All behind: Content Moderation 2.0 + qwen3-rerank + IDaaS SSO         │
@@ -312,7 +315,7 @@ Sources: [ARMS LLM Trace Explorer](https://www.alibabacloud.com/help/en/arms/app
 | Domain | Version C (recommended default) | Version A | Version B |
 |---|---|---|---|
 | Data pipeline | Managed DocMind + multimodal fallback (option 1-D) | BDA + Nova Multimodal fallback (1-D) | BDA + Nova Multimodal fallback (1-D) |
-| Retrieval | Hybrid (B) on emergency + **Agentic (C)** on complex + **LazyGraphRAG (D)** over WHO corpus | Same pattern | Same pattern |
+| Retrieval | Hybrid (B) on emergency + **Agentic (C)** on complex + **managed AnalyticDB PG GraphRAG (D)** on the WHO + protocol corpus | Hybrid (B) + Agentic (C) + **managed Bedrock Knowledge Bases GraphRAG on Neptune Analytics (D)** | Same as Version A |
 | Orchestration | Model Studio Agent + Workflow Application; **multi-agent specialist topology on complex lane (§3b option B, 7 specialties toggleable per hospital)** | Bedrock Agents + same multi-agent topology | Bedrock Agents + same multi-agent topology |
 | Training (at launch) | PAI SFT+LoRA on Qwen3-8B distilled from Qwen3.5-Plus + GRPO round for tool calling | Bedrock Model Distillation Sonnet 4.5 → Nova Lite | Bedrock RFT on Qwen3-32B (us-west-2) or SageMaker GRPO on Qwen3-4B (SG residency path) |
 | Corporate integration | SMART on FHIR + Graph subscriptions + Upload Portal + IPsec VPN | Same | Same |
@@ -326,7 +329,7 @@ Nothing below is "phase 2" — it's all built. The tenant config simply turns it
 | Toggle | Default | When to turn OFF |
 |---|---|---|
 | `multi_agent_specialists_enabled` | ON | A small hospital without enough specialty volume wants a simpler single-agent path |
-| `lazygraphrag_enabled` | ON | A hospital's workload is entirely single-hop retrieval ("what's the ICD code for X?") |
+| `graphrag_enabled` | ON | A hospital's workload is entirely single-hop retrieval ("what's the ICD code for X?") |
 | `pubmed_tool_enabled` | ON | The hospital prefers internal-only sourcing and an offline corpus |
 | `ehr_launch_smart_v2` | ON per configured tenant | Hospital doesn't have FHIR yet (rare in APAC 2026) — falls back to manual patient context entry |
 | `student_model_override` | student | A hospital wants to pin to the base teacher model for clinical-review reasons; pricier but available |
@@ -344,10 +347,13 @@ All seven toggles are first-class parameters in the tenant config object stored 
 - [Qwen-Agent docs](https://qwen.readthedocs.io/en/latest/framework/qwen_agent.html)
 - [Deploy a Qwen 3 Agentic RAG — DailyDose](https://www.dailydoseofds.com/p/deploy-a-qwen-3-agentic-rag/)
 - [Agentic RAG: The 2026 Production Guide (MarsDevs)](https://www.marsdevs.com/guides/agentic-rag-2026-guide)
+- [AnalyticDB for PostgreSQL — GraphRAG service (Alibaba managed)](https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql/user-guide/use-the-graphrag-service)
+- [Amazon Bedrock Knowledge Bases GraphRAG on Neptune Analytics — GA announcement](https://aws.amazon.com/blogs/machine-learning/announcing-general-availability-of-amazon-bedrock-knowledge-bases-graphrag-with-amazon-neptune-analytics/)
+- [Amazon Bedrock — build a knowledge base with Neptune Analytics graphs](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-build-graphs.html)
 - [Agentic Medical Graph-RAG (AMG-RAG) — arXiv 2502.13010](https://arxiv.org/abs/2502.13010)
 - [MedGraphRAG — Towards Safe Medical LLMs via Graph RAG, arXiv 2408.04187](https://arxiv.org/abs/2408.04187)
-- [LazyGraphRAG — Microsoft Research blog](https://www.microsoft.com/en-us/research/blog/lazygraphrag-setting-a-new-standard-for-quality-and-cost/)
-- [LazyGraphRAG 700× cheaper — Particula blog](https://particula.tech/blog/lazygraphrag-700x-cheaper-graphrag-knowledge-graphs)
+- [Microsoft GraphRAG — reference implementation (self-hosted fallback only)](https://microsoft.github.io/graphrag/)
+- [LazyGraphRAG — Microsoft Research blog (self-hosted fallback)](https://www.microsoft.com/en-us/research/blog/lazygraphrag-setting-a-new-standard-for-quality-and-cost/)
 - [KG-RAG with small LLMs on Japanese medical QA — arXiv 2504.10982](https://arxiv.org/html/2504.10982v5)
 - [MMedAgent-RL — Qwen2.5-VL multi-agent medical reasoning, arXiv 2506.00555](https://arxiv.org/html/2506.00555v2)
 - [MedRoute — RL dynamic specialist routing, arXiv 2604.06180](https://arxiv.org/abs/2604.06180)

@@ -183,7 +183,7 @@ There is **no pilot / PoC / staged rollout**. When we go live, every capability 
 | Emergency toggle + if/else router | ✅ on |
 | **Fine-tuned Nova Lite student** distilled from Sonnet 4.5 via Bedrock Model Distillation | ✅ **trained before launch, serving 100% of fast-lane traffic** |
 | Multi-agent specialist topology (GP / triage + Emergency + ID + Oncology + Cardio + Pediatrics + Pharmacology) on complex lane | ✅ on (toggleable per hospital client) |
-| Optional LazyGraphRAG over the WHO + protocol corpus | ✅ on |
+| Managed GraphRAG (Bedrock Knowledge Bases GraphRAG on Neptune Analytics) on the WHO + protocol corpus | ✅ on |
 | Layer-1 semantic cache + Layer-2 Bedrock Prompt Caching | ✅ on |
 | Bedrock Reserved Tier on the emergency lane | ✅ on (sized to peak TPM) |
 | Guardrails + Comprehend Medical PHI mask + grounding + citation validator | ✅ on |
@@ -197,7 +197,7 @@ After launch the team runs:
 | Cadence | Action |
 |---|---|
 | Daily 02:00 SGT | WHO ICD-11 delta ingest; semantic-cache invalidation for affected `source:*` tags |
-| Monthly day 1 02:30 SGT | WHO guideline PDF refresh + LazyGraphRAG re-index |
+| Monthly day 1 02:30 SGT | WHO guideline PDF refresh + incremental re-index of the Bedrock Knowledge Bases GraphRAG (Neptune Analytics) graph |
 | Weekly Sun | SharePoint / trial-report reconciliation pass (safety net for missed webhooks) |
 | Monthly | DPO micro-run on the past month's clinician preference pairs (Bedrock Model Distillation has no DPO path; on Version A we use Claude 3 Haiku SFT+DPO fallback or skip DPO for Nova Lite). Short training, same canary evaluation as launch. |
 | Quarterly | Full student retrain on accumulated new clinician data + latest WHO releases; re-qualify with eval harness; promote after it matches or beats current student on the holdout. |

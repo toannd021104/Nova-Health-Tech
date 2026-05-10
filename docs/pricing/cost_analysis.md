@@ -20,15 +20,15 @@ This changes the verdict: **Version A with Nova Micro on the fast lane is the ch
 | **Complex-lane model options** | Sonnet 4.5 OR Nova Pro | **Qwen3 VL 235B A22B** (Sydney; with vision) OR Qwen3 235B A22B 2507 (text-only, cheaper) | **Qwen3.5-Plus** (newer Feb-2026 release, replaces Qwen-Max) |
 | **Customization** | Bedrock Model Distillation (Sonnet → Nova Lite, ~$2k/run) | **Bedrock Reinforcement Fine-Tuning on Qwen3 32B** (us-west-2, $80/hr ≈ $640/run) OR SageMaker GRPO on Qwen3-4B (~$100/run) | PAI SFT+LoRA on Qwen3-8B (~$15–40/run) |
 | **Singapore data residency** | ✅ | ⚠️ Bedrock Qwen is Sydney; PDPA contract-mitigable | ✅ |
-| **Monthly pilot total (500 physicians, base)** | **~$2,755 / mo (A1+: Nova Micro + Nova Pro)** or ~$7,095 / mo (A2: Haiku 4.5 + Sonnet 4.5) | **~$2,767 / mo** (Bedrock-only, no SageMaker) | **~$1,920 / mo (Qwen3.5-Flash + Qwen3.5-Plus, SG-native embed/rerank)** |
-| **Post-customization total** | ~$5,570 / mo (A2 after Nova Lite distillation) | **~$3,040 / mo** (after Bedrock RFT on Qwen3 32B) | ~$1,980 / mo (after SFT+LoRA on PAI) |
+| **Monthly pilot total (500 physicians, base)** | **~$2,955 / mo (A1+: Nova Micro + Nova Pro)** or ~$7,295 / mo (A2: Haiku 4.5 + Sonnet 4.5) | **~$2,967 / mo** (Bedrock-only, no SageMaker) | **~$2,220 / mo (Qwen3.5-Flash + Qwen3.5-Plus, SG-native embed/rerank + AnalyticDB PG GraphRAG)** |
+| **Post-customization total** | ~$5,765 / mo (A2 after Nova Lite distillation) | **~$3,240 / mo** (after Bedrock RFT on Qwen3 32B) | ~$2,280 / mo (after SFT+LoRA on PAI) |
 | **Data-residency posture** | Singapore, PDPA-native | Sydney Bedrock (PDPA-mitigable); SG only if SageMaker path | Singapore, PDPA-native |
 
-**Headline (re-ranked)**:
-1. **Version C (~$1,920/mo)** — cheapest SG-native, Qwen3.5-Plus replaced Qwen-Max for 3× savings on complex lane. Embeddings use `text-embedding-v4` + `tongyi-embedding-vision-plus` (SG International); reranker is `qwen3-rerank`.
-2. **Version A1+ (~$2,755/mo)** — cheapest fully AWS-BAA-covered SG-native, pending Nova Micro/Pro clinical quality benchmark.
-3. **Version B (~$2,767/mo)** — pure Bedrock, no SageMaker required. Qwen3 Next 80B A3B + Qwen3 VL 235B. Sydney residency.
-4. **Version A2 (~$7,095/mo)** — running demo today (Haiku 4.5 + Sonnet 4.5). Quality-first baseline.
+**Headline (re-ranked, all three versions include managed GraphRAG service)**:
+1. **Version C (~$2,220/mo)** — cheapest SG-native, Qwen3.5-Plus replaced Qwen-Max for 3× savings on complex lane. Embeddings use `text-embedding-v4` + `tongyi-embedding-vision-plus` (SG International); reranker is `qwen3-rerank`; **managed GraphRAG on AnalyticDB for PostgreSQL**.
+2. **Version A1+ (~$2,955/mo)** — cheapest fully AWS-BAA-covered SG-native, pending Nova Micro/Pro clinical quality benchmark. Includes **Bedrock Knowledge Bases GraphRAG on Neptune Analytics**.
+3. **Version B (~$2,967/mo)** — pure Bedrock, no SageMaker required. Qwen3 Next 80B A3B + Qwen3 VL 235B. Sydney residency. Same GraphRAG stack as Version A.
+4. **Version A2 (~$7,295/mo)** — Haiku 4.5 + Sonnet 4.5 baseline. Quality-first.
 
 **About Qwen3.6-27B** (released 22 Apr 2026): coding-agent specialist. Nova should not use it — lower general-knowledge scores than Qwen3.5-Plus/Qwen3.5-397B, not on Model Studio API, not on Bedrock. Re-evaluate when it gets hosted with medical benchmarks.
 
@@ -41,7 +41,7 @@ This changes the verdict: **Version A with Nova Micro on the fast lane is the ch
 - Prompt / context-cache (Layer 2) hit rate 70 % on non-cached calls → effective 50 % off on input tokens.
 - Vector store ~20 GB indexed.
 - Site-to-Site VPN up for corporate integration (dual tunnel).
-- Nothing below is "phase 2" or "phase 3" — everything is live at launch. Customization costs are amortized per retrain cadence (monthly DPO, quarterly SFT). Optional toggles (multi-agent specialist, LazyGraphRAG, PubMed tool) add usage to the numbers below; see line items.
+- Nothing below is "phase 2" or "phase 3" — everything is live at launch. Customization costs are amortized per retrain cadence (monthly DPO, quarterly SFT). Optional toggles (multi-agent specialist, managed GraphRAG, PubMed tool) add usage to the numbers below; see line items.
 
 ## 3. Three cost levers available on all three clouds
 
@@ -187,20 +187,21 @@ If we split the complex lane so that only figure-bearing retrieval hits Qwen3-VL
 | Cohere Rerank 3.5 (selective) | 10 % of complex calls | ~$85 |
 | Bedrock Guardrails | per call | ~$180 |
 | OpenSearch Serverless | 1+1 OCU × 720 hr × $0.24 | ~$350 |
+| **Bedrock Knowledge Bases GraphRAG on Neptune Analytics** | graph extraction LLM calls at ingest (~$80 one-time per monthly WHO refresh + webhook increments) + Neptune Analytics capacity (1 m-NCU minimum ≈ $0.16/hr × 720) + graph-traversal LLM calls amortized at ~$0.0005/query × 30% of complex-lane traffic | ~$200 |
 | Comprehend Medical | per 100-char unit | ~$180 |
 | Lambda + API GW + CloudFront + WAF | serverless | ~$150 |
 | S3 + CloudTrail Object Lock + Macie | | ~$120 |
 | ElastiCache Valkey (2 AZ cache.t4g.small) | | ~$80 |
 | Site-to-Site VPN | dual tunnel | ~$80 |
-| **A1 subtotal** | | **~$6,815** |
+| **A1 subtotal** | | **~$7,015** |
 
 #### A1+ — Nova Micro (fast) + **Nova Pro** (complex) · all-Nova, SG-native
 
 | Item | Cost vs A1 |
 |---|---|
 | Complex lane — Nova Pro instead of Sonnet 4.5 (420 k × $0.0035) | ~$1,470 (vs Sonnet's $5,460) |
-| Everything else same as A1 | ~$1,285 |
-| **A1+ subtotal** | **~$2,755** |
+| Everything else same as A1 (includes Bedrock Knowledge Bases GraphRAG at ~$200) | ~$1,485 |
+| **A1+ subtotal** | **~$2,955** |
 
 Nova Pro can't match Sonnet 4.5 on complex clinical reasoning depth, but if it clears the benchmark it's the cheapest SG-native option in the entire comparison. **This becomes the new baseline to beat.**
 
@@ -210,11 +211,11 @@ Nova Pro can't match Sonnet 4.5 on complex clinical reasoning depth, but if it c
 |---|---|---|
 | Fast lane — Haiku 4.5 | 180 k × 65 % × $0.003 | ~$350 |
 | Complex lane — Sonnet 4.5 | 420 k × $0.013 | ~$5,460 |
-| All other items same as A1 | | ~$1,285 |
-| **A2 subtotal** | | **~$7,095** |
+| All other items same as A1 (includes Bedrock Knowledge Bases GraphRAG at ~$200) | | ~$1,485 |
+| **A2 subtotal** | | **~$7,295** |
 | Distillation (Sonnet → Nova Lite) amortized, trained once pre-launch + re-qualified quarterly | $2,000 per run / 3 months | ~$670 |
 | Post-distill Nova Lite replaces Sonnet on ~40 % of complex traffic | savings | −$2,200 |
-| **A2 with trained Nova Lite student (baseline at launch)** | | **~$5,565** |
+| **A2 with trained Nova Lite student (baseline at launch)** | | **~$5,765** |
 
 ### Version B — AWS + Qwen (Sydney Bedrock only, no SageMaker)
 
@@ -228,16 +229,17 @@ Bedrock hosts four Qwen3 models in Sydney, so Version B is fully Bedrock-hosted 
 | Cohere Rerank 3.5 (selective) | | ~$85 |
 | Bedrock Guardrails | per call | ~$180 |
 | OpenSearch Serverless | baseline | ~$350 |
+| **Bedrock Knowledge Bases GraphRAG on Neptune Analytics** | same pattern as A1 (ingest + 1 m-NCU Neptune capacity + graph-traversal LLM calls) | ~$200 |
 | Comprehend Medical DetectPHI | | ~$180 |
 | Lambda + API GW + CloudFront + WAF | serverless | ~$150 |
 | S3 + CloudTrail Object Lock + Macie | | ~$120 |
 | ElastiCache Valkey | | ~$80 |
 | Site-to-Site VPN | dual tunnel | ~$80 |
-| **B base (Bedrock-only, no custom model — same-API fallback)** | | **~$2,767** |
+| **B base (Bedrock-only, no custom model — same-API fallback)** | | **~$2,967** |
 | Bedrock RFT training (Qwen3-32B, ~8 hr × $80/hr), trained pre-launch, amortized quarterly | ~$640 per run | +~$215 |
 | Fast lane switches to custom Qwen3-32B (us-west-2) with cheaper output | | ~neutral or saves ~$20 |
 | Model storage | | +~$2 |
-| **B at launch with trained Qwen3-32B custom model (path B-1)** | | **~$2,985–$3,040** |
+| **B at launch with trained Qwen3-32B custom model (path B-1)** | | **~$3,185–$3,240** |
 
 **Splitting the complex lane:** Most RAG retrievals don't involve figures. If we route only figure-bearing queries to Qwen3 VL and the rest to Qwen3 235B A22B 2507 (text-only at $0.2266/$0.9064), the complex lane cost drops:
 
@@ -257,7 +259,7 @@ Same launch-day custom student, but hosted in Singapore on SageMaker:
 | GRPO training on `ml.g6e.8xlarge` (quarterly retrain ~$100) | amortized +$35 |
 | SageMaker SG endpoint `ml.g5.2xlarge` always-on (`720 hr × $1.52`) | +$1,095 |
 | Savings on fast lane (replaces Bedrock Qwen3 Next calls) | −$95 |
-| **B path B-2 total** | **~$3,800** |
+| **B path B-2 total** | **~$4,000** |
 
 Use path B-2 only when the client mandates SG residency for the student model.
 
@@ -274,16 +276,17 @@ Post-Qwen3.5 update: complex lane now uses **Qwen3.5-Plus** (Feb 2026 release) i
 | qwen3-rerank (top-20 set, 10% of complex calls) | ~500 M tokens amortized | ~$50 |
 | Content Moderation 2.0 | per call | ~$50 |
 | OpenSearch Vector Search (small cluster) | | ~$180 |
+| **AnalyticDB for PostgreSQL GraphRAG service** | 1 × 4-core 32 GB vector-optimized instance (baseline for managed GraphRAG + RAG service) + Qwen-Plus tokens for entity/relation extraction at ingest | ~$300 |
 | DataWorks SDDP PHI masking | | ~$120 |
 | FC + API GW + CDN + WAF | | ~$90 |
 | OSS + ActionTrail + SLS WORM | | ~$70 |
 | Tair (Redis-compatible) | | ~$60 |
 | IPsec VPN Gateway | | ~$60 |
-| **Base monthly (Qwen3.5-Plus, no student)** | | **~$1,920** |
+| **Base monthly (Qwen3.5-Plus, no student)** | | **~$2,220** |
 | SFT+LoRA training run (Qwen3-8B), trained once pre-launch + quarterly retrain | 2–4 GPU-hr × $1–2 on PAI | ~$15–40 per run |
 | PAI-EAS hosting fine-tuned Qwen3-8B (A10 GPU, always-on) | | ~$720–1,500 |
 | Student replaces Qwen3.5-Plus on ~60 % of complex-lane traffic | | **−$660** |
-| **C at launch with Qwen3-8B student active** | | **~$1,980–2,760** |
+| **C at launch with Qwen3-8B student active** | | **~$2,280–3,060** |
 
 Alibaba's advantage is now even stronger: Qwen3-8B on PAI-EAS fits on a single A10 **and** Qwen3.5-Plus complex-lane pricing is cheaper than the Bedrock Qwen3-235B in Sydney.
 

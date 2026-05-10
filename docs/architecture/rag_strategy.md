@@ -46,6 +46,7 @@ Reasoning:
 - Managed services keep the compliance boundary tight — Macie / SDDP scans and the cloud provider's BAA already cover them.
 - The per-document cost is small next to what Nova will spend on LLM inference; optimizing parsing cost before the model is premature.
 - Strategy C is available as a deterministic fallback for a short list of documents (typically < 10%) where tables or flowcharts matter and Strategy A misses them. The RAG router emits both a text chunk answer and, when the query matches a "needs the figure" classifier, a page-image answer.
+- **Knowledge-Graph RAG is layered on top of Strategy A**, not a replacement. Both clouds expose managed GraphRAG services (Bedrock Knowledge Bases GraphRAG on Neptune Analytics for AWS; AnalyticDB for PostgreSQL GraphRAG service for Alibaba) that extract entities + relations from the same parsed corpus and expose a `graph_retrieve(entity, hops=2)` tool to the complex-lane agent. See §Graph-augmented retrieval below.
 
 ### Concrete AWS implementation
 
@@ -67,6 +68,43 @@ Reasoning:
 - **Retrieval**: Model Studio RAG Application for retrieval; ranker node calls `qwen3-rerank` before generation.
 - **Freshness**: CloudOps Scheduler cron (day 1) → Function Workflow → same refresh job → OSS upsert → Model Studio RAG re-index.
 
+## Graph-augmented retrieval — managed GraphRAG service on top
+
+Both clouds now ship a **managed** Graph-RAG service that sits beside the vector KB and draws from the same parsed corpus:
+
+| Cloud | Service | How it wires in |
+|---|---|---|
+| **AWS** | **Amazon Bedrock Knowledge Bases GraphRAG on Amazon Neptune Analytics** (GA March 2025) | Bedrock KB automatically extracts entities and relations from the same documents fed to the vector KB, stores the graph in a Neptune Analytics graph, and exposes graph-aware retrieval through the same KB API. No Neo4j to run. |
+| **Alibaba** | **AnalyticDB for PostgreSQL GraphRAG service** | Managed entity+relation extraction pipeline that reuses the RAG service's ingestion; graph is stored in ADBPG alongside the vector table; queried over the same OpenAPI. |
+
+Why we put this at launch, not "maybe later":
+
+- The complex lane already has questions that want graph traversal ("patients on warfarin with a history of AFib who also take amiodarone — what's the interaction story?"). Vector search alone answers poorly; the agent needs to walk entity relations.
+- Global-scope questions ("summarize the common failure modes across the last 12 months of WHO sepsis updates") are exactly what community-summary graph retrieval is designed for.
+- Both services handle entity extraction automatically — **no manual KG construction**. That removes the main complexity objection against GraphRAG.
+- Self-hosted alternatives (Microsoft GraphRAG, LightRAG, LazyGraphRAG) stay on the shelf only for on-prem (Apsara Stack) deployments where the managed service can't run.
+
+### Graph retrieval as a tool the agent picks
+
+The complex-lane agent sees two retrieval tools, not one:
+
+```python
+def kb_retrieve(topic, source, max_age_days):
+    """Hybrid BM25 + kNN over the vector KB. Use for direct factual
+    lookup and most clinical answers."""
+
+def graph_retrieve(entity, relation=None, hops=2):
+    """Managed GraphRAG. Use when the question needs multi-hop traversal
+    (drug-drug, condition-drug, trial-endpoint-cohort relationships) or
+    a corpus-wide summary."""
+```
+
+The agent's router prompt lists a decision rubric: single-hop factual → kb_retrieve; multi-hop / relational / "summarize across" → graph_retrieve. Results from both land in the same citation frame, so every answer still has its `[N]` pointers back to concrete chunks.
+
+### Freshness
+
+Graph re-index runs on the same triggers as the vector KB sync: monthly WHO refresh, SharePoint webhook, daily ICD-11 delta. Both managed services do **incremental** updates, so we don't pay to re-extract entities for unchanged documents.
+
 ## ICD-11 API is a first-class source (not a single download)
 
 This API is **the** "structured external source" the scenario mentions, alongside PubMed. It's used three ways:
@@ -85,6 +123,9 @@ See `docs/architecture/AWS_architecture.md` §4.2 and `docs/architecture/Alibaba
 - [Document Parsing for RAG — A Complete Guide for 2026 (Omdena)](https://www.omdena.com/blog/document-parsing-for-rag)
 - [RAG-based application on PAI for finance and healthcare (Alibaba)](https://www.alibabacloud.com/help/en/pai/use-cases/development-of-rag-application-flow)
 - [Multimodal embeddings — Alibaba Cloud Model Studio](https://www.alibabacloud.com/help/en/model-studio/multimodal-embeddings)
+- [AnalyticDB for PostgreSQL — GraphRAG service (Alibaba managed)](https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql/user-guide/use-the-graphrag-service)
+- [Amazon Bedrock Knowledge Bases GraphRAG on Neptune Analytics — GA announcement](https://aws.amazon.com/blogs/machine-learning/announcing-general-availability-of-amazon-bedrock-knowledge-bases-graphrag-with-amazon-neptune-analytics/)
+- [Amazon Bedrock — build a knowledge base with Neptune Analytics graphs](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-build-graphs.html)
 - [WHO ICD-11 API Swagger](https://id.who.int/swagger/index.html)
 
 *Content above is rephrased for compliance with licensing restrictions.*
