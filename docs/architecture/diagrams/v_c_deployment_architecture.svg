@@ -79,7 +79,7 @@
   <rect x="300" y="320" width="780" height="110" class="box box-ali"/>
   <text x="320" y="340" class="title">AI tier</text>
   <text x="320" y="364" class="lbl-sm">• Model Studio (Bailian / dashscope-intl) — Qwen3.5-Flash · Qwen3.5-Plus · Qwen3-VL-Plus · Qwen3-rerank · embeddings</text>
-  <text x="320" y="382" class="lbl-sm">• PAI-EAS — Qwen3-8B student · A10 GPU · vLLM · PagedAttention · always-on (single endpoint)</text>
+  <text x="320" y="382" class="lbl-sm">• PAI-EAS — Qwen3-8B student (complex lane, ~60% of traffic) · A10 GPU · vLLM · PagedAttention · always-on · DR fallback for emergency</text>
   <text x="320" y="400" class="lbl-sm">• PAI DLC + Model Gallery — training jobs · SFT + LoRA + DPO + GRPO · quarterly cadence</text>
   <text x="320" y="418" class="lbl-sm">• PAI AI-Node (same VPC) — provides LLM egress for GraphRAG extraction</text>
 

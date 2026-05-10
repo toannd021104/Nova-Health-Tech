@@ -111,9 +111,9 @@
   <!-- Model Studio + PAI-EAS -->
   <rect x="520" y="310" width="380" height="80" class="box box-ali"/>
   <text x="710" y="332" text-anchor="middle" class="title">Model Studio (Bailian / dashscope-intl) + PAI-EAS</text>
-  <text x="710" y="350" text-anchor="middle" class="lbl-sm">Qwen3.5-Flash · Qwen3.5-Plus · Qwen3-VL-Plus</text>
-  <text x="710" y="366" text-anchor="middle" class="lbl-sm">Qwen3-8B student (A10) · Content Moderation 2.0</text>
-  <text x="710" y="382" text-anchor="middle" class="lbl-sm">40-department Agent apps + 1 emergency Workflow app</text>
+  <text x="710" y="350" text-anchor="middle" class="lbl-sm">Fast lane: Qwen3.5-Flash · Router: Flash JSON · Vision: Qwen3-VL-Plus</text>
+  <text x="710" y="366" text-anchor="middle" class="lbl-sm">Complex lane: Qwen3-8B student (60%, PAI-EAS A10) + Qwen3.5-Plus teacher (40%)</text>
+  <text x="710" y="382" text-anchor="middle" class="lbl-sm">40-department Agent apps + 1 emergency Workflow app · Content Moderation 2.0</text>
 
   <rect x="920" y="310" width="200" height="80" class="box box-ali"/>
   <text x="1020" y="332" text-anchor="middle" class="title">Citation + grounding</text>

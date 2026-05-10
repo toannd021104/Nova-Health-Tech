@@ -223,12 +223,18 @@ ASCII equivalent (for text-only renderers):
          │              │                              │ Function Workflow         │
  Layer 1 │    Layer 2   │  Generation                  │  DocMind parse → chunk →  │
  Tair    │    Qwen      │  (Model Studio + PAI-EAS):   │  embed → KB + graph sync  │
- +Tair   │    Context   │   Qwen3.5-Flash (fast,       │                           │
- Vector  │    Cache     │     router, Emergency)       │ + Security Center scan    │
- semantic│  (implicit + │   Qwen3.5-Plus (complex +    │ + SDDP PHI scan           │
- cache   │   explicit)  │     teacher + 39 specialists)│                           │
-         │              │   Qwen3-VL-Plus (Radiology)  │                           │
-         │              │   Qwen3-8B student (PAI-EAS) │                           │
+ +Tair   │    Context   │   FAST LANE (emergency):     │                           │
+ Vector  │    Cache     │     Qwen3.5-Flash            │ + Security Center scan    │
+ semantic│  (implicit + │   COMPLEX LANE:              │ + SDDP PHI scan           │
+ cache   │   explicit)  │     Qwen3.5-Plus teacher (40%│                           │
+         │              │       of complex traffic)    │                           │
+         │              │     Qwen3-8B student on      │                           │
+         │              │       PAI-EAS (60% — committed│                           │
+         │              │       day one; DR fallback   │                           │
+         │              │       for emergency lane)    │                           │
+         │              │     Qwen3-VL-Plus (Radiology)│                           │
+         │              │   ROUTER:                    │                           │
+         │              │     Qwen3.5-Flash JSON mode  │                           │
          │              │   + Content Moderation 2.0   │                           │
          │              │                              └──────────┬───────────────┘
          │              │                                         ▼

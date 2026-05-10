@@ -21,7 +21,8 @@ Distillation is **not** a fourth technique — it's a way to generate the SFT tr
 | Answer complex medical questions in natural language | Base foundation model + RAG. No fine-tune needed. |
 | Rely on internal trial reports + WHO + ICD-11 | RAG. Fine-tuning can't replace this — WHO updates monthly. |
 | Consistent tone and phrasing | SFT on Nova-approved answers; DPO if preference pairs exist. |
-| 2-second emergency SLA | Smaller, faster student. Distilled (teacher → student) with SFT. |
+| 2-second emergency SLA (fast lane) | Already-small fast model (Qwen3.5-Flash / Nova Micro / Qwen3 Next 80B MoE) + 3-layer cache. Fine-tuning is not what delivers the 2-s SLA on Version C — the Flash model + cache budget already fits. |
+| Complex-lane latency + cost + tone (60%+ of complex traffic) | **Distilled student** (teacher → smaller model, SFT). Serves the bulk of complex-lane traffic at ~2× faster than the teacher. Also doubles as an emergency DR fallback when the upstream endpoint has an outage. |
 | Patient-sensitive internal trials | **Never put PHI in training data.** De-identify via [Comprehend Medical](https://aws.amazon.com/comprehend/medical/) / [DataWorks SDDP](https://www.alibabacloud.com/product/sddp) first. |
 
 ## 3. What's actually fine-tunable per cloud
@@ -109,8 +110,8 @@ Path B-1 default: simpler ops, and the $0.78/1M output on the custom model is **
 | Role | Model | Customization |
 |---|---|---|
 | Complex-lane / teacher | **Qwen3.5-Plus** on Model Studio SG ([pricing](https://www.alibabacloud.com/help/en/model-studio/model-pricing)) | — |
-| Emergency-lane base | Qwen3.5-Flash | — |
-| **Student, serves production on day one** | **Qwen3-8B on PAI Model Gallery → PAI-EAS** | SFT + LoRA (or QLoRA), optional DPO, optional GRPO. Most flexible of the three versions. |
+| Emergency-lane base | Qwen3.5-Flash | — (already fast enough with cache; not fine-tuned) |
+| **Complex-lane student, serves ~60% of complex traffic on day one** | **Qwen3-8B on PAI Model Gallery → PAI-EAS** | SFT + LoRA (or QLoRA), optional DPO, optional GRPO. Most flexible of the three versions. Also acts as emergency DR fallback if Model Studio has an outage. |
 
 ## 5. SFT dataset pipeline (shared across all three versions)
 
@@ -142,7 +143,7 @@ Step 5 — Evaluation harness
 Step 6 — Promote to production
   Gate: student ≥ 95% of teacher on holdout + no regression on safety suite
     (PHI leak, ungrounded answer, prompt injection).
-  Launch-day: 100% on fast lane. Post-launch retrains: 5% canary for 72 hours.
+  Launch-day: 100% on its designated lane (fast lane for AWS versions; complex lane for Version C). Post-launch retrains: 5% canary for 72 hours.
 ```
 
 **Never put raw PHI in training data.** De-identify before step 2.
@@ -164,7 +165,7 @@ Before any fine-tune: `temperature=0.1`, narrow `max_tokens`, stop sequences, fi
 Fine-tuning adds on top:
 - Clinical-citation rubric the model follows without re-prompting
 - Tone mimicking Nova's approved-answer corpus
-- Lower cost and latency (smaller student on fast lane)
+- Lower cost and latency (smaller student on its designated lane: fast lane for Versions A/B, complex lane for Version C)
 - Tool-calling reliability (GRPO on Versions B and C only)
 
 ## 8. Per-run cost ([full cost breakdown in each proposal doc](overview.md))

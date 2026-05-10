@@ -232,7 +232,7 @@ Layer 2 hit  (prompt cache)      →  1100 ms, 90% cheaper input  (bulk of remai
 No cache     (cold path)         →  1800 ms, full price         (rare)
 ```
 
-Blended p50 ~600–900 ms for cached-hot emergency, p95 < 2000 ms. The fine-tuned student (see [`customization.md`](customization.md)) makes the cold path also fit the SLA.
+Blended p50 ~600–900 ms for cached-hot emergency, p95 < 2000 ms. The fast-lane model (Qwen3.5-Flash / Nova Micro / Qwen3 Next 80B MoE) is already small enough to fit the SLA. Fine-tuned students (see [`customization.md`](customization.md)) are complex-lane / fast-lane assets per version; they don't sit on the emergency critical path of Version C.
 
 ### Invalidation rules
 

@@ -130,7 +130,7 @@
   <text x="670" y="694" text-anchor="middle" class="lbl-sm">pubmed_search</text>
 
   <text x="500" y="730" text-anchor="middle" class="lbl-sm">Clinical Pharmacy side-channel on prescribing · Radiology forces Qwen3-VL on image</text>
-  <text x="500" y="748" text-anchor="middle" class="lbl-sm">Qwen3.5-Plus synthesis · grounding score ≥ 0.7 · citation validation</text>
+  <text x="500" y="748" text-anchor="middle" class="lbl-sm">Qwen3-8B student (PAI-EAS, 60%) + Qwen3.5-Plus teacher (40%) · grounding ≥ 0.7 · citation validation</text>
 
   <!-- Data stores accessed (right side) -->
   <rect x="760" y="450" width="180" height="80" class="box box-data"/>
@@ -153,8 +153,8 @@
 
   <rect x="960" y="550" width="180" height="80" class="box box-llm"/>
   <text x="1050" y="572" text-anchor="middle" class="title">LLM generation</text>
-  <text x="1050" y="592" text-anchor="middle" class="lbl-sm">Qwen3.5-Flash (fast)</text>
-  <text x="1050" y="608" text-anchor="middle" class="lbl-sm">Qwen3.5-Plus (complex)</text>
+  <text x="1050" y="592" text-anchor="middle" class="lbl-sm">Qwen3.5-Flash (fast lane)</text>
+  <text x="1050" y="608" text-anchor="middle" class="lbl-sm">Qwen3-8B student + Qwen3.5-Plus</text>
   <text x="1050" y="624" text-anchor="middle" class="lbl-sm">Qwen3-VL-Plus (vision)</text>
 
   <rect x="760" y="650" width="380" height="100" class="box box-out"/>

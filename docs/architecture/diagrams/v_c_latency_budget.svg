@@ -18,7 +18,7 @@
   </defs>
 
   <text x="640" y="28" text-anchor="middle" font-size="17" class="title">Emergency-Lane Latency Budget (p95, Singapore)</text>
-  <text x="640" y="48" text-anchor="middle" class="lbl-sm">Target ≤ 2,000 ms · measured end-to-end from client request to complete streamed answer</text>
+  <text x="640" y="48" text-anchor="middle" class="lbl-sm">Target ≤ 2,000 ms · Emergency lane = Qwen3.5-Flash · Student appears only as DR fallback if Model Studio is unavailable</text>
 
   <!-- Axis -->
   <g transform="translate(240,100)">
@@ -95,8 +95,8 @@
     <rect x="45"  y="176" width="12"  height="24" class="seg-cache"/>
     <text x="75" y="193" class="lbl-sm">~150 ms</text>
 
-    <!-- Bar 4: Student model (Qwen3-8B on PAI-EAS) -->
-    <text x="-10" y="248" text-anchor="end" class="lbl">Student Qwen3-8B (~60% cases)</text>
+    <!-- Bar 4: Student model as DR fallback for emergency lane -->
+    <text x="-10" y="248" text-anchor="end" class="lbl">Student Qwen3-8B (emergency DR fallback)</text>
     <rect x="0"   y="236" width="41"  height="24" class="seg-auth"/>
     <rect x="41"  y="236" width="29"  height="24" class="seg-retr"/>
     <!-- TTFT 250 ms = 102 px -->
@@ -122,7 +122,7 @@
   <g transform="translate(240,520)">
     <rect x="0"   y="0" width="12" height="12" class="seg-auth"/>  <text x="18" y="10" class="lbl-sm">IDaaS + SDDP PHI mask (~100 ms)</text>
     <rect x="220" y="0" width="12" height="12" class="seg-retr"/>  <text x="238" y="10" class="lbl-sm">Hybrid retrieval + rerank (~70 ms)</text>
-    <rect x="460" y="0" width="12" height="12" class="seg-ttft"/>  <text x="478" y="10" class="lbl-sm">TTFT first-token (~300 ms / ~180 ms L2 / ~250 ms student)</text>
+    <rect x="460" y="0" width="12" height="12" class="seg-ttft"/>  <text x="478" y="10" class="lbl-sm">TTFT first-token (~300 ms / ~180 ms L2 / ~250 ms DR fallback)</text>
     <rect x="0"   y="24" width="12" height="12" class="seg-gen"/>  <text x="18" y="34" class="lbl-sm">Full answer generation (~700–1,100 ms)</text>
     <rect x="280" y="24" width="12" height="12" class="seg-mod"/>  <text x="298" y="34" class="lbl-sm">Moderation + citation validation (~110 ms)</text>
     <rect x="560" y="24" width="12" height="12" class="seg-cache"/><text x="578" y="34" class="lbl-sm">Cache write / decrypt / audit (~10–25 ms)</text>
