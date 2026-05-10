@@ -32,7 +32,7 @@
 
 ### 1.1 Problem statement
 
-Nova Health Tech's clinical decision-support tool cannot keep pace with physician needs on two fronts: speed and medical relevance. Clinicians need grounded answers in seconds during diagnosis, with a hard 2-second target for emergency cases. Internal clinical trial reports sit in legacy PDFs with inconsistent tagging. WHO publishes monthly protocol updates that must reach clinicians within 24 hours. Patient-sensitive data carries PDPA, HCSA, and HIPAA obligations. The assistant must answer complex medical questions in natural language, ground every claim in internal trial reports plus WHO guidelines plus WHO ICD-11 plus PubMed, stay auditable, and hold consistent tone across forty clinical specialties. The board has approved building this as a GenAI assistant for internal clinical staff and hospital clients.
+Nova Health Tech's clinical decision-support tool cannot keep pace with physician needs on two fronts: speed and medical relevance. Clinicians need grounded answers in seconds during diagnosis, with a hard 2-second target for emergency cases. Internal clinical trial reports sit in legacy PDFs with inconsistent tagging. WHO publishes monthly protocol updates that must reach clinicians within 24 hours. Patient-sensitive data carries healthcare data protection obligations that vary by jurisdiction. The assistant must answer complex medical questions in natural language, ground every claim in internal trial reports plus WHO guidelines plus WHO ICD-11 plus PubMed, stay auditable, and hold consistent tone across forty clinical specialties. The board has approved building this as a GenAI assistant for internal clinical staff and hospital clients.
 
 ### 1.2 Proposed solution overview
 
@@ -96,7 +96,7 @@ Single-region SaaS on Alibaba Cloud Singapore. Components grouped by layer:
 
 ### 1.3 A note on "Singapore International"
 
-[Alibaba Cloud operates two consoles from one physical cloud](https://www.alibabacloud.com/help/en/general-reference/latest/alibaba-cloud-overview): the **Mainland China site** (`aliyun.com`, RMB billing, primarily serves PRC customers) and the **International site** (`alibabacloud.com`, USD billing, everywhere else). Some services are only exposed through one site or the other, even when both physically could reach the Singapore (`ap-southeast-1`) region.
+[Alibaba Cloud operates two consoles from one physical cloud](https://www.alibabacloud.com/help/en/general-reference/latest/alibaba-cloud-overview): the **Mainland China site** (`aliyun.com`, primarily serves PRC customers) and the **International site** (`alibabacloud.com`, everywhere else). Some services are only exposed through one site or the other, even when both physically could reach the Singapore (`ap-southeast-1`) region.
 
 For Version C, all tenants are registered on the **International site**. When this document says:
 
@@ -141,53 +141,34 @@ Read "SG Intl" as "Singapore region via Alibaba Cloud International site".
 | **Scalability** | Peak concurrent clinicians per tenant | 500 |
 | | Peak queries per minute per tenant | 200 qpm |
 | | Corpus size | 10,000+ documents, ~5M chunks |
-| **Accuracy** | Holdout eval score vs clinician gold-standard | ≥ 85% |
+| **Accuracy** | Holdout eval score vs clinician gold-standard | ≥ 95% |
 | | PHI leakage in output | 0 tolerance |
 | | Ungrounded-answer rate | ≤ 2% (blocked by guardrail) |
 | **Tone** | Inter-rater agreement on "clinical tone" on 100-sample blind review | ≥ 80% |
 
 ### 2.3 Compliance & regulatory constraints
 
-Primary frame is Singapore PDPA plus HCSA 2020 for telemedicine clinical-decision-support software. HIPAA applies only when a hospital client serves US patients. GDPR applies only when a client serves EU residents. FDA SaMD with the CDS carve-out applies in US context; the carve-out preserves because the UI labels the assistant as decision support and shows clinicians the basis of every recommendation. EU AI Act classifies medical AI as high-risk.
-
-| Regulation | Scope | Alibaba Cloud Singapore support |
-|---|---|---|
-| Singapore PDPA | Primary data-residency frame | Native; SG region keeps data in-country; contract clauses available for cross-border cases |
-| Singapore HCSA 2020 | Telemedicine, clinical decision support | Supported; BAA equivalent on request |
-| HIPAA + HITECH | US-patient deployments only | Supported via International site BAA for applicable services |
-| GDPR | EU-resident deployments only | Supported; Alibaba Frankfurt as alternative region |
-| FDA SaMD, 21st Century Cures Act CDS carve-out | US clinical decision support | Architecture supports the clinician-review-required disclosure needed for the carve-out |
-| EU AI Act (high-risk) | EU healthcare AI | Human-oversight, risk-management, and logging controls available |
-| ISO 27001, 27017, 27018, 27701 | Industry baseline | Certified |
-| SOC 1, 2, 3 | Industry baseline | Certified |
-| MLPS 2.0 | China market readiness | Certified (not in Version C scope) |
+Alibaba Cloud holds industry-standard certifications relevant to clinical data hosting. Examples include PCI-DSS, ISO/IEC 27001, ISO/IEC 27017, ISO/IEC 27018, ISO/IEC 27701, SOC 1, SOC 2, SOC 3, and NIST 800-53 R5. Healthcare deployments should map their specific regulatory obligations to these certifications on a per-tenant basis.
 
 Reference:
-1. https://www.pdpc.gov.sg/organisations/resources/guidance-by-topic/guide-to-cross-border-data-transfers
-2. https://www.alibabacloud.com/en/trust-center
-3. https://www.hipaajournal.com/hipaa-retention-requirements/
-4. https://www.law.cornell.edu/cfr/text/45/164.530
-5. https://gdpr.eu/
-6. https://artificialintelligenceact.eu/
-7. https://www.fda.gov/medical-devices/software-medical-device-samd/clinical-decision-support-software
-8. https://www.iso.org/standard/27001
-9. https://www.aicpa-cima.com/resources/landing/system-and-organization-controls-soc-suite-of-services
+1. https://www.alibabacloud.com/en/trust-center
 
 ### 2.4 Assumptions and constraints
 
-| Assumption | Impact if wrong |
-|---|---|
-| Hospitals accept PDPA-native Singapore region; no default cross-border replication | Additional DR region would require PDPA transfer-limitation assessment |
-| Clinicians access the assistant over public Internet (TLS 1.3 + IDaaS JWT + WAF + per-tenant IP allow-list) or inside the EHR iframe (SMART App Launch v2) | Standalone clinical UI still works without EHR; public Internet is standard SaaS pattern |
-| Hospital EHR exposes an Internet-reachable FHIR R4 endpoint with SMART App Launch v2 (true for modern Epic / Cerner Millennium / Allscripts / Oracle Health deployments) | On-prem-only FHIR endpoint is reached via the data-plane IPsec VPN instead of a public gateway |
-| Hospital uses SharePoint Online (Microsoft Graph) or any other Internet-reachable document source (Google Drive, Confluence Cloud) | On-prem SharePoint Server / legacy SMB is pulled over the data-plane IPsec VPN |
-| Hospital firewall can (a) allow outbound HTTPS to Nova's published IP range + domain for clinician traffic, and (b) terminate a Site-to-Site IPsec tunnel for backend PHI transfer | Hospital without either capability is not a candidate tenant |
-| WHO ICD-11 API rate limits are acceptable (no official published limit; Nova has a registered [OAuth2 client](https://icd.who.int/icdapi)) | Rate-limit hits would require upstream caching and slower incremental ingests |
-| PubMed E-utilities free tier (3 req/s) is sufficient without an [API key](https://support.nlm.nih.gov/knowledgebase/article/KA-05317/en-us) for the agent-tool volume | Register for API key to 10 req/s |
-| Hospital IdP supports SAML 2.0 or OIDC | Non-standard IdP requires a broker |
-| Medical-vocabulary allow-list for Content Moderation 2.0 is approved by Alibaba account team pre-launch | Over-blocking on valid clinical content; degrade UX |
+| Assumption |
+|---|
+| Hospitals accept Singapore-region deployment; no default cross-border replication |
+| Clinicians access the assistant over public Internet (TLS 1.3, IDaaS JWT, WAF, per-tenant IP allow-list) or inside the EHR iframe (SMART App Launch v2) |
+| Hospital EHR exposes an Internet-reachable FHIR R4 endpoint with SMART App Launch v2 (modern Epic, Cerner Millennium, Allscripts, Oracle Health deployments) |
+| Hospital uses SharePoint Online (Microsoft Graph) or any other Internet-reachable document source (Google Drive, Confluence Cloud) |
+| Hospital firewall allows outbound HTTPS to Nova's published IP range and domain for clinician traffic |
+| Hospital firewall can terminate a Site-to-Site IPsec tunnel for the data pipeline (bulk PHI transfer: SharePoint Server, on-prem FHIR, SMB/NFS shares, Upload Portal) |
+| WHO ICD-11 API rate limits are acceptable; Nova has a registered [OAuth2 client](https://icd.who.int/icdapi) |
+| PubMed E-utilities free tier (3 req/s) is sufficient without an [API key](https://support.nlm.nih.gov/knowledgebase/article/KA-05317/en-us) for the agent-tool volume |
+| Hospital IdP supports SAML 2.0 or OIDC |
+| Medical-vocabulary allow-list for Content Moderation 2.0 is approved by Alibaba account team pre-launch |
 
-**Constraint: no phases.** One production release activates every capability in this document. Training happens **before cut-over**, not after. Post-launch runs **continuous operations**: monthly DPO, quarterly SFT: not phased feature rollouts.
+**Constraint: no phases.** One production release activates every capability in this document. Training happens before cut-over. Post-launch runs continuous operations (monthly DPO, quarterly SFT), not phased feature rollouts.
 
 ---
 
@@ -286,13 +267,13 @@ ASCII equivalent (for text-only renderers):
 
 ### 3.2 Core architectural principles
 
-1. **Stay in Singapore.** Every query-path service has a Singapore endpoint. Zero cross-region hops at runtime. PDPA posture is "default no cross-border transfer", which eliminates the transfer-limitation obligation.
+1. **Stay in Singapore.** Every query-path service has a Singapore endpoint. Zero cross-region hops at runtime. Default posture: no cross-border transfer.
 2. **Managed over self-managed.** Managed Model Studio, managed AnalyticDB PG GraphRAG, managed OpenSearch Vector Search HA, managed Tair. No Neo4j, no self-hosted vector store, no Kubernetes clusters the Nova team has to patch.
 3. **Pure if/else for emergency routing.** Deterministic, no LLM call on the hot path. Saves ~300 ms.
 4. **Every answer grounded + cited.** No un-cited output leaves the system. Guardrail blocks ungrounded output.
 5. **Fine-tune cheaply, fine-tune often.** PAI SFT+LoRA ≈ $15–40 per run. Cheap iteration is the cheapest quality lever over 12+ months.
 6. **PHI never reaches the model.** DataWorks SDDP masks before log write; FC tokenization reverses only in UI.
-7. **Everything audited.** 6-year WORM retention covers HIPAA and PDPA in one policy.
+7. **Everything audited.** 6-year WORM retention covers common healthcare-data retention requirements in one policy.
 8. **One product on day one.** No phase 1 / 2 / 3. Pre-launch build, launch, then continuous operations.
 
 ### 3.3 Technology stack summary
@@ -877,10 +858,9 @@ The clinician's chat UI, the EHR SMART-on-FHIR iframe, and Upload Portal authent
 
 **Why public HTTPS is sufficient here**:
 
-- PDPA regulates *where data lands*, not the transit path. Data lands in Singapore (Nova VPC). Transit is TLS 1.3.
-- HIPAA §164.312(e) Transmission Security requires encryption + integrity: TLS 1.3 satisfies both.
-- Clinician prompts are SDDP-masked at FC preflight before they reach the LLM, so even if the transit somehow leaked, the model never saw raw PHI.
-- Singapore HCSA regulates clinical governance, not network topology.
+- Data lands in Singapore (Nova VPC). Transit is TLS 1.3 with integrity and encryption.
+- Clinician prompts are SDDP-masked at FC preflight before they reach the LLM.
+- No hospital-specific regulatory framework requires a dedicated-line or VPN for short, tokenized clinician prompts.
 
 #### 7.6.2 Data plane: bulk PHI transfer (Site-to-Site IPsec-VPN, baseline)
 
@@ -989,7 +969,7 @@ Not required for baseline. Path prepared: all Nova VPCs attach to a single CEN i
 ### 8.2 Data de-identification and anonymization layer
 
 **At ingest** (for the raw bucket):
-- [DataWorks SDDP](https://www.alibabacloud.com/product/sddp) scans every new document with PDPA-S and HIPAA rule packs (must be activated by the Alibaba account team pre-launch)
+- [DataWorks SDDP](https://www.alibabacloud.com/product/sddp) scans every new document with healthcare PHI rule packs (activated by the Alibaba account team pre-launch)
 - Matches to quarantine to `/raw/_quarantine/` bucket; admin notification; document excluded from index until cleared
 
 **At runtime** (for clinician queries + model prompts):
@@ -1071,7 +1051,7 @@ sg-vpn       : IPsec endpoints only
 
 ### 8.6 Audit logging and non-repudiation
 
-**Pipeline**: [ActionTrail](https://www.alibabacloud.com/product/actiontrail) (control plane) + FC app logs + Model Studio observability to [SLS](https://www.alibabacloud.com/product/log-service) to OSS WORM with **6-year retention** (HIPAA §164.530(j)).
+**Pipeline**: [ActionTrail](https://www.alibabacloud.com/product/actiontrail) (control plane) + FC app logs + Model Studio observability to [SLS](https://www.alibabacloud.com/product/log-service) to OSS WORM with **6-year retention**.
 
 **Per-interaction audit record**:
 
@@ -1765,10 +1745,10 @@ The UI renders `[1]` / `[2]` / `[3]` as hoverable inline chips. Clicking `[1]` o
 | Alibaba inadvertently routes SG Intl request through CN Mainland | Very Low | Very High (PDPA breach) | Contract clause with Alibaba; Intl mode documented to exclude CN Mainland compute; ActionTrail audit lets us detect region drift |
 | SDDP fails to detect novel PHI format (e.g. rare ID format) | Low | High | Defense in depth: FC runtime mask + model-never-sees-raw + output DLP; plus `qwen3-rerank` safety classifier on outputs; periodic red-team |
 | Audit pipeline drops log records under extreme load | Very Low | High | Synchronous ActionTrail write; SLS ingest backed by 7-day replay buffer; reconciliation job compares expected vs ingested counts |
-| HIPAA requirement beyond 6 years for specific document classes | Low | Low | 6-year default covers HIPAA §164.530(j); tenant-configurable longer retention available per contract |
-| Singapore HCSA audit requests specific audit format | Medium | Low | SLS export to regulator-specific format via scheduled report job; collaborate with tenant on pre-approved templates |
+| Retention requirement beyond 6 years for specific document classes | Low | Low | 6-year default; tenant-configurable longer retention available per contract |
+| Regulator audit requests specific audit format | Medium | Low | SLS export to regulator-specific format via scheduled report job; collaborate with tenant on pre-approved templates |
 | WHO ICD-11 license terms change | Very Low | Medium | Registered OAuth2 client subject to WHO terms; changes tracked; worst case: snapshot-only mode with staleness banner |
-| GDPR DSAR (if EU client onboarded) timeline missed | Low | Medium | Tenant-scoped DSAR runbook tested monthly; `tenant_id` + `user_id` indexed in SLS for fast retrieval |
+| GDPR DSAR (if applicable) timeline missed | Low | Medium | Tenant-scoped DSAR runbook tested monthly; `tenant_id` + `user_id` indexed in SLS for fast retrieval |
 | Hospital client cannot accept Singapore residency | Medium | N/A for Version C (would recommend a different version or region) | Hybrid to Apsara Stack offered; or pivot to Alibaba Frankfurt / Virginia Intl region with client's PDPA/GDPR assessment |
 
 ### 13.3 Operational risks
@@ -2024,8 +2004,8 @@ Summary of why Alibaba wins for the SG-native scenario:
 | **Bailian** | OpenAPI product name for Model Studio |
 | **DashScope** | Runtime API gateway for Model Studio |
 | **SG Intl** | Shorthand for "Singapore region (`ap-southeast-1`) accessed through the Alibaba Cloud International site" (`alibabacloud.com`). Distinguishes from "SG on CN Mainland site" for services that differ by site: e.g. [Model Studio](https://www.alibabacloud.com/help/en/model-studio/what-is-model-studio) is International-only with runtime endpoint `dashscope-intl.aliyuncs.com`. See [§1.5](#15-a-note-on-singapore-international--sg-intl). |
-| **International site** | `alibabacloud.com`: Alibaba's console for customers outside Mainland China. USD billing. All Version C tenants live here. |
-| **CN Mainland site** | `aliyun.com`: Alibaba's console for Mainland China customers. RMB billing. Out of scope for Version C; hosts some Qwen variants (`qwen3-vl-embedding`, `qwen3-vl-rerank`, `gte-rerank-v2`) that are not available via International site. |
+| **International site** | `alibabacloud.com`: Alibaba's console for customers outside Mainland China. All Version C tenants live here. |
+| **CN Mainland site** | `aliyun.com`: Alibaba's console for Mainland China customers. Out of scope for Version C; hosts some Qwen variants (`qwen3-vl-embedding`, `qwen3-vl-rerank`, `gte-rerank-v2`) that are not available via International site. |
 | **Tair** | Alibaba's Redis OSS-compatible managed service |
 | **SAE** | Serverless App Engine (Alibaba's managed container runtime) |
 | **WORM** | Write Once Read Many (immutable object storage) |
