@@ -159,7 +159,10 @@ All tools are read-only.
 
 ### 7.3 Corporate integration
 
-- **EHR / HIS bridge** — SAE-hosted FastAPI container exposing HL7v2 / FHIR over the VPN to the hospital; de-identifies before calling FC.
+See `docs/architecture/corporate_integration.md` for the full EHR/FHIR + SharePoint design.
+
+- **EHR launch** via **SMART App Launch v2** against Epic / Cerner (Oracle Health) / Allscripts on FHIR R4; Function Compute de-identifies the patient slice (DataWorks SDDP) before calling Model Studio. Read-only scopes only.
+- **SharePoint / OneDrive** — Microsoft Graph webhooks → Function Compute → OSS → ingestion pipeline.
 - **Clinician SSO** — IDaaS federation per hospital tenant.
 - **Admin SSO** — Cloud SSO → Nova's EntraID.
 - **Audit export** — SLS → OSS nightly → hospital SIEM.

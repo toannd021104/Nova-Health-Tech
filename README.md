@@ -31,6 +31,7 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 │   │   ├── fine_tuning_and_distillation.md             ← teacher→student distillation + tone via hyperparams
 │   │   ├── caching_strategy.md                         ← 3-layer cache (semantic / prompt-context / reserved)
 │   │   ├── framework_choice.md                         ← Bedrock Agents + Model Studio Application (chosen) vs LangGraph/LlamaIndex
+│   │   ├── corporate_integration.md                    ← EHR (SMART on FHIR) + SharePoint (Graph webhooks) + upload portal
 │   │   └── ingestion_and_identity.md                   ← scheduled ingestion, upload portal, Site-to-Site VPN, IdP federation
 │   ├── compliance/
 │   │   └── security_compliance.md                      ← PDPA / HCSA / HIPAA(6-yr) / FDA / ISO / EU AI Act
@@ -52,14 +53,15 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 ## Read order
 
 1. `docs/architecture/AWS_architecture.md` — the build target (Singapore, Haiku-first, Site-to-Site VPN).
-2. `docs/architecture/ingestion_and_identity.md` — scheduled ingestion, upload portal, hospital IdP federation, VPN.
-3. `docs/architecture/rag_strategy.md` — handling the WHO PDFs and the ICD-11 API.
-4. `docs/architecture/fine_tuning_and_distillation.md` — 2-second SLA without losing accuracy.
-5. `docs/architecture/caching_strategy.md` — three cache layers.
-6. `docs/architecture/framework_choice.md` — why Bedrock Agents + Model Studio Application are primary.
-7. `docs/architecture/Alibaba_architecture.md` — parallel Qwen plan.
-8. `docs/compliance/security_compliance.md` — regulation coverage, 6-year retention.
-9. `docs/pricing/cost_analysis.md` — cost sheet with caching / batch / distillation applied.
+2. `docs/architecture/corporate_integration.md` — EHR / SMART on FHIR, SharePoint / Microsoft Graph, upload portal.
+3. `docs/architecture/ingestion_and_identity.md` — scheduled ingestion, hospital IdP federation, VPN details.
+4. `docs/architecture/rag_strategy.md` — handling the WHO PDFs and the ICD-11 API.
+5. `docs/architecture/fine_tuning_and_distillation.md` — 2-second SLA without losing accuracy.
+6. `docs/architecture/caching_strategy.md` — three cache layers.
+7. `docs/architecture/framework_choice.md` — why Bedrock Agents + Model Studio Application are primary.
+8. `docs/architecture/Alibaba_architecture.md` — parallel Qwen plan.
+9. `docs/compliance/security_compliance.md` — regulation coverage, 6-year retention.
+10. `docs/pricing/cost_analysis.md` — cost sheet with caching / batch / distillation applied.
 
 ## Key production decisions (summary)
 

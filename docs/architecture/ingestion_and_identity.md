@@ -8,10 +8,10 @@ The RAG index is **always fresh via scheduled jobs, never lazy**. Physicians don
 |---|---|---|---|---|
 | WHO ICD-11 structured API | Daily 02:00 SGT | EventBridge cron (AWS) / CloudOps Scheduler (Ali) | Delta pull against `releaseId` | Catches updates without full re-walk |
 | WHO guideline PDFs | Monthly, day 1 at 02:30 SGT + RSS webhook for urgent living guidelines | EventBridge cron + API Gateway webhook | Diff on the WHO publications index; download changed PDFs | Matches the scenario's "monthly protocol updates" |
-| Internal clinical trial reports | **Weekly, Sunday 03:00 SGT** | EventBridge cron | Batch pull from SharePoint / file share over Site-to-Site VPN | Most trial reports change infrequently |
-| Internal treatment protocols | **Weekly, Sunday 03:30 SGT** | Same cron | Same pull path | |
-| Manual override (either of the above) | Any time | Upload portal (see §2) | Direct user upload | Handles urgent additions / corrections that can't wait for the weekly |
-| Monthly full reconciliation | Day 1, 04:00 SGT | EventBridge cron | Full diff + re-index of any document whose hash changed | Catches anything the incremental path missed |
+| Internal clinical trial reports | **Weekly, Sunday 03:00 SGT** — AND real-time Microsoft Graph webhook for SharePoint changes (see `docs/architecture/corporate_integration.md` §2) | EventBridge cron + Graph subscription webhook | Weekly batch pull from SharePoint; webhook fires on any create/update/delete | Weekly is the reconciliation safety net; webhook keeps the index current within minutes |
+| Internal treatment protocols | Same as above | Same | Same | |
+| Manual override (any source) | Any time | Upload portal (see §2) | Direct user upload | Handles urgent additions / corrections that can't wait for the weekly |
+| Monthly full reconciliation | Day 1, 04:00 SGT | EventBridge cron | Full diff + re-index of any document whose hash changed | Catches anything incremental paths missed |
 
 All jobs write to the same **raw S3 / OSS bucket**, then a single Step Functions / Function Workflow picks up the object-created event and runs: parse → chunk → embed → upsert. One ingestion pipeline, many triggers.
 

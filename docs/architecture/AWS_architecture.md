@@ -179,7 +179,10 @@ Full mapping in `docs/compliance/security_compliance.md`.
 
 ### 7.3 Corporate integration
 
-- **EHR launch** via SMART-on-FHIR iframe; the FHIR slice passed to Lambda is de-identified before it reaches the model.
+See `docs/architecture/corporate_integration.md` for the full EHR/FHIR + SharePoint design.
+
+- **EHR launch** via **SMART App Launch v2** against Epic / Cerner (Oracle Health) / Allscripts on FHIR R4; the clinician's EHR session provides the patient context, which Lambda de-identifies before calling Bedrock. Scopes are all `*.rs` (read + search) — the assistant never writes to the EHR.
+- **SharePoint / OneDrive** — Microsoft Graph `subscriptions` (webhook or Event Hubs delivery) on `/sites/{site-id}/drives/{drive-id}/root` triggers the same Step Functions ingestion pipeline whenever a document is created / updated / deleted. `Sites.Selected` app permission preferred.
 - **Clinician SSO** — Cognito federation per hospital tenant to their EntraID / Okta / ADFS.
 - **Admin SSO** — IAM Identity Center → Nova's EntraID.
 - **Audit export** — nightly CloudWatch Logs → S3 → hospital SIEM via cross-account role assumption.
