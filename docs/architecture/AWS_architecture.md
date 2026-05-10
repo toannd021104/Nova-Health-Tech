@@ -1,215 +1,214 @@
-# AWS Architecture — Nova Health Tech Clinical GenAI Assistant (Production Plan)
+# AWS Architecture — Nova Health Tech Clinical GenAI Assistant (Production)
 
-Production design for the AI assistant service. The web UI can stay simple and publicly accessible for verification, but the AI service itself (model serving, RAG, data pipeline, security) is sized for the real clinical workload: hundreds of source documents, hundreds of physicians, and monthly WHO refreshes.
+Production design for the AI assistant service deployed in **AWS Singapore (ap-southeast-1)**. The web UI can stay simple and publicly accessible for verification; the AI service itself is sized for real clinical workload.
 
-## 1. Design goals (from the scenario)
+## 1. Goals mapped to design (from the scenario)
 
 | Requirement | Design response |
 |---|---|
-| Answer complex medical questions in natural language | Two-lane model strategy: **Claude Sonnet 4.6** (teacher, complex) + a **fine-tuned Nova Lite student** distilled from Sonnet+RAG outputs for the fast lane |
-| Rely on internal trial reports + WHO + ICD-11 | Hierarchical RAG in Bedrock Knowledge Bases on OpenSearch Serverless; BDA advanced parsing for complex PDFs; ICD-11 API used three ways (see `docs/architecture/rag_strategy.md`) |
-| Auditable, regulation-compliant | Bedrock Guardrails + Comprehend Medical + Macie + CloudTrail to S3 Object Lock (7-yr); HIPAA BAA with AWS |
-| **2-second emergency response** | Fine-tuned small student + semantic cache + Bedrock prompt caching + streaming (see `docs/architecture/caching_strategy.md`) |
-| Consistent tone | Distillation corpus from Sonnet; low-temperature sampling; fixed system-prompt template (see `docs/architecture/fine_tuning_and_distillation.md` §hyperparameters) |
-| Monthly WHO refresh | EventBridge → Step Functions → incremental KB sync |
-| Legacy PDFs, inconsistent tagging | Bedrock Data Automation (advanced parsing) with figure extraction; multimodal embeddings on figure-bearing chunks |
-| Structured WHO API | Direct JSON ingest via Function + runtime tool call via Bedrock Agents |
+| Answer complex medical questions in natural language | Two-lane strategy: **Claude Haiku 4.5** (fast lane, student-enhanced) + **Claude Sonnet 4.6** (complex lane, teacher of distillation) |
+| Rely on internal trial reports + treatment protocols + WHO + ICD-11 | Multi-KB RAG (Bedrock Knowledge Bases on OpenSearch Serverless) fed by **scheduled ingestion** + an **internal upload portal** |
+| Auditable, compliant | Bedrock Guardrails + Comprehend Medical + Macie + CloudTrail → S3 Object Lock (**6-year retention** per HIPAA §164.530(j)) |
+| 2-second emergency response | Fine-tuned Nova Lite student (from Sonnet+RAG distillation) OR plain Haiku 4.5, plus 3-layer caching and streaming |
+| Consistent tone | Distillation on approved answers + low-temperature sampling + fixed system prompt (`docs/architecture/fine_tuning_and_distillation.md`) |
+| Monthly WHO refresh | EventBridge cron → Step Functions → Bedrock KB incremental sync (see `docs/architecture/ingestion_and_identity.md`) |
+| Legacy PDFs, inconsistent tagging | Bedrock Data Automation advanced parsing + Nova Multimodal Embeddings on figure-bearing chunks |
+| Structured WHO API | Ingest + runtime tool call + query expansion |
+| Corporate integration with hospital systems | **Site-to-Site VPN** between hospital and Nova VPC; **hospital IdP federation** via Cognito (SAML/OIDC) |
 
-## 2. Component diagram
+## 2. Region and data residency
+
+- **Primary region: `ap-southeast-1` (Singapore).**
+- Why Singapore:
+  - Low latency to hospital clients in APAC.
+  - AWS Singapore is HIPAA-eligible across all services we need (Bedrock, S3, OpenSearch Serverless, Lambda, API Gateway, Cognito, Comprehend Medical, Macie, etc.).
+  - Singapore PDPA + HCSA allow cross-border health-data transfer **only when the recipient jurisdiction provides comparable protection**; keeping data **in Singapore** is the simplest compliance posture and avoids the transfer-limitation obligation entirely.
+  - Model Studio on Alibaba is also available in Singapore — lets Nova offer both cloud variants without regulatory asymmetry.
+- **No cross-border transfer** by default. If Nova ever needs a second region for DR (e.g., Tokyo), PDPA-compliant contracts and patient consent (deemed consent covers most clinical use) must be in place first.
+- **No Outposts, no Direct Connect.** Singapore region is close enough; the hospital connects over AWS Site-to-Site VPN.
+
+## 3. Component diagram
 
 ```
-                           ┌────────────────────────────────────────────────────────┐
-                           │                   Clinician / Hospital                 │
-                           │   (Web app, EHR SMART-on-FHIR iframe, mobile)          │
-                           └──────────────────────┬─────────────────────────────────┘
-                                  HTTPS + SSO (SAML/OIDC via Cognito + IAM IdC)
-                                                  │
-                                    ┌─────────────▼─────────────┐
-                                    │   CloudFront + WAF        │
-                                    └─────────────┬─────────────┘
-                                                  │
-                                    ┌─────────────▼─────────────┐
-                                    │  API Gateway (REST + WS)  │
-                                    │  + Cognito authorizer     │
-                                    └─────────────┬─────────────┘
-                                                  │
-                         ┌────────────────────────▼─────────────────────────┐
-                         │        Lambda /chat (in private VPC)             │
-                         │   0. authn/z, 1. PHI mask, 2. classify,          │
-                         │   3. cache check, 4. retrieve, 5. generate,      │
-                         │   6. ground check, 7. audit                      │
-                         └─┬─────────┬─────────────┬────────────┬─────┬─────┘
-                           │         │             │            │     │
-               Comprehend  │ Layer 1 │   Layer 2   │   Gen      │ Log │
-                 Medical   │ Redis   │   Bedrock   │ (students, │     │
-                 DetectPHI │ semantic│   Prompt    │  teacher)  │     │
-                           │ cache   │   Cache     │            │     │
-                           ▼         ▼             ▼            ▼     ▼
-            ┌──────────────────┐ ┌──────────┐ ┌─────────────────┐ ┌──────────────┐
-            │ de-id/tokenize   │ │ElastiCache│ │  Bedrock        │ │ CloudWatch   │
-            │ via KMS          │ │ Valkey/   │ │  ┌────────────┐ │ │ CloudTrail   │
-            │                  │ │ RediSearch│ │  │ Sonnet 4.6 │ │ │ → S3 WORM    │
-            └──────────────────┘ └──────────┘ │  │ (teacher)  │ │ │ 7-yr retn    │
-                                              │  │ Nova Lite  │ │ └──────────────┘
-                                              │  │ (student,  │ │
-                                              │  │ fine-tuned)│ │
-                                              │  └────────────┘ │
-                                              │  + Guardrails   │
-                                              └────────┬────────┘
-                                                       │
-                                         ┌─────────────▼─────────────┐
-                                         │ Bedrock Knowledge Bases   │
-                                         │  - kb-who-guidelines      │
-                                         │  - kb-internal-trials     │
-                                         │  - kb-icd11               │
-                                         │ on OpenSearch Serverless  │
-                                         │ (hybrid kNN + BM25)       │
-                                         │  + Titan Embed Text v2    │
-                                         │  + Nova Multimodal Emb    │
-                                         └─────────────┬─────────────┘
-                                                       │
-                                         metadata index + chunk store
-
-Ingestion (async, event-driven):
-
-  S3 raw bucket ──► EventBridge ──► Step Functions
-      ├── Bedrock Data Automation (advanced parsing: text + tables + figures)
-      ├── Lambda chunker (hierarchical 1500/300 tok, 15% overlap)
-      ├── Bedrock embed (Titan v2 for text; Nova Multimodal for figure chunks)
-      ├── Macie scan for PHI leakage (quarantine if found)
-      └── Bedrock Knowledge Base sync (incremental, upsert on doc-hash)
-
-Monthly refresh:
-
-  EventBridge cron (day 1, 00:00 UTC)
-   └── Step Functions workflow
-         ├── GET WHO guidelines index (RSS)   → diff → download changed PDFs
-         ├── GET WHO ICD-11 /mms delta        → diff → upsert JSON
-         └── trigger ingestion pipeline for changed docs
-
-Distillation (quarterly):
-
-  S3 training-data bucket ◄── Bedrock Batch (Sonnet, 50% off, generates answers)
-        └── clinician review via A2I ── DPO pair builder
-              └── Bedrock custom model job ── Nova Lite student (SFT + pref tune)
-                    └── eval harness (LLM-as-judge) ── promote to prod if pass
+              ┌──────────────────────────────────────────────────────────────┐
+              │   Hospital network (clinician workstations + EHR systems)    │
+              └──┬──────────────────────────────────────────────┬────────────┘
+                 │                                              │
+         AI chat │ HTTPS over                      Internal mgmt │ HTTPS over
+                 │ public Internet                               │ Site-to-Site
+                 │                                               │ VPN (IPsec/IKEv2)
+                 ▼                                               ▼
+     ┌──────────────────────┐                      ┌──────────────────────────┐
+     │ CloudFront + WAF     │                      │ Customer Gateway on-prem │
+     └──────┬───────────────┘                      └──────────┬───────────────┘
+            │                                                 │
+     ┌──────▼──────────┐   ──────── Site-to-Site VPN ───────► │ VPN GW / TGW
+     │ API Gateway     │                                      │  (private side)
+     │  (public, REST) │                                      └──────────┬───────────┘
+     │  + Cognito JWT  │                                                 │
+     │   authorizer    │                                                 │
+     └──────┬──────────┘                                                 ▼
+            │                                                 ┌──────────────────────┐
+            │                                                 │ Private ALB + Cognito│
+            │                                                 │ OIDC/SAML ← EntraID  │
+            │                                                 │                      │
+            │                                                 │ ECS Fargate:         │
+            │                                                 │  Upload Portal       │
+            │                                                 │  (internal UI)       │
+            │                                                 └──────────┬───────────┘
+            │                                                            │
+            ▼                                                            ▼
+   ┌──────────────────────────────┐                        ┌──────────────────────────┐
+   │ Lambda /chat (VPC)           │                        │ S3 raw bucket             │
+   │  0. authn (Cognito JWT)       │◄──── semantic cache ──┤ /raw/scheduled/...        │
+   │  1. PHI mask (Comprehend Med) │     hit returns early │ /raw/manual/...           │
+   │  2. router (Haiku classifier) │                       │ /raw/icd11/...            │
+   │  3. route to Agent / Workflow │                       │ /raw/who/...              │
+   │     (Bedrock Agents)          │                       └──────────┬───────────────┘
+   │  4. ground-check + audit      │                                  │ ObjectCreated
+   └─────┬──────────────┬──────────┘                                  ▼
+         │              │                                ┌──────────────────────────┐
+ Layer 1 │    Layer 2   │  Generation                    │ Step Functions pipeline  │
+ Elasti- │    Bedrock   │  (Bedrock):                    │  BDA parse → chunk →     │
+ Cache   │    Prompt    │    Haiku 4.5 (fast, student)   │  embed → KB sync         │
+ Valkey  │    Caching   │    Sonnet 4.6 (complex,        │                          │
+ semantic│              │     teacher of distillation)   │ + GuardDuty Malware scan │
+ cache   │              │  + Guardrails                  │ + Macie PHI scan         │
+         │              │                                └──────────┬───────────────┘
+         │              │                                           ▼
+         │              │                             ┌────────────────────────────┐
+         │              │                             │ Bedrock Knowledge Bases    │
+         │              │                             │  kb-who-guidelines         │
+         │              │                             │  kb-internal-trials        │
+         │              │                             │  kb-treatment-protocols    │
+         │              │                             │  kb-icd11                  │
+         │              │                             │  on OpenSearch Serverless  │
+         │              │                             │  (hybrid kNN + BM25)       │
+         │              │                             │  + Titan Embed Text v2     │
+         │              │                             │  + Nova Multimodal Emb     │
+         │              │                             └────────────────────────────┘
+         ▼              ▼
+  All traffic logged → CloudTrail → S3 Object Lock (6-yr WORM) → Security Lake
 ```
 
-## 3. Data pipeline structure
+### Ingestion triggers (see `docs/architecture/ingestion_and_identity.md`)
 
-See `docs/architecture/rag_strategy.md` for the three candidate strategies and the recommendation (managed parse + managed RAG, with multimodal-embedding fallback for figure-heavy pages).
+- WHO ICD-11 daily delta (EventBridge 02:00 SGT).
+- WHO guidelines monthly + RSS webhook for living guidelines.
+- Internal clinical trial reports and treatment protocols: **weekly** Sunday pull over Site-to-Site VPN from hospital SharePoint / SMB share.
+- Manual overrides via the **Internal Upload Portal** (private ALB, hospital-VPN-only, hospital-IdP auth).
 
-### 3.1 Sources
+## 4. Data pipeline
 
-| Source | Format | Ingest path | Schedule | Chunking |
+See `docs/architecture/rag_strategy.md` for the strategy decision. Summary:
+
+- **Parser**: Bedrock Data Automation with advanced parsing (handles 100+ page PDFs with horizontal / vertical tables and text-based flowcharts out of the box).
+- **Chunking**: hierarchical 1500 / 300 tokens with 15% overlap; section-aware.
+- **Embeddings**: Titan Embed Text v2 for text; Nova Multimodal Embeddings for figure-bearing chunks.
+- **Vector store**: OpenSearch Serverless vector collection; BM25 + HNSW hybrid in one index.
+- **Metadata on every chunk**: `source`, `document_id`, `revision`, `document_type`, `publication_date`, `review_date`, `specialty`, `evidence_grade`, `page`, `section_heading`, `has_table`, `has_figure`.
+- **Retrieval**: hybrid query + metadata pre-filter (default `review_date >= NOW-18m`) → top-20 kNN → Cohere Rerank (Bedrock) → top-5 → Bedrock Agent.
+
+## 5. Model orchestration
+
+### 5.1 Framework choice
+
+See `docs/architecture/framework_choice.md`.
+
+- **Bedrock Agents + Bedrock Knowledge Bases** are the primary runtime (conversational, multi-tool). The Agent exposes retrieval + ICD-11 + trial lookup as tools.
+- **LangChain** is used only for the semantic cache (`RedisSemanticCache` against ElastiCache Valkey + RediSearch) and per-session chat memory.
+
+### 5.2 Router and lanes
+
+A small Lambda classifier (Nova Micro, ~150 ms) picks the lane for each query:
+
+| Question class | Model | Hyperparameters | Guardrail | Latency target |
 |---|---|---|---|---|
-| Internal clinical trial reports | Legacy PDF, inconsistent tagging | S3 → Bedrock Data Automation | On upload + bulk backfill | Hierarchical 1500/300 tokens, 15% overlap; section-aware |
-| WHO guideline PDFs | PDF (100+ pages, tables + figures + flowcharts) | S3 → Bedrock Data Automation (advanced parsing) | Monthly cron + RSS watcher | Same hierarchical + figure extraction |
-| WHO ICD-11 | JSON via ICD-11 API | Lambda → S3 → Lambda chunker | Monthly full walk + daily delta | One chunk per entity |
-| (Future) External literature | JSONL / XML | Lambda → S3 | Daily delta | One chunk per abstract |
+| Emergency / acute | **Claude Haiku 4.5** (streaming) with optional Nova Lite distillation student behind a feature flag | `temperature=0.1, top_p=0.7, max_tokens=700, stop=[...]` | Strict PHI + emergency disclaimer | **≤ 2 s** |
+| Complex differential | **Claude Sonnet 4.6** (streaming) | `temperature=0.2, top_p=0.9, max_tokens=1500` | Standard | 3–6 s |
+| Literature / citation | Haiku 4.5, grounded-only mode | `temperature=0.1, top_p=0.7` | No-hallucination | 1.5–2 s |
+| Patient-education phrasing | Haiku 4.5 with tone preset | `temperature=0.2, top_p=0.9` | Standard + tone | 1–2 s |
 
-### 3.2 Parsing and embedding
+**Claude Opus is not used** — it's overkill for clinical QA at this token volume and its price is hard to justify next to Sonnet. If a query truly needs Opus-level reasoning (rare), it goes to a human specialist instead.
 
-- **Bedrock Data Automation** with advanced parsing handles text, tables (preserves 2-D structure), figures (extracts and captions), and layout metadata.
-- **Text chunks** → Titan Embed Text v2 (1024-dim).
-- **Figure-bearing chunks** → Amazon Nova Multimodal Embeddings (fuses the page text + cropped figure into one vector), enabling "show me the dosing flowchart" queries.
-- **OpenSearch Serverless** holds both indexes; a single retrieval call does hybrid kNN + BM25 over both.
+### 5.3 Agent tools
 
-### 3.3 ICD-11 API as a first-class source
-
-Three integration points; see `docs/architecture/rag_strategy.md` §"ICD-11 API is a first-class source".
-
-- Credentials live in **AWS Secrets Manager** (`nova/who-icd/client_id`, `nova/who-icd/client_secret`), rotated via Lambda; Secrets Manager KMS-encrypted.
-- Access is via a short-lived Bearer token that the Lambda fetches on cold start and refreshes before expiry.
-
-## 4. Model orchestration
-
-### 4.1 Router
-
-A small Lambda classifier (optionally Nova Micro) picks the lane for each query:
-
-| Question class | Model | Temperature / top_p / top_k | Guardrail | Latency target |
-|---|---|---|---|---|
-| Emergency / acute | **Fine-tuned Nova Lite student** (streaming) | 0.1 / 0.7 / 40 | Strict PHI + emergency disclaimer injector | **≤ 2 s** |
-| Complex differential | **Claude Sonnet 4.6** (streaming) | 0.2 / 0.9 / — | Standard | 3–6 s |
-| Literature / citation lookup | Student, grounded-only mode | 0.1 / 0.7 / 40 | No-hallucination | 1.5–2 s |
-| Patient-education phrasing | Student with tone-preset system prompt | 0.2 / 0.9 / 40 | Standard + tone | 1–2 s |
-
-Until the student is trained and evaluated, the emergency lane uses **Claude Haiku 4.5** unmodified as a fallback — still hits the SLA, just without the tone/accuracy gains distillation brings.
-
-### 4.2 Agent tools (Bedrock Agents)
-
-- `retrieve_guideline(topic, source=WHO, max_age_days=90)` — KB retrieval with metadata pre-filter.
-- `lookup_trial(nct_id)` — Lambda fetching ClinicalTrials.gov at request time.
-- `icd11_lookup(term, mode)` — Lambda hitting the WHO ICD-11 API (`/mms/search` or `/mms/{id}`) for live authoritative codes and synonyms.
-- `icd11_expand_query(term)` — used silently by the retrieval stage to expand the hybrid BM25 query with ICD-11 synonyms.
+- `retrieve_guideline(topic, source=WHO, max_age_days=90)` — Bedrock KB retrieval with metadata pre-filter.
+- `retrieve_trial(nct_or_doc_id)` — pulls by ID from the internal KB.
+- `icd11_lookup(term, mode)` — Lambda hitting the live WHO ICD-11 API (`/mms/search` and `/mms/{id}`).
+- `icd11_expand_query(term)` — used silently by the retrieval stage to boost BM25 recall with synonyms.
 
 All tools are read-only; no tool can write to any PHI store.
 
-## 5. Security architecture
+## 6. Security architecture
 
-Summary below; full mapping in `docs/compliance/security_compliance.md`.
+Full mapping in `docs/compliance/security_compliance.md`.
 
 | Layer | Control |
 |---|---|
-| Account isolation | AWS Organizations; one account per env; SCP bans non-HIPAA-eligible services in prod |
-| Network | Lambdas in private VPC; Bedrock via VPC endpoints; OpenSearch Serverless in VPC; no Internet egress |
-| Identity | IAM Identity Center → hospital IdP; Cognito user pools for the app; MFA enforced |
+| Account isolation | AWS Organizations; one account per environment (prod / stage / dev) in `ap-southeast-1` |
+| Network | Lambdas in private VPC; Bedrock + S3 + OpenSearch via VPC endpoints; zero internet egress from the chat Lambda |
+| Identity — clinicians | Cognito user pool federated via SAML/OIDC to each hospital's IdP (EntraID / Okta / ADFS); MFA enforced in IdP |
+| Identity — Nova staff | IAM Identity Center federated to Nova's EntraID; no long-lived IAM users |
+| Hospital ↔ cloud | **Site-to-Site VPN** (IPsec IKEv2, AES-256-GCM, SHA-2), dual-tunnel HA; BGP routing preferred |
 | Data at rest | S3, OpenSearch, ElastiCache, Secrets Manager all on customer-managed KMS keys |
-| Data in transit | TLS 1.3; mTLS internally |
-| PHI handling | Comprehend Medical DetectPHI on inbound → reversible tokenization → model never sees raw PHI. Macie weekly on raw S3. |
-| LLM safety | Bedrock Guardrails: denied topics, PHI filter, contextual grounding ≥ 0.7, prompt-injection filter. A guardrail fail blocks response and is logged. |
-| Audit | CloudTrail → S3 Object Lock 7 yr; Bedrock invocation logging captures request/response hashes |
-| Model risk | Evaluation harness gates every student retrain; production pins a specific model version |
-| Secrets | Secrets Manager with KMS + automatic rotation for the ICD-11 API credential |
-| BAA | AWS BAA covers all services in this design — verify current list before launch |
+| Data in transit | TLS 1.3 everywhere; mTLS internally where supported |
+| PHI handling | Comprehend Medical DetectPHI on every inbound message → reversible tokenization (KMS-backed) → model never sees raw PHI. Macie weekly on `raw/` |
+| LLM safety | Bedrock Guardrails: denied topics, PHI filter, contextual grounding threshold ≥ 0.7, prompt-injection filter; a fail blocks the response and is logged |
+| Audit | CloudTrail → S3 Object Lock (immutable) with **6-year retention** + Security Lake; Bedrock invocation logs capture request/response hashes |
+| Ingestion safety | GuardDuty Malware Protection on S3 uploads; Macie PHI scan; quarantine + admin notification on any leak |
+| Secrets | Secrets Manager with KMS + rotation Lambda for the WHO ICD-11 OAuth client |
+| BAA | AWS BAA signed and scoped to all services used in this design in `ap-southeast-1` |
 
-## 6. Deployment approach
+## 7. Deployment approach
 
-### 6.1 Public cloud by default, hybrid available
+### 7.1 Public cloud in Singapore; optional hybrid via VPN
 
-- **Primary**: Bedrock + OpenSearch Serverless in `us-east-1`; mirror in `eu-central-1` for EU hospitals.
-- **Hybrid on request**: AWS Outposts rack at the hospital data center runs the frontend + API + ElastiCache + an OpenSearch cache locally; Bedrock calls go over AWS Direct Connect. Keeps sub-ms local cache hits for the hottest protocols.
+- **Primary**: all AWS services in `ap-southeast-1`; multi-AZ.
+- **Hospital integration**: Site-to-Site VPN only. Outposts and Direct Connect are intentionally out of scope — Singapore latency is acceptable and VPN throughput (1.25 Gbps / tunnel) handles document uploads comfortably.
+- **DR**: cross-AZ within ap-southeast-1 for normal DR; a warm-standby in `ap-southeast-3` (Jakarta) or `ap-northeast-1` (Tokyo) is a roadmap item pending PDPA transfer-limitation review.
 
-### 6.2 Phased rollout
+### 7.2 Phased rollout
 
 | Phase | Weeks | Deliverable |
 |---|---|---|
-| 1 | 1–6 | RAG-only with Claude Haiku on the fast lane; Sonnet on the slow lane; evaluation harness baseline |
-| 2 | 7–10 | Distillation round 1: Sonnet generates Qs+answers → clinician review → Nova Lite SFT → ship student behind a feature flag with canary 5% |
-| 3 | 11–14 | Student at 100%; add DPO from clinician preferences; enable Bedrock prompt caching and reserved-tier on peak hours |
-| 4 | quarterly | Retrain student on accumulated new clinician data + new WHO guidelines |
+| 1 | 1–6 | Scheduled WHO + ICD-11 ingestion live, upload portal live, RAG with Haiku (fast) + Sonnet (complex); eval baseline |
+| 2 | 7–10 | Distillation round 1: Sonnet generates Qs+answers from curated seed → clinician review → Nova Lite SFT → ship behind feature flag at 5% canary |
+| 3 | 11–14 | Student at 100%; enable Bedrock Prompt Caching; add DPO preference-tuning; Reserved Tier on the emergency lane |
+| 4 | quarterly | Retrain student on accumulated new clinician data + new WHO / ICD-11 |
 
-### 6.3 Corporate integration
+### 7.3 Corporate integration
 
-- **EHR launch** via SMART-on-FHIR iframe; patient-chart slice passed to Lambda as FHIR resources, de-identified, then attached to the prompt.
-- **SSO** — SAML 2.0 via IAM Identity Center.
-- **Audit export** — nightly CSV to hospital SIEM via S3 Cross-Region Replication.
+- **EHR launch** via SMART-on-FHIR iframe; the FHIR slice passed to Lambda is de-identified before it reaches the model.
+- **Clinician SSO** — Cognito federation per hospital tenant to their EntraID / Okta / ADFS.
+- **Admin SSO** — IAM Identity Center → Nova's EntraID.
+- **Audit export** — nightly CloudWatch Logs → S3 → hospital SIEM via cross-account role assumption.
 
-## 7. Performance optimization — how the 2-second budget closes
+## 8. Performance — closing the 2-second budget
 
-See `docs/architecture/caching_strategy.md` for full details; summary:
+See `docs/architecture/caching_strategy.md` for detail. Representative p95 emergency path:
 
 ```
-     20 ms   Semantic cache hit (30–45% of emergency queries)        ← return fast
-    100 ms   Authn + PHI mask
-     60 ms   Hybrid retrieval (metadata-filtered, top-20 kNN+BM25)
-    400 ms   Student model first-token (with prompt cache hit)
-  1,200 ms   Student full answer (250 tokens, streaming)
+     20 ms   Semantic cache hit (Layer 1; 30–45% of emergency queries)
+    100 ms   Cognito auth + PHI mask
+     60 ms   Hybrid retrieval (metadata pre-filter, top-20 kNN+BM25, rerank to 5)
+    400 ms   Haiku 4.5 first-token (with Bedrock Prompt Cache hit on the static prefix)
+  1,200 ms   Haiku 4.5 full answer (250 tokens, streaming)
     120 ms   Guardrail + grounding + citation validation
   ────────
-  ≤ 1,900 ms  p95 emergency budget
+   ≤ 1,900 ms  p95
 ```
 
-The combination matters: fine-tuned small model alone isn't enough; caching alone isn't enough; hybrid retrieval alone isn't enough. The three together, plus streaming, give the SLA.
+Fine-tuned Nova Lite student (phase 3) shaves ~300–400 ms off that.
 
-## 8. References
+## 9. References
 
-- [AWS Prescriptive Guidance — Creating RAG solutions on AWS for healthcare](https://docs.aws.amazon.com/prescriptive-guidance/latest/rag-healthcare-use-cases/introduction.html)
-- [HIPAA compliance for generative AI solutions on AWS](https://aws.amazon.com/blogs/industries/hipaa-compliance-for-generative-ai-solutions-on-aws/)
-- [Amazon Bedrock Knowledge Bases — advanced parsing & chunking](https://aws.amazon.com/blogs/machine-learning/amazon-bedrock-knowledge-bases-now-supports-advanced-parsing-chunking-and-query-reformulation-giving-greater-control-of-accuracy-in-rag-based-applications/)
+- [AWS Services in Scope by Compliance Program (HIPAA, etc.)](https://aws.amazon.com/compliance/services-in-scope/)
+- [Architecting for HIPAA Security and Compliance on AWS](https://docs.aws.amazon.com/whitepapers/latest/architecting-hipaa-security-and-compliance-on-aws/architecting-hipaa-security-and-compliance-on-aws.html)
+- [Amazon Bedrock Knowledge Bases — advanced parsing, chunking](https://aws.amazon.com/blogs/machine-learning/amazon-bedrock-knowledge-bases-now-supports-advanced-parsing-chunking-and-query-reformulation-giving-greater-control-of-accuracy-in-rag-based-applications/)
 - [Cache Prompts Between Requests — Bedrock](https://aws.amazon.com/bedrock/prompt-caching/)
-- [Fine-tuning LLMs in healthcare — AWS Prescriptive Guidance](https://docs.aws.amazon.com/prescriptive-guidance/latest/generative-ai-nlp-healthcare/fine-tuning.html)
-- [WHO ICD-11 API Swagger](https://id.who.int/swagger/index.html)
+- [AWS Site-to-Site VPN — user guide](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html)
+- [Cognito SAML / OIDC federation](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-identity-federation.html)
+- [Singapore PDPA — cross-border transfers](https://www.pdpc.gov.sg/organisations/resources/guidance-by-topic/guide-to-cross-border-data-transfers)
 
 *Content above is rephrased for compliance with licensing restrictions.*

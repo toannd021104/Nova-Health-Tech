@@ -19,11 +19,9 @@ This is exactly the distillation pattern that Clinical Knowledge Distillation fo
 
 | Role | AWS | Alibaba Cloud |
 |---|---|---|
-| Teacher (slow, high quality, used only during training and for live escalation) | **Claude Sonnet 4.6** on Bedrock | **Qwen3-Max** on Model Studio |
-| Student (fast, serves emergency traffic) | **Amazon Nova Lite** (fine-tunable) — with Haiku 4.5 as a no-fine-tune fallback | **Qwen3-8B-Instruct** (SFT + LoRA on PAI Model Gallery, served on PAI-EAS) |
-| Why not fine-tune Claude directly | Bedrock does not expose Claude weights for SFT today; system prompts + guardrails are the only tuning levers | N/A — Qwen is open weights |
-
-On AWS, Nova Lite is the most practical student because it's Bedrock-native fine-tunable. Haiku 4.5 stays as the fallback when a trainable alternative isn't warranted yet. Teams that need a Claude-class student with open weights typically pick Llama 3.2 on SageMaker — that adds ops complexity so we leave it for later.
+| Teacher (slow, high quality, used during training and live escalation for complex questions) | **Claude Sonnet 4.6** on Bedrock | **Qwen-Max (Qwen3-Max)** on Model Studio |
+| Student (fast, serves emergency traffic) | **Claude Haiku 4.5** in phases 1–2; **Nova Lite fine-tuned on Sonnet+RAG outputs** once the distillation dataset is ready (phase 3) | **Qwen3.5-Flash** in phases 1–2; **Qwen3-8B SFT + LoRA on PAI** (served on PAI-EAS) from phase 3 |
+| Why not Opus / why not fine-tune Claude | Opus 4.6 is deliberately excluded — price is hard to justify for clinical QA at this volume, and Sonnet is already the teacher. Claude weights aren't exposed for SFT on Bedrock, so the fine-tunable target is Nova Lite. | Qwen is open weights; fine-tune the student directly |
 
 ### Data pipeline for fine-tune
 
@@ -62,13 +60,14 @@ Step 6 — Evaluation gate
 The router Lambda / Function Compute picks the model per query:
 
 ```
-emergency classifier (300 ms)
-   ├── emergency → Student (fine-tuned, cached, streaming)          → ≤ 2 s
-   ├── complex   → Teacher (Sonnet / Qwen3-Max, streaming)          → 4–7 s
-   └── citation-heavy → Student, but with strict grounded-only mode → ≤ 3 s
+emergency classifier (200–300 ms, Nova Micro / Qwen-Flash)
+   ├── emergency → AWS: Haiku 4.5 (phase 1–2) → Nova Lite student (phase 3+). Cached + streaming.     → ≤ 2 s
+   │              Ali: Qwen3.5-Flash (phase 1–2) → Qwen3-8B student on PAI-EAS (phase 3+).            → ≤ 2 s
+   ├── complex   → Teacher (Sonnet 4.6 / Qwen-Max), streaming                                          → 4–7 s
+   └── citation-heavy → fast-lane model with strict grounded-only mode                                 → ≤ 3 s
 ```
 
-The student handles ~60–70% of traffic. The teacher stays in the picture for complex differential diagnosis and for retraining the student every quarter.
+Before the student ships, Haiku 4.5 and Qwen3.5-Flash already meet the 2-second SLA on their own. Distillation is the quality lift, not the latency lift.
 
 ### Costs
 

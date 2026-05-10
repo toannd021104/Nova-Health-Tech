@@ -43,7 +43,7 @@ Both clouds charge **50% of on-demand price** for batch inference. We use this f
 
 ## Layer 3 — Reserved throughput for the production peak (removes cold-start and queueing)
 
-- **AWS — Bedrock Reserved Tier** for Claude Opus/Sonnet/Haiku and Nova family. Fixed $/1K tokens-per-minute, billed monthly. Economical above a threshold of sustained TPM; for Nova's ER peak hours, typically pays off on the emergency lane.
+- **AWS — Bedrock Reserved Tier** for Claude Sonnet/Haiku and the Nova family. Fixed $/1K tokens-per-minute, billed monthly. Economical above a threshold of sustained TPM; for Nova's ER peak hours, typically pays off on the emergency (Haiku) lane.
 - **Alibaba — Qwen Provisioned Throughput Units (PTU)** on Model Studio. Same idea — pay for reserved tokens-per-minute; Guarantees consistent latency when traffic spikes.
 
 We turn on reserved capacity only for the small-model emergency lane at first; the complex/teacher lane stays on-demand until traffic justifies reservation.

@@ -1,205 +1,193 @@
-# Alibaba Cloud Architecture — Nova Health Tech Clinical GenAI (Production Plan)
+# Alibaba Cloud Architecture — Nova Health Tech Clinical GenAI (Production)
 
-Parallel production design to the AWS build, using Qwen and Alibaba Cloud's managed services. Same production scope: real hundreds-of-documents RAG, monthly WHO refresh, fine-tuned student model for the 2-second emergency lane.
+Parallel production design using Qwen and Alibaba Cloud managed services in the **Singapore region**. Same production scope as the AWS plan: real hundreds-of-documents RAG, scheduled ingestion + internal upload portal, fine-tuned student for the 2-second emergency lane, full compliance posture.
 
-## 1. Why Qwen on Alibaba Cloud for Nova
+## 1. Why Qwen on Alibaba in Singapore
 
-- Qwen3 / 3.5 / 3.6 models are open-weight and natively fine-tunable on PAI with SFT / LoRA / QLoRA / DPO — confirmed in `askAli_AI_Assistant.txt`. That makes the distillation play (see `docs/architecture/fine_tuning_and_distillation.md`) far cheaper than the AWS equivalent.
-- `qwen3-vl-embedding` produces a single fused vector across text + figures on a page, which matches the WHO PDFs' mix of body text, tables, and flowcharts.
-- Qwen pricing is 5–10× cheaper per token than Claude / Nova; at Nova's expected volume the monthly bill is materially smaller.
-- Alibaba's Singapore and Frankfurt regions hold ISO 27001/27017/27018/27701 and support GDPR posture; Shanghai supports MLPS 2.0 Level 3 for any mainland-China expansion.
+- Qwen3 / Qwen3.5 / Qwen3.6 models are open-weight and natively fine-tunable on PAI (SFT + LoRA + QLoRA + DPO + GRPO — confirmed in `askAli_AI_Assistant.txt`).
+- Qwen is available natively in the **Singapore** Model Studio region.
+- `qwen3-vl-embedding` (multimodal, fused) is the recommended embedding for the WHO PDFs mixing text, tables, and figures — per `askAli_AI_Assistant.txt`.
+- Qwen pricing is 5–10× cheaper per token than Claude; at Nova's volume the monthly inference bill is materially smaller.
+- Alibaba Singapore holds ISO 27001 / 27017 / 27018 / 27701, SOC 1/2/3, and aligns with PDPA obligations for a data-intermediary role.
 
-## 2. Component diagram
+## 2. Region and data residency
+
+- **Primary region: Singapore.** Model Studio, PAI, OpenSearch Vector Search, OSS, Tair, FC, ActionTrail all present.
+- **Keep data in Singapore.** Avoids the PDPA transfer-limitation obligation; matches the AWS plan for regulatory symmetry.
+- **No on-prem (Apsara Stack) in scope.** Hospital connects over Site-to-Site IPsec VPN; Alibaba Singapore region is close enough.
+
+## 3. Component diagram
 
 ```
-                ┌────────────────────────────────────────────────────┐
-                │               Clinician / Hospital                 │
-                └──────────────────┬─────────────────────────────────┘
-                            HTTPS + SSO (IDaaS SAML/OIDC)
-                                   │
-                    ┌──────────────▼──────────────┐
-                    │  Anti-DDoS + WAF + CDN      │
-                    └──────────────┬──────────────┘
-                                   │
-                    ┌──────────────▼──────────────┐
-                    │   API Gateway + RAM         │
-                    └──────────────┬──────────────┘
-                                   │
-             ┌─────────────────────▼──────────────────────┐
-             │   Function Compute — /chat handler         │
-             │    (private VPC; no public egress)         │
-             │  0. authn/z, 1. PHI mask, 2. classify,     │
-             │  3. cache check, 4. retrieve, 5. generate, │
-             │  6. ground check, 7. audit                 │
-             └─┬─────────┬─────────────┬──────────────┬───┘
-               │         │             │              │
-   DataWorks /  │ Layer 1 │  Layer 2    │    Gen       │ Log
-    SDDP mask   │ Tair    │  Qwen       │ (students,   │
-               │ semantic│  Context    │  teacher)    │
-               │ cache   │  Cache      │              │
-               ▼         ▼             ▼              ▼
-    ┌────────────────┐ ┌──────────┐ ┌──────────────────────┐ ┌─────────────────┐
-    │ Reversible     │ │   Tair   │ │  Model Studio        │ │  SLS + OSS WORM │
-    │ tokenization   │ │  (Redis- │ │  ┌────────────────┐  │ │  7-yr retention │
-    │ via KMS        │ │  compat, │ │  │ Qwen3-Max      │  │ └─────────────────┘
-    └────────────────┘ │  Tair    │ │  │ (teacher)      │  │
-                       │  Vector) │ │  │ Qwen3-8B       │  │
-                       └──────────┘ │  │ (student, SFT  │  │
-                                    │  │  on PAI-EAS)   │  │
-                                    │  └────────────────┘  │
-                                    │  + Content Moderation│
-                                    └──────────┬───────────┘
-                                               │
-                                ┌──────────────▼──────────────┐
-                                │  OpenSearch Vector Search   │
-                                │  Edition                    │
-                                │  - index-who-guidelines     │
-                                │  - index-internal-trials    │
-                                │  - index-icd11              │
-                                │  + text-embedding-v4 (text) │
-                                │  + qwen3-vl-embedding (fig) │
-                                └──────────────┬──────────────┘
-                                               │
-                                         OSS chunk store
-
-Ingestion (async, event-driven):
-
-  OSS raw bucket ──► EventBridge ──► Function Workflow
-      ├── DocMind (general PDFs) + Qwen-VL-Max (complex tables / figures)
-      ├── FC chunker (hierarchical 1500/300 tok, 15% overlap)
-      ├── embed (text → text-embedding-v4; figure → qwen3-vl-embedding fused)
-      ├── SDDP scan for PHI leakage (quarantine if found)
-      └── OpenSearch upsert (by doc-hash)
-
-Monthly refresh:
-
-  CloudOps Scheduler (day 1, 00:00 UTC)
-   └── Function Workflow
-         ├── poll WHO guidelines RSS + download changed PDFs
-         ├── walk WHO ICD-11 API delta
-         └── ingestion pipeline for changed docs
-
-Distillation (quarterly):
-
-  OSS training-data bucket ◄── Model Studio Batch (Qwen3-Max, 50% off)
-        └── clinician review ── DPO pair builder
-              └── PAI Model Gallery (Qwen3-8B SFT + LoRA, optional DPO)
-                    └── PAI-EAS (private endpoint) ── eval harness ── promote
+              ┌──────────────────────────────────────────────────────────────┐
+              │   Hospital network (clinician workstations + EHR)            │
+              └──┬──────────────────────────────────────────────┬────────────┘
+                 │                                              │
+         AI chat │                                Internal mgmt │ HTTPS over
+                 │ HTTPS                                         │ IPsec VPN
+                 ▼                                               ▼
+     ┌──────────────────────┐                      ┌──────────────────────────┐
+     │ Anti-DDoS + WAF +    │                      │ Customer Gateway on-prem │
+     │ Alibaba CDN          │                      └──────────┬───────────────┘
+     └──────┬───────────────┘                                 │
+            │                                                 │
+     ┌──────▼──────────┐   ───── Site-to-Site IPsec VPN ─────►│ VPN Gateway
+     │ API Gateway     │                                      │ (private side)
+     │  + RAM / IDaaS  │                                      └──────────┬───────────┘
+     │    authorizer   │                                                 │
+     └──────┬──────────┘                                                 ▼
+            │                                                 ┌──────────────────────┐
+            │                                                 │ Private SLB + IDaaS  │
+            │                                                 │ OIDC/SAML ← EntraID  │
+            │                                                 │                      │
+            │                                                 │ SAE container:       │
+            │                                                 │  Upload Portal       │
+            │                                                 │  (internal UI)       │
+            │                                                 └──────────┬───────────┘
+            │                                                            │
+            ▼                                                            ▼
+   ┌──────────────────────────────┐                        ┌──────────────────────────┐
+   │ Function Compute /chat (VPC) │                        │ OSS raw bucket            │
+   │  0. authn (RAM/IDaaS token)  │◄──── semantic cache ──┤ /raw/scheduled/...        │
+   │  1. PHI mask (DataWorks SDDP) │     hit returns early │ /raw/manual/...           │
+   │  2. router (Qwen-Flash)       │                       │ /raw/icd11/...            │
+   │  3. route to Agent / Workflow │                       │ /raw/who/...              │
+   │     (Model Studio Application)│                       └──────────┬───────────────┘
+   │  4. ground-check + audit      │                                  │ ObjectCreated
+   └─────┬──────────────┬──────────┘                                  ▼
+         │              │                                ┌──────────────────────────┐
+ Layer 1 │    Layer 2   │  Generation                    │ Function Workflow        │
+ Tair    │    Qwen      │  (Model Studio / PAI-EAS):     │  DocMind parse → chunk → │
+ +Tair   │    Context   │    Qwen-Flash (fast lane)      │  embed → KB sync         │
+ Vector  │    Cache     │    Qwen-Max (complex + teacher)│                          │
+ semantic│              │    Qwen3-8B student (phase 3)  │ + Security Center scan   │
+ cache   │              │  + Content Moderation          │ + SDDP PHI scan          │
+         │              │                                └──────────┬───────────────┘
+         │              │                                           ▼
+         │              │                             ┌────────────────────────────┐
+         │              │                             │ Model Studio Knowledge Base│
+         │              │                             │  kb-who-guidelines         │
+         │              │                             │  kb-internal-trials        │
+         │              │                             │  kb-treatment-protocols    │
+         │              │                             │  kb-icd11                  │
+         │              │                             │  on OpenSearch Vector      │
+         │              │                             │  Search Edition            │
+         │              │                             │  + text-embedding-v4       │
+         │              │                             │  + qwen3-vl-embedding      │
+         │              │                             └────────────────────────────┘
+         ▼              ▼
+  All traffic logged → ActionTrail → SLS → OSS (WORM, 6-yr retention)
 ```
 
-## 3. Data pipeline
+## 4. Data pipeline
 
-See `docs/architecture/rag_strategy.md` — the Alibaba-side realization of Strategy A (managed parse + managed RAG).
+See `docs/architecture/rag_strategy.md`. Summary for Alibaba:
 
-### 3.1 Sources
+- **Parser**: DocMind handles general PDFs; PAI pipeline invokes **Qwen-VL-Max** on pages flagged as complex (multi-page tables, flowcharts).
+- **Chunking**: hierarchical 1500/300 tokens, 15% overlap, section-aware — same as AWS side.
+- **Embeddings**: `text-embedding-v4` for text chunks; `qwen3-vl-embedding` with `enable_fusion=True` (2560-dim) for figure-bearing chunks.
+- **Vector store**: **OpenSearch Vector Search Edition**; Model Studio embedding plugin handles re-vectorization on upload.
+- **Retrieval**: hybrid kNN + BM25, metadata pre-filter, `gte-rerank` for reranking before generation.
 
-Identical to the AWS side — internal clinical trial PDFs, WHO guideline PDFs, WHO ICD-11 API. Same hierarchical 1500/300 chunking, same metadata fields on every chunk.
+## 5. Model orchestration
 
-### 3.2 Parsing and embedding
+### 5.1 Framework — Model Studio Application
 
-- **DocMind** for general PDFs (body text + regular tables).
-- **Qwen-VL-Max** invoked via PAI-pipeline for pages flagged as complex (flowcharts, multi-page tables, figures).
-- **Text chunks** → `text-embedding-v4` (or `text-embedding-v3` if v4 not in region) — 1024 or 1536 dim depending on model.
-- **Figure-bearing chunks** → `qwen3-vl-embedding` with `enable_fusion=True` (2560-dim), per `askAli_AI_Assistant.txt`.
-- **OpenSearch Vector Search Edition** — the Model Studio embedding plugin handles re-vectorization on upload; one index per source with hybrid BM25 + kNN.
+See `docs/architecture/framework_choice.md`. Two application types per Alibaba's own docs:
 
-### 3.3 ICD-11 API as first-class source
+- **Agent application** — conversational; LLM decides which tools / RAG to call. Used for the general clinical chat.
+- **Workflow application** — deterministic DAG (retrieve → prompt → generate → moderation). Used for the emergency lane, where the path is fixed and auditability matters most.
 
-Three integration points (same pattern as AWS):
+**LangChain** is used only for the semantic cache (against Tair + TairVector) and chat memory, same as the AWS side.
 
-1. **Ingest** — monthly `scripts/download_who_icd.py --walk --max-depth 2` writes JSON to OSS → chunker indexes one record per entity.
-2. **Runtime tool call** — Model Studio Application exposes `icd11_lookup(term)` as a tool; Function Compute does the live API call.
-3. **Query expansion** — a small FC step expands the clinician's query with ICD-11 synonyms before the hybrid BM25 call.
+### 5.2 Router and lanes
 
-ICD-11 credentials live in **KMS-encrypted Secrets Manager** equivalent (Credentials Manager), accessible only to the Function Compute role.
+A small FC classifier (Qwen3.5-Flash, ~200 ms) picks the lane:
 
-## 4. Model orchestration
-
-### 4.1 Router
-
-A small FC classifier (optionally a distilled Qwen3-0.6B) picks the lane:
-
-| Question class | Model | Temperature / top_p / top_k / seed | Guardrail | Latency target |
+| Question class | Model | Hyperparameters | Guardrail | Latency target |
 |---|---|---|---|---|
-| Emergency / acute | **Fine-tuned Qwen3-8B student** on PAI-EAS (streaming) | 0.1 / 0.7 / 40 / 42 | Strict PHI + emergency disclaimer injector | **≤ 2 s** |
-| Complex differential | **Qwen3-Max** (teacher, streaming) | 0.2 / 0.9 / — / — | Standard | 3–6 s |
-| Literature / citation lookup | Student, grounded-only mode | 0.1 / 0.7 / 40 / 42 | No-hallucination | 1.5–2 s |
-| Patient-education phrasing | Student with tone-preset system prompt | 0.2 / 0.9 / 40 / 42 | Standard + tone | 1–2 s |
+| Emergency / acute | **Qwen3.5-Flash** (streaming) with optional Qwen3-8B distillation student behind a feature flag | `temperature=0.1, top_p=0.7, top_k=40, seed=42` | Strict PHI + emergency disclaimer | **≤ 2 s** |
+| Complex differential | **Qwen-Max (Qwen3-Max)** (streaming) | `temperature=0.2, top_p=0.9` | Standard | 3–6 s |
+| Literature / citation | Qwen3.5-Flash, grounded-only mode | `temperature=0.1, top_p=0.7, top_k=40` | No-hallucination | 1.5–2 s |
+| Patient-education phrasing | Qwen3.5-Flash with tone preset | `temperature=0.2, top_p=0.9` | Standard + tone | 1–2 s |
 
-Until the Qwen3-8B student is trained, the fast lane uses **Qwen3.5-Flash** directly — cheap and fast enough for the SLA, but without the tone alignment.
+Qwen APIs are OpenAI-compatible, so the same router code works against Model Studio's Singapore endpoint (`https://dashscope-intl.aliyuncs.com/compatible-mode/v1`). Qwen supports `seed`, which we pin per deployment to maximize determinism.
 
-Qwen API is OpenAI-compatible, so the router code is the same as the AWS version with a different `base_url` and auth header.
+### 5.3 Agent tools (Model Studio plug-ins)
 
-### 4.2 Agent tools
+- `retrieve_guideline(topic, source=WHO, max_age_days=90)` — KB retrieval.
+- `retrieve_trial(doc_id)` — internal KB.
+- `icd11_lookup(term, mode)` — FC calling the live WHO ICD-11 API.
+- `icd11_expand_query(term)` — silent query expansion for retrieval.
 
-Same four tools as AWS (`retrieve_guideline`, `lookup_trial`, `icd11_lookup`, `icd11_expand_query`), defined in Model Studio Application's tool config. Tools are read-only.
+All tools are read-only.
 
-## 5. Security architecture
+## 6. Security architecture
 
 | Layer | Control |
 |---|---|
-| Account isolation | Resource Directory with Control Policy Service; one account per env |
-| Network | FC in VPC; Model Studio + PAI-EAS via PrivateLink; OpenSearch Vector in VPC; no Internet egress |
-| Identity | RAM + IDaaS SAML/OIDC; MFA enforced |
-| Data at rest | OSS, OpenSearch, Tair, Credentials Manager all on customer-managed KMS (BYOK) |
-| Data in transit | TLS 1.3; ASM for service-mesh mTLS |
+| Account isolation | Resource Directory + Control Policy Service; one account per env in Singapore |
+| Network | FC in VPC; Model Studio + PAI-EAS via PrivateLink; OpenSearch Vector in VPC; no public egress from the chat FC |
+| Identity — clinicians | **Alibaba IDaaS (Cloud Identity)** user pool federated via SAML/OIDC to each hospital's IdP (EntraID / Okta / ADFS); MFA enforced in IdP |
+| Identity — Nova staff | **Cloud SSO + RAM** federated to Nova's EntraID; short-lived SSO credentials |
+| Hospital ↔ cloud | **Site-to-Site IPsec VPN** on VPN Gateway (IKEv2 + AES-256-GCM + SHA-2), dual-tunnel HA |
+| Data at rest | OSS, OpenSearch, Tair, Credentials Manager all on KMS BYOK |
+| Data in transit | TLS 1.3; ASM for mTLS |
 | PHI handling | DataWorks Data Security Guard + SDDP classify → reversible tokenization in FC (KMS-backed) |
-| LLM safety | Content Moderation 2.0 for generative AI — medical-misinformation, jailbreak, PII, bias filters. Fail → block + log |
-| Audit | ActionTrail → SLS → OSS WORM 7-yr retention |
-| Model risk | Eval harness gates every student retrain; production pins model version |
-| Secrets | Credentials Manager with KMS; rotation Lambda for ICD-11 API credential |
-| Compliance | ISO 27001/17/18/27701, MLPS 2.0 L3 (Shanghai), GDPR-aligned services (Singapore/Frankfurt) |
+| LLM safety | Content Moderation 2.0 for generative AI — medical misinformation, jailbreak, PII, bias filters |
+| Audit | ActionTrail → SLS → OSS WORM with **6-year retention** (HIPAA §164.530(j)); Model Studio observability captures every call |
+| Ingestion safety | Security Center scan on uploaded PDFs; SDDP PHI scan; quarantine + notify on leak |
+| Secrets | Credentials Manager with KMS + rotation FC for WHO ICD-11 OAuth client |
+| Compliance | ISO 27001/17/18/27701, SOC 1/2/3, PDPA alignment in Singapore region |
 
-## 6. Deployment approach
+## 7. Deployment approach
 
-### 6.1 Region strategy
+### 7.1 Public cloud in Singapore; VPN for the hospital
 
-| Hospital client | Region | Compliance posture |
-|---|---|---|
-| International SaaS default | Singapore or Frankfurt | ISO + GDPR |
-| Mainland China | Shanghai | MLPS L3 + PIPL |
-| On-prem (hospital DC) | Apsara Stack (Alibaba private-cloud) or ACK-Edge | Full local control; central cloud still does training |
+- All Alibaba services in Singapore; multi-AZ where applicable.
+- Hospital integration over Site-to-Site IPsec VPN — no dedicated line unless a customer specifically requests one.
+- DR via cross-AZ within Singapore; a warm-standby region is a roadmap item with PDPA review.
 
-### 6.2 Phased rollout
+### 7.2 Phased rollout
 
-Mirrors the AWS phases; costs are materially smaller:
+| Phase | Weeks | Deliverable | Typical cost |
+|---|---|---|---|
+| 1 | 1–6 | Scheduled WHO + ICD-11 ingestion live, upload portal live, RAG with Qwen-Flash (fast) + Qwen-Max (complex) | Low hundreds of USD/mo |
+| 2 | 7–10 | Distill Qwen3-8B student from Qwen-Max outputs; LoRA on PAI Model Gallery | ~$30–100 per retrain |
+| 3 | 11–14 | Student at 100% via PAI-EAS; enable Qwen Context Cache (implicit + explicit); PTU on emergency lane | Marginal; PTU only when sustained TPM high |
+| 4 | quarterly | Retrain with new WHO + clinician data | < $100 per retrain |
 
-| Phase | Deliverable | Typical cost |
-|---|---|---|
-| 1 (weeks 1–6) | RAG + Qwen3.5-Flash fast lane + Qwen3-Max slow lane | Low hundreds of USD/mo in pilot |
-| 2 (weeks 7–10) | Distill Qwen3-8B from Qwen3-Max outputs, LoRA on PAI | $30–100 per retrain |
-| 3 (weeks 11–14) | 100% canary; add DPO; enable context caching + PTU on emergency lane | Marginal; PTU only if sustained TPM high |
-| 4 (quarterly) | Retrain with new WHO + clinician data | < $100 per retrain |
+### 7.3 Corporate integration
 
-### 6.3 Corporate integration
-
-- **EHR / HIS bridge** — custom FastAPI container on ECS-equivalent (Serverless App Engine) exposing HL7v2 / FHIR → FC endpoint.
-- **SSO** — IDaaS SAML 2.0 / OIDC.
+- **EHR / HIS bridge** — SAE-hosted FastAPI container exposing HL7v2 / FHIR over the VPN to the hospital; de-identifies before calling FC.
+- **Clinician SSO** — IDaaS federation per hospital tenant.
+- **Admin SSO** — Cloud SSO → Nova's EntraID.
 - **Audit export** — SLS → OSS nightly → hospital SIEM.
 
-## 7. Performance optimization — closing the 2-second budget
+## 8. Performance — closing the 2-second budget
 
-See `docs/architecture/caching_strategy.md`.
+See `docs/architecture/caching_strategy.md`. Representative p95 emergency path:
 
 ```
-     25 ms   Tair semantic cache hit (30–45% of emergency queries)  ← return fast
-    100 ms   Authn + PHI mask
-     70 ms   Hybrid retrieval (OpenSearch Vector)
-    300 ms   Student first-token (with Qwen context cache hit)
-    1100 ms  Student full answer (250 tokens, streaming, PAI-EAS)
+     25 ms   Tair semantic cache hit (Layer 1; 30–45% of emergency queries)
+    100 ms   IDaaS auth + PHI mask
+     70 ms   OpenSearch Vector hybrid retrieval + rerank
+    300 ms   Qwen3.5-Flash first-token (with Qwen Context Cache hit)
+  1,100 ms   Qwen3.5-Flash full answer (250 tokens, streaming)
     110 ms   Moderation + citation check
   ────────
-   ≤ 1,700 ms  p95 emergency budget
+   ≤ 1,700 ms  p95
 ```
 
-## 8. References
+## 9. References
 
-- [Fine-tune Qwen — Alibaba Cloud Model Studio](https://www.alibabacloud.com/help/en/model-studio/text-generation-model-tuning)
-- [Quick start: Deploy, fine-tune, and evaluate Qwen3 models on PAI](https://www.alibabacloud.com/help/en/pai/use-cases/quick-start-deploy-fine-tune-and-evaluate-qwen3-models)
-- [Multimodal embeddings | Alibaba Cloud Model Studio](https://www.alibabacloud.com/help/en/model-studio/multimodal-embeddings)
-- [Context Cache feature for Qwen models](https://www.alibabacloud.com/help/en/model-studio/context-cache)
-- [RAG-based application on PAI for finance and healthcare](https://www.alibabacloud.com/help/en/pai/use-cases/development-of-rag-application-flow)
-- [Stream Model Responses with Low Latency via SSE](https://www.alibabacloud.com/help/en/model-studio/stream)
-- [WHO ICD-11 API Swagger](https://id.who.int/swagger/index.html)
+- [Text generation — Alibaba Cloud Model Studio (service regions include Singapore)](https://www.alibabacloud.com/help/en/model-studio/text-generation)
+- [Agent vs Workflow Applications in Model Studio](https://www.alibabacloud.com/help/en/model-studio/application-introduction)
+- [AI Agent Architecture with LLM and Tools — Alibaba](https://www.alibabacloud.com/help/en/model-studio/getting-started/application-building-instructions)
+- [Context Cache for Qwen models](https://www.alibabacloud.com/help/en/model-studio/context-cache)
+- [Multimodal embeddings — Alibaba Cloud Model Studio](https://www.alibabacloud.com/help/en/model-studio/multimodal-embeddings)
+- [Alibaba Cloud VPN Gateway — IPsec-VPN](https://www.alibabacloud.com/help/en/vpn/)
+- [Alibaba IDaaS — overview](https://www.alibabacloud.com/help/en/idaas/)
+- [Singapore PDPA — cross-border transfers](https://www.pdpc.gov.sg/organisations/resources/guidance-by-topic/guide-to-cross-border-data-transfers)
 
 *Content above is rephrased for compliance with licensing restrictions.*

@@ -32,14 +32,13 @@ Ali's 1M-token-per-model quota gives Nova a near-zero-cost RAG+light-finetune pr
 
 ## 3. LLM inference pricing (per 1M tokens)
 
-### AWS Bedrock (on-demand, us-east-1)
+### AWS Bedrock (on-demand, ap-southeast-1 Singapore)
 
 | Model | Input | Output | Best fit |
 |---|---|---|---|
-| Claude Haiku 4.5 | ~$1.00 | ~$5.00 | Emergency lane fallback (before student ships) |
-| Claude Sonnet 4.6 | ~$3.00 | ~$15.00 | Teacher (distillation) + complex reasoning |
-| Claude Opus 4.6 | ~$15.00 | ~$75.00 | Rarely — only hardest consults |
-| Amazon Nova Lite | ~$0.06 | ~$0.24 | **Student (fine-tuned)** for emergency lane |
+| Claude Haiku 4.5 | ~$1.00 | ~$5.00 | Emergency/fast lane (primary) |
+| Claude Sonnet 4.6 | ~$3.00 | ~$15.00 | Complex reasoning + teacher (distillation) |
+| Amazon Nova Lite | ~$0.06 | ~$0.24 | **Student (fine-tuned)** for emergency lane (phase 3) |
 | Amazon Nova Pro | ~$0.80 | ~$3.20 | Larger student if Lite under-fits |
 | Titan Embed Text v2 | ~$0.02 per 1M | — | Text embeddings |
 | Nova Multimodal Embeddings | ~$0.06 per 1M + image pricing | — | Figure-bearing chunks |
@@ -105,9 +104,9 @@ Assumptions:
 
 | Item | Unit calc | Cost |
 |---|---|---|
-| Fast lane — Nova Lite student | 360k × 65% (after sem cache) = 234k calls × (3k in + 350 out); input effective price ~$0.03 per 1M after prompt cache | ~**$45** |
-| Slow lane — Sonnet 4.6 | 210k × (3k in + 350 out); input effective price ~$1.50 after prompt cache | ~**$1,700** |
-| Top-tier — Opus 4.6 | 30k × same | ~**$2,250** |
+| Fast lane — Claude Haiku 4.5 | 360k × 65% (after sem cache) = 234k calls × (3k in + 350 out); input effective price ~$0.50 after prompt cache | ~**$800** |
+| Complex lane — Sonnet 4.6 | 210k × (3k in + 350 out); input effective price ~$1.50 after prompt cache | ~**$1,700** |
+| Top-tier escalation | 30k × same (stays on Sonnet; Opus not used) | ~**$250** |
 | Titan text embeddings (ingest + queries) | ~500M tokens amortized | ~**$10** |
 | Nova Multimodal embeddings (figure chunks) | ~50M tokens + images | ~**$20** |
 | Bedrock Guardrails | per call | ~**$60** |
@@ -117,9 +116,9 @@ Assumptions:
 | S3 + CloudTrail (Object Lock) + Macie | low | ~**$120** |
 | ElastiCache Valkey/Redis (cache.t4g.small × 2 AZ with RediSearch) | | ~**$80** |
 | Distillation retrain, amortized | $2k / 3 | ~**$700** |
-| **AWS total** | | **≈ $5,665 / month** |
+| **AWS total** | | **≈ $4,540 / month** |
 
-Without the caching layers, the same workload would run ~$8–9k/month. With prompt caching + semantic cache + router biasing traffic to the student, roughly **30–40% savings** is realistic.
+Without the caching layers, the same workload would run ~$7–8k/month. With prompt caching + semantic cache + router biasing traffic to Haiku, roughly **30–40% savings** is realistic. When the Nova Lite student ships in phase 3, the fast-lane cost drops further by 80–90% — typical post-distillation AWS total settles around **$3,000–3,500 / month**.
 
 ### Alibaba Cloud (production, optimized)
 
