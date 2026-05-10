@@ -35,10 +35,22 @@ async function loadMe() {
 }
 loadMe();
 
-function appendMsg(role, text) {
+function renderMarkdown(text) {
+  if (!window.marked || !window.DOMPurify) return text;
+  marked.setOptions({ gfm: true, breaks: true, headerIds: false, mangle: false });
+  return DOMPurify.sanitize(marked.parse(text));
+}
+
+function appendMsg(role, text, { raw = false } = {}) {
   const div = document.createElement("div");
   div.className = `msg ${role === "user" ? "user-msg" : role === "error" ? "error-msg" : "assistant-msg"}`;
-  div.textContent = text;
+  if (raw) {
+    div.innerHTML = text;
+  } else if (role === "assistant" && text !== "…") {
+    div.innerHTML = renderMarkdown(text);
+  } else {
+    div.textContent = text;
+  }
   chatEl.appendChild(div);
   chatEl.scrollTop = chatEl.scrollHeight;
   return div;
@@ -65,7 +77,7 @@ async function send(message) {
       return;
     }
 
-    pending.textContent = data.answer || "(no answer)";
+    pending.innerHTML = renderMarkdown(data.answer || "(no answer)");
 
     if (data.citations?.length) {
       const cites = document.createElement("div");

@@ -164,3 +164,35 @@ input[type="checkbox"]:checked + .switch::after { transform: translateX(16px); }
   border-radius: 999px; padding: 6px 10px; font-size: 12px; cursor: pointer;
 }
 .suggestion:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Markdown-rendered assistant messages */
+.assistant-msg h1, .assistant-msg h2, .assistant-msg h3, .assistant-msg h4 {
+  font-size: 14px; font-weight: 700; margin: 10px 0 4px; color: var(--text);
+}
+.assistant-msg h1 { font-size: 15px; }
+.assistant-msg p { margin: 6px 0; }
+.assistant-msg ul, .assistant-msg ol { margin: 6px 0; padding-left: 22px; }
+.assistant-msg li { margin: 2px 0; }
+.assistant-msg strong { font-weight: 700; }
+.assistant-msg em { font-style: italic; }
+.assistant-msg code {
+  background: rgba(15, 23, 42, 0.08); padding: 1px 5px;
+  border-radius: 4px; font-family: ui-monospace, Consolas, monospace; font-size: 12.5px;
+}
+.assistant-msg pre {
+  background: rgba(15, 23, 42, 0.06); padding: 10px 12px;
+  border-radius: 6px; overflow-x: auto; margin: 8px 0;
+  font-family: ui-monospace, Consolas, monospace; font-size: 12.5px;
+}
+.assistant-msg blockquote {
+  border-left: 3px solid var(--accent); padding-left: 10px;
+  color: var(--muted); margin: 6px 0;
+}
+.assistant-msg a { color: var(--accent); text-decoration: underline; }
+.assistant-msg table {
+  border-collapse: collapse; margin: 8px 0; font-size: 13px;
+}
+.assistant-msg th, .assistant-msg td {
+  border: 1px solid var(--border); padding: 4px 8px; text-align: left;
+}
+.assistant-msg th { background: var(--panel-2); font-weight: 600; }

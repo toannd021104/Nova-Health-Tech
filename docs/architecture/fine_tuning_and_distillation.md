@@ -1,135 +1,115 @@
-# Fine-tuning, Distillation, and the 2-Second Emergency SLA
+# Fine-tuning & Distillation — Per-Version Plan
 
-## The core tension
+Replaces the earlier hand-wavy version. See `docs/architecture/model_customization_research.md` for the full fact-check against AWS / Alibaba docs; this file records the **decision per cloud version**.
 
-Emergency care needs an answer in ≤ 2 seconds. The models that answer medical questions well (Claude Sonnet 4.6, Qwen3-Max) are slow — typical p95 around 5–8 seconds for a 300-token answer with RAG context. The models that are fast enough (Claude Haiku 4.5, Qwen3.5-Flash) answer in 1–2 seconds but miss clinically important nuance on rarer conditions.
+## 1. Techniques we will and will not use
 
-## The plan (agreed with user)
-
-**Use a small model for serving, make it smart via distillation + fine-tuning from a big model's outputs.**
-
-1. The big model (teacher) — Claude Sonnet 4.6 on AWS, Qwen3-Max on Ali — answers a curated set of representative clinical questions, with the full RAG context attached.
-2. Clinicians review and approve those answers. This builds a **synthetic instruction dataset** of ~10–30k `(question, RAG-context, approved-answer)` tuples.
-3. The small model (student) — Haiku 4.5 on AWS (via Nova Micro/Lite custom fine-tune since Claude weights aren't trainable on Bedrock), Qwen3-8B on Ali — is fine-tuned on that dataset with SFT + LoRA.
-4. At serving time, the student is called with the RAG context; it produces answers that are close to the teacher's quality but at the small model's latency.
-
-This is exactly the distillation pattern that Clinical Knowledge Distillation for EHRs and the SynthVision medical dataset both validate. It turns a latency problem into a one-time training investment.
-
-### Model choices per cloud
-
-| Role | AWS | Alibaba Cloud |
+| Technique | Used? | Where |
 |---|---|---|
-| Teacher (slow, high quality, used during training and live escalation for complex questions) | **Claude Sonnet 4.6** on Bedrock | **Qwen-Max (Qwen3-Max)** on Model Studio |
-| Student (fast, serves emergency traffic) | **Claude Haiku 4.5** in phases 1–2; **Nova Lite fine-tuned on Sonnet+RAG outputs** once the distillation dataset is ready (phase 3) | **Qwen3.5-Flash** in phases 1–2; **Qwen3-8B SFT + LoRA on PAI** (served on PAI-EAS) from phase 3 |
-| Why not Opus / why not fine-tune Claude | Opus 4.6 is deliberately excluded — price is hard to justify for clinical QA at this volume, and Sonnet is already the teacher. Claude weights aren't exposed for SFT on Bedrock, so the fine-tunable target is Nova Lite. | Qwen is open weights; fine-tune the student directly |
+| **SFT** (supervised fine-tuning) | Yes | All three versions. Primary training step. |
+| **Knowledge distillation** | Yes | Produces the SFT dataset. Teacher in each version listed below. |
+| **DPO** (preference tuning) | Optional phase-3 | All three versions, once clinician-labeled preference pairs exist. |
+| **GRPO** (reinforcement w/ verifiable reward) | Optional, later | Only on open-weight Qwen (Versions B and C). Good for "did the answer cite a real chunk?" style rewards. |
+| **Classical RLHF** (reward-model + PPO) | No | Heavier than DPO / GRPO with no clinical-accuracy upside. |
+| **No-op (RAG only)** | Yes, for now | What the running demo actually does today. |
 
-### Data pipeline for fine-tune
+## 2. Per-version teacher → student plan
+
+### Version A — AWS with Claude
+
+| Role | Model | Customization |
+|---|---|---|
+| Complex-lane / teacher | Claude Sonnet 4.5 on Bedrock | — (used as-is) |
+| Emergency-lane base | Claude Haiku 4.5 on Bedrock | — (cannot be fine-tuned on Bedrock) |
+| Distillation student (phase 3) | **Amazon Nova Lite** on Bedrock | **Bedrock Model Distillation** — Sonnet 4.5 as teacher → Nova Lite as student. Managed end-to-end: Bedrock generates the SFT dataset via the teacher, trains Nova Lite, exposes a custom-model endpoint. |
+| Backup path (if we need Claude-family student) | Claude 3 Haiku (2024-03-07) | Bedrock custom fine-tuning (SFT only). Trade-off: we lose Haiku 4.5 quality gains, only pick this if the 4.5 → 3 regression is acceptable. |
+
+Key constraint: **fine-tuning Claude Haiku 4.5 itself is not possible on Bedrock.** The SVG and docs now reflect that Nova Lite is the student, not "fine-tuned Haiku".
+
+### Version B — AWS with Qwen
+
+| Role | Model | Customization |
+|---|---|---|
+| Complex-lane / teacher | Qwen3-VL 235B A22B on Bedrock `bedrock-mantle` | — |
+| Student (primary) | **Qwen3-8B on SageMaker** | **SFT + LoRA** via Hugging Face TRL; optional **DPO** round; optional **GRPO** round on tool-calling / citation-correctness reward |
+| Student (alternate) | Qwen3 32B on Bedrock `bedrock-mantle` | **Reinforcement fine-tuning** via Bedrock OpenAI-compatible API with Lambda grader |
+
+SageMaker path wins on flexibility (three techniques available, portable LoRA adapter). Bedrock-mantle path wins on "one service, one IAM surface" simplicity. Choose per team preference; both are real.
+
+### Version C — Alibaba Cloud (Qwen)
+
+| Role | Model | Customization |
+|---|---|---|
+| Complex-lane / teacher | Qwen-Max (Qwen3-Max) on Model Studio | — |
+| Student | **Qwen3-8B on PAI Model Gallery → PAI-EAS** | **SFT + LoRA** (or QLoRA for 4-bit memory savings), optional **DPO**, optional **GRPO** (Qwen3 explicitly supports GRPO per Alibaba docs) |
+
+Most flexible of the three. Qwen2.5-7B-Instruct and Qwen1.5 also fine-tunable on PAI for Base/Chat variants.
+
+## 3. SFT dataset pipeline (shared across all three versions)
 
 ```
-Step 1 — Seed queries
-  ├── scrape de-identified historical clinician questions from Nova's existing tool
-  └── generate synthetic variations using the teacher (paraphrases, edge cases)
-         → ~10k seed questions
+Step 1 — Seed prompts
+  (a) de-identified clinician questions from historical Nova invocation logs
+  (b) paraphrases + edge cases generated by the teacher from WHO / protocol chunks
+      → target: 10k–30k prompts
 
-Step 2 — Teacher generation (batched, 50% off on both clouds)
-  for each question:
-      retrieve RAG context
-      ask teacher: "Answer in Nova's standard tone, cite every claim, ≤ 250 words"
-      store (question, context, teacher_answer)
+Step 2 — Teacher generation (batch, 50% off)
+  For each prompt:
+    retrieve RAG context
+    ask teacher with Nova-style system prompt
+    record (question, context, teacher_answer)
 
 Step 3 — Clinician review (Amazon A2I / Alibaba Human Verification)
-  sample 10–20% for clinician review; fix what they flag; feed corrections
-  back into the dataset with higher weight
+  Sample 10–20%. Approved / fixed answers become SFT rows.
+  Clinician choices become DPO (chosen, rejected) pairs.
 
-Step 4 — DPO pair dataset (optional but recommended)
-  for each reviewed example, build (chosen=clinician-approved,
-                                    rejected=earlier model draft)
-  → Qwen supports DPO natively; Nova Lite supports preference tuning
+Step 4 — Train
+  Version A → Bedrock Model Distillation job (managed)
+  Version B → SageMaker TRL SFT + LoRA on Qwen3-8B
+  Version C → PAI Model Gallery Qwen3-8B SFT + LoRA
 
-Step 5 — Fine-tune
-  AWS: Bedrock custom model (Nova Lite SFT)
-  Ali: PAI Model Gallery (Qwen3-8B SFT + LoRA, then optional DPO)
+Step 5 — Evaluation harness
+  LLM-as-judge (teacher grades student) on accuracy, citation coverage,
+  PHI leakage, tone, emergency-appropriateness.
+  If student >= 95% of teacher on the holdout, promote. Else iterate.
 
-Step 6 — Evaluation gate
-  LLM-as-judge eval (teacher grades student answers) + clinician spot-check
-  If student accuracy ≥ 95% of teacher on the holdout, ship; else iterate.
+Step 6 — Deploy behind a feature flag (5% canary → 100%)
 ```
 
-### Deployment in the two lanes
+Never put raw PHI in any training data. De-identify via Comprehend Medical (AWS) / DataWorks SDDP (Alibaba) before step 2.
 
-The router Lambda / Function Compute picks the model per query:
-
-```
-emergency classifier (200–300 ms, Nova Micro / Qwen-Flash)
-   ├── emergency → AWS: Haiku 4.5 (phase 1–2) → Nova Lite student (phase 3+). Cached + streaming.     → ≤ 2 s
-   │              Ali: Qwen3.5-Flash (phase 1–2) → Qwen3-8B student on PAI-EAS (phase 3+).            → ≤ 2 s
-   ├── complex   → Teacher (Sonnet 4.6 / Qwen-Max), streaming                                          → 4–7 s
-   └── citation-heavy → fast-lane model with strict grounded-only mode                                 → ≤ 3 s
-```
-
-Before the student ships, Haiku 4.5 and Qwen3.5-Flash already meet the 2-second SLA on their own. Distillation is the quality lift, not the latency lift.
-
-### Costs
-
-Distillation is a one-time cost (periodic retraining, ~quarterly).
-
-- **AWS** — Nova Lite SFT on 20k samples: about $1–2k per run on Bedrock custom models; teacher calls to generate the dataset at batch-50%-off rates, roughly $300–600 for 20k teacher answers with RAG context. Total retrain: ~**$2k per quarter**.
-- **Alibaba** — Qwen3-8B LoRA on 20k samples: 2–4 GPU-hours on A10, about $10–30; teacher (Qwen3-Max) batch calls for 20k answers, roughly $30–60. Total retrain: under **$100 per quarter**.
-
-The savings on inference far outweigh this — routing emergency traffic to a small student model (instead of the teacher) is the single largest cost-and-latency lever in the whole system.
-
-## Consistent tone and phrasing via hyperparameters
-
-The scenario asks for "consistent tone and phrasing." Fine-tuning on Nova-approved answers bakes in the style, but the inference-time levers matter too:
-
-| Parameter | Default (creative) | Recommended (clinical) | Rationale |
-|---|---|---|---|
-| `temperature` | 0.7 | **0.1–0.2** | Low temperature makes token selection near-deterministic. Same prompt + same context produces nearly the same answer every time. |
-| `top_p` (nucleus) | 1.0 | **0.7–0.9** | Narrows the sampling pool to high-probability tokens. Cuts stylistic drift without going fully deterministic. |
-| `top_k` | unset | **40** (when the model supports it, e.g. Qwen / Nova) | Hard cap on candidate tokens per step; avoids rare tokens that bloat style variance. |
-| `max_tokens` | 4096 | **700** for emergency, **1500** for complex | Limits runaway answers; pairs with system prompt "be concise". |
-| `stop_sequences` | none | `["\n\nDisclaimer:", "\n\nEND"]` | Cuts off at a predictable stopping point for cleaner formatting. |
-| `frequency_penalty` | 0 | **0.2** | Gently discourages repeating the same phrasing across turns. |
-| `presence_penalty` | 0 | **0** for clinical | Keep 0 — we want repeated use of the correct terminology. |
-| `seed` (if supported) | none | **Pin per deployment** (e.g. 42) | Maximal determinism when the provider supports it. Nova/Qwen OpenAI-compatible endpoints support `seed`; Claude on Bedrock does not. |
-
-Trade-off: pure `temperature=0` is not actually fully deterministic on most hosted APIs because of mixed-precision GPU batching, and it can make the model brittle (refusing to answer when uncertain). `temperature=0.1–0.2` with a fine-tuned student gives the best combination of consistency and resilience in our testing plan.
-
-**System prompt template** (same shape on both clouds) also enforces tone:
+## 4. Hyperparameters we commit to (per AWS docs for Claude 3 Haiku, our fallback path)
 
 ```
-You are Nova's clinical decision-support assistant.
-Voice: precise, neutral, professional. No filler phrases.
-Structure every answer as:
-  1. Immediate action (one sentence, only for emergency questions)
-  2. Key details (3–5 bullets, each with a citation token like [1], [2])
-  3. Cautions / contraindications
-  4. References (the citation list)
-Never include advice for patients directly. If stakes are high, remind the
-clinician that this is decision support, not a diagnosis.
+epochCount:             2     (AWS default; range 1–10)
+batchSize:              32    (AWS default; range 4–256)
+learningRateMultiplier: 1.0   (AWS default; range 0.1–2.0)
+earlyStoppingThreshold: 0.001 (AWS default; range 0–0.1)
+earlyStoppingPatience:  2     (AWS default; range 1–10)
 ```
 
-## When to avoid fine-tuning
+For Nova Lite fine-tuning, similar defaults apply — consult the Nova-specific section when we commit to the distillation job.
 
-- **Knowledge freshness** — always via RAG. WHO publishes monthly updates; a fine-tune cycle can't keep up and would encode stale facts.
-- **Hallucination control** — RAG + grounding check + citation validator; fine-tuning on too-small datasets often makes hallucination worse.
-- **Short deadlines** — fine-tuning + eval typically adds 3–4 weeks. Start with RAG only.
-- **On PHI** — never. De-identify or synthesize before any training job, on either cloud.
+For Qwen3-8B LoRA on SageMaker TRL, starting points:
+- LoRA rank 16, alpha 32, dropout 0.05.
+- `learning_rate 2e-4`, 3 epochs, warmup ratio 0.03, `bf16` precision.
+- Batch size per device 4 with gradient accumulation 4 on a `ml.g5.2xlarge`.
 
-## Evaluation harness (required before production)
+## 5. Tone consistency (doesn't need fine-tuning to start)
 
-- **LLM-as-judge** using the teacher model with a clinician-authored rubric: factual accuracy, citation coverage, PHI leakage, tone consistency, emergency-appropriateness.
-- **Latency eval** — p50, p95, p99 under production load; reject a new model version if p95 emergency latency exceeds 1800 ms.
-- **Safety eval** — 200+ red-team prompts (prompt injection, self-diagnosis, dosage override, jailbreak) before go-live.
-- **Drift eval** after each monthly WHO refresh and every student retrain — rerun the full suite, alert if any metric drops > 3%.
+Before any training: `temperature=0.1`, narrow `max_tokens`, stop sequences, and a fixed system prompt (see `aws-demo/ec2/app/graph.py`). These are the *cheap* levers; they already deliver 80% of "consistent tone" for clinicians.
 
-## References
+Fine-tuning makes sense only when:
+- We have 5k+ Nova-approved answers to imitate.
+- The system prompt alone can't encode the stylistic rules we want.
+- Evaluation shows tone inconsistency is still flagged after step 2.
 
-- [Clinical Knowledge Distillation for EHRs (arXiv)](https://arxiv.org/html/2506.15118)
-- [Synthetic data distillation enables extraction of clinical information at scale — Nature](https://www.nature.com/articles/s41746-025-01681-4)
-- [When Compressing a Frontier Model Actually Pays Off](https://tianpan.co/blog/2026-04-09-knowledge-distillation-economics-production-ai)
-- [Fine-tune Qwen — Alibaba Cloud Model Studio](https://www.alibabacloud.com/help/en/model-studio/text-generation-model-tuning)
-- [Fine-tuning LLMs in healthcare — AWS Prescriptive Guidance](https://docs.aws.amazon.com/prescriptive-guidance/latest/generative-ai-nlp-healthcare/fine-tuning.html)
-- [The Tuning Decisions Nobody Explains — temperature / top-p / top-k in production](https://tianpan.co/blog/2026-04-18-sampling-parameters-production-temperature-top-p-tuning)
+## 6. Current status
 
-*Content above is rephrased for compliance with licensing restrictions.*
+- The **running demo** uses **no fine-tuning**. It routes to plain Haiku 4.5 or Sonnet 4.5 + RAG + an if/else emergency toggle.
+- Next step (user-requested): spin up an **isolated AWS-with-Claude RAG benchmark environment**, run a latency + quality test suite, and only *then* decide whether to commit to distillation.
+- After that benchmark, compare against Versions B and C using the same suite; pick the winner per client segment.
+
+## 7. References
+
+- See `docs/architecture/model_customization_research.md` for the complete list of authoritative links.

@@ -6,7 +6,7 @@ Production design for the AI assistant service deployed in **AWS Singapore (ap-s
 
 | Requirement | Design response |
 |---|---|
-| Answer complex medical questions in natural language | Two-lane strategy: **Claude Haiku 4.5** (fast lane, student-enhanced) + **Claude Sonnet 4.6** (complex lane, teacher of distillation) |
+| Answer complex medical questions in natural language | Two-lane strategy: **Claude Haiku 4.5** (fast lane) + **Claude Sonnet 4.5** (complex lane). **No fine-tuning of Haiku 4.5 is possible** on Bedrock today — see `docs/architecture/model_customization_research.md`. Phase-3 quality lever is **distillation from Sonnet → Amazon Nova Lite** via Bedrock Model Distillation (managed). |
 | Rely on internal trial reports + treatment protocols + WHO + ICD-11 | Multi-KB RAG (Bedrock Knowledge Bases on OpenSearch Serverless) fed by **scheduled ingestion** + an **internal upload portal** |
 | Auditable, compliant | Bedrock Guardrails + Comprehend Medical + Macie + CloudTrail → S3 Object Lock (**6-year retention** per HIPAA §164.530(j)) |
 | 2-second emergency response | Fine-tuned Nova Lite student (from Sonnet+RAG distillation) OR plain Haiku 4.5, plus 3-layer caching and streaming |
@@ -129,7 +129,9 @@ A small Lambda classifier (Nova Micro, ~150 ms) picks the lane for each query:
 | Literature / citation | Haiku 4.5, grounded-only mode | `temperature=0.1, top_p=0.7` | No-hallucination | 1.5–2 s |
 | Patient-education phrasing | Haiku 4.5 with tone preset | `temperature=0.2, top_p=0.9` | Standard + tone | 1–2 s |
 
-**Claude Opus is not used** — it's overkill for clinical QA at this token volume and its price is hard to justify next to Sonnet. If a query truly needs Opus-level reasoning (rare), it goes to a human specialist instead.
+**Notes on models used:**
+- Demo uses plain Claude Haiku 4.5 + Sonnet 4.5; no fine-tuning. Phase-3 customization goes through **Bedrock Model Distillation from Sonnet → Amazon Nova Lite**. Haiku 4.5 itself cannot be fine-tuned on Bedrock (only Claude 3 Haiku is). See `docs/architecture/model_customization_research.md`.
+- **Claude Opus is not used** — priced out for this volume and Sonnet covers the complex lane.
 
 ### 5.3 Agent tools
 
