@@ -875,9 +875,8 @@ Optional tenant-enabled watermarking: invisible Unicode watermark encoding `sess
 
 ---
 
-## 9. Deployment Architecture
+## 9. Deployment
 
-![Deployment architecture: single-region, multi-AZ, serverless-first](../architecture/diagrams/v_c_deployment_architecture.svg)
 
 ### 9.1 Cloud deployment model
 
@@ -947,135 +946,81 @@ Runbooks in Git: incident-response, restore-opensearch, restore-analyticdb, mode
 
 ![Latency budget: emergency p95 bars](../architecture/diagrams/v_c_latency_budget.svg)
 
-The 2-second emergency SLA is a hard business requirement. This section shows how we hit it. Diagram: [`../architecture/diagrams/v_c_latency_budget.svg`](../architecture/diagrams/v_c_latency_budget.svg).
+### 10.1 Latency budget (emergency, 2-second target)
 
-### 10.1 Latency budget breakdown (targeting 2-second emergency response)
-
-**Representative emergency p95 path (cold, no Layer-1 cache hit)**:
+Cold path, Layer-1 miss:
 
 ```
-  25 ms   Tair semantic cache lookup + miss
- 100 ms   IDaaS token validation + DataWorks SDDP PHI mask
-  70 ms   Hybrid retrieval (BM25 + kNN, metadata pre-filter, top-20 to qwen3-rerank top-5)
- 300 ms   Qwen3.5-Flash first-token (Qwen Context Cache hit on the system prefix)
-1,100 ms  Qwen3.5-Flash full answer (250 tokens at streaming speed)
- 110 ms   Content Moderation 2.0 + citation validator
-──────
-≤ 1,705 ms  p95
+25 ms     Tair semantic cache miss
+100 ms    IDaaS token + DataWorks SDDP PHI mask
+70 ms     Hybrid retrieval + qwen3-rerank
+300 ms    Qwen3.5-Flash first-token (Qwen Context Cache hit on system prefix)
+1,100 ms  Qwen3.5-Flash full answer (250 tokens, streaming)
+110 ms    Content Moderation 2.0 + citation validator
+total     <= 1,705 ms p95
 ```
 
-**With Tair semantic cache hit** (~30–45% of emergency queries):
+Tair semantic cache hit (30 to 45 percent of emergency queries):
 
 ```
-  25 ms   Tair cache lookup + hit
- 100 ms   IDaaS token + SDDP PHI mask
-  30 ms   Cache payload decrypt + citation rehydrate + audit log
-──────
-≤ 155 ms   p95 on cached-hit
+25 ms     Tair hit
+100 ms    IDaaS + SDDP
+30 ms     Cache decrypt + citation rehydrate + audit
+total     <= 155 ms p95
 ```
 
-**Why this fits in 2 seconds**:
-- Pure if/else emergency routing saves ~300 ms vs a classifier LLM call
-- Qwen3.5-Flash is genuinely fast (~250 tok/s output streaming on Model Studio SG): the fast lane already fits
-- Qwen Context Cache implicit prefix caching (20% of normal input price on hits) cuts TTFT
-- Zero cross-region hops: everything inside Singapore International
-- The Qwen3-8B student is a *complex-lane* asset (serves ~60% of complex traffic at ~2× faster than Qwen3.5-Plus) and an emergency DR fallback if Model Studio has an outage: it is NOT on the critical path for the 2-s emergency SLA
-
-**Complex-lane budget** is 6,000 ms: more room for multi-tool agent synthesis (graph_retrieve + icd11_lookup + pubmed_search can take 3–5 seconds combined).
+Complex-lane budget 6,000 ms allows multi-tool agent synthesis.
 
 ### 10.2 Caching strategy
 
 ![Three-layer cache strategy](../architecture/diagrams/v_c_cache_strategy.svg)
 
-Three layers, each handling a different cache-hit class. Diagram: [`../architecture/diagrams/v_c_cache_strategy.svg`](../architecture/diagrams/v_c_cache_strategy.svg).
-
-**Layer 1: Semantic response cache (LangChain + Tair)**
-
-Hash the question embedding, look up the cached final answer, skip the LLM entirely.
-
-- [`langchain.cache.RedisSemanticCache`](https://python.langchain.com/docs/integrations/llms/llm_caching/#redis-semantic-cache) against Tair (Redis OSS-compatible) + TairVector
-- Key: `sha256(normalize(question) | emergency_flag | tenant_id | model_version)`
-- Similarity threshold: 0.95 cosine
-- TTL: 10 min emergency / 24 hr general
-- Hit rate (observed in similar deployments): 30–45% on repeating emergency protocols
-
-**Invalidation**:
-- On KB upsert: flush keys tagged `source:<changed-document_id>`
-- On ICD-11 delta: flush keys tagged `source:icd11`
-- On prompt-version change: full flush
-- On model-version change: full flush (cached answers are model-specific)
-
-**Layer 2: [Qwen Context Cache](https://www.alibabacloud.com/help/en/model-studio/context-cache) (implicit + explicit)**
-
-Reuses transformer KV tensors on the model server side.
-
-- **Implicit cache**: zero-config from day 1; cache hits bill at **20% of standard input price**
-- **Explicit cache IDs** for large static prefixes (system prompt + Nova-voice examples + safety template): used on the emergency lane where the prefix is ~2 KB and identical across calls
-- TTL: longer than Bedrock's 5-min TTL; exact value Alibaba-managed
-
-**Benefit on emergency**: TTFT drops from ~500 ms to ~300 ms; input-token billing drops ~50% on cached portions.
-
-**Layer 3: [Qwen Provisioned Throughput Units](https://www.alibabacloud.com/help/en/model-studio/model-training-and-deployment-billing) (peak only)**
-
-Reserved inference capacity for the emergency lane during peak hours.
-
-- PTU sized to peak TPM observed in the first month of production traffic
-- On-demand falls back outside peak to avoid over-provisioning
-- Eliminates throttling during morning-shift handoff spikes
-
-### 10.3 Inference optimization (quantization, batching, GPU selection)
-
-**Model Studio inference** is Alibaba-managed; we don't pick GPUs: we pick the model tier. Qwen3.5-Flash is internally optimized (the exact techniques are Alibaba's).
-
-**Fine-tuned Qwen3-8B on PAI-EAS**: this is the one place we pick hardware:
-
-| Parameter | Choice | Rationale |
+| Layer | Mechanism | Key details |
 |---|---|---|
-| GPU | A10 (24 GB VRAM) | Qwen3-8B bf16 is ~16 GB; fits on A10 with headroom for KV cache |
-| Quantization | bf16 for initial launch; INT8 AWQ optional post-launch | bf16 matches teacher precision; INT8 is a follow-up quality/speed tradeoff |
-| Batching | Dynamic batching (max batch 8, max latency 50 ms) | Amortizes GPU idle time |
-| Inference backend | vLLM on PAI-EAS (default); SGLang optional | vLLM has Qwen3 support + PagedAttention + prefix caching |
+| L1 Semantic response | LangChain `RedisSemanticCache` on Tair + TairVector | Key includes normalized question + emergency flag + tenant + model version; 0.95 cosine threshold; TTL 10 min emergency / 24 hr general; 30 to 45 percent hit rate |
+| L2 Prefix KV | Qwen Context Cache | Implicit from day 1 (20 percent of input price on hits); explicit cache IDs for static prefix; drops TTFT ~500 to ~300 ms |
+| L3 Reserved capacity | Qwen PTU | Sized to peak TPM in month 1; on-demand fallback outside peak |
 
-**PagedAttention + vLLM Automatic Prefix Caching** on the PAI-EAS student give a second Layer-2-equivalent cache at the self-hosted tier: useful when traffic patterns show repeated system-prompt prefixes.
+Invalidation rules: KB upsert flushes `source:<document_id>` tags; ICD-11 delta flushes `source:icd11`; prompt or model version change triggers full flush.
 
-### 10.4 Auto-scaling and load management
+### 10.3 Inference optimization
+
+Model Studio inference is Alibaba-managed; we pick the model tier.
+
+Fine-tuned Qwen3-8B on PAI-EAS:
+
+| Parameter | Choice |
+|---|---|
+| GPU | A10 (24 GB VRAM); Qwen3-8B bf16 is ~16 GB |
+| Quantization | bf16 initial; INT8 AWQ optional post-launch |
+| Batching | Dynamic batching (max batch 8, max latency 50 ms) |
+| Inference backend | vLLM (default); SGLang optional |
+
+vLLM PagedAttention + Automatic Prefix Caching add a second Layer-2-equivalent cache on the self-hosted tier.
+
+### 10.4 Auto-scaling
 
 | Component | Scaling |
 |---|---|
-| CDN + WAF | Alibaba-managed; no configuration |
-| API Gateway | Serverless; auto-scale to published per-stage quotas |
-| Function Compute | Pre-provisioned warm instances for emergency lane (16 instances min); auto-scale elastic for complex |
-| Function Workflow (ingest) | Concurrency cap 50 (respects Model Studio RPM) |
-| OpenSearch Vector Search HA | 2 OCU baseline; manual scale to 4 OCU for peak |
-| AnalyticDB PG | 4-core 32 GB instance; vertical-scale to 8-core or compute group for peak |
-| Tair | 1 GB cluster baseline; shard as keys grow |
-| Model Studio inference | On-demand tier by default; Qwen PTU activated for emergency peak |
-| PAI-EAS (student) | Single A10 baseline; scale up to 2 during peak (session-affinity ensures no cold-start regression) |
+| CDN + WAF | Alibaba-managed |
+| API Gateway | Serverless; auto-scale |
+| Function Compute | 16 pre-provisioned warm for emergency; elastic for complex |
+| Function Workflow (ingest) | Concurrency cap 50 |
+| OpenSearch Vector Search | 2 OCU baseline, scale to 4 OCU for peak |
+| AnalyticDB PG | 4-core 32 GB; vertical-scale to 8-core for peak |
+| Tair | 1 GB baseline; shard as keys grow |
+| Model Studio | On-demand; Qwen PTU on emergency peak |
+| PAI-EAS | Single A10 baseline; scale to 2 at peak (session-affinity) |
 
-**Load shedding**: when emergency-lane p95 crosses 1,800 ms sustained over 5 minutes, the load-shedder begins returning a "system busy, retry" banner for non-emergency traffic on the same FC pool, preserving emergency SLA.
+Load shedding: if emergency p95 exceeds 1,800 ms sustained 5 min, non-emergency traffic gets a retry banner. Per-clinician rate limit 30 qpm with 1.5× burst; WAF returns 429 beyond that.
 
-**Per-clinician rate limit**: 30 queries/min (soft limit with 1.5× burst). Beyond that, WAF returns HTTP 429.
+### 10.5 Retrieval optimization
 
-### 10.5 Retrieval optimization (ANN, re-ranking)
+HNSW parameters (5M-chunk corpus): M=16, efConstruction=200, efSearch=80. Gives ~95 percent recall@20 at ~5 ms per query.
 
-**HNSW parameters** (tuned for medical corpus size ~5M chunks):
+Rerank: top-20 kNN from OpenSearch, qwen3-rerank scores to top-5. Adds ~30 ms and ~$0.0001 per query. Emergency lane skips rerank if top kNN score > 0.85 cosine. Complex lane always reranks.
 
-```
-M               : 16     (neighbors per layer)
-efConstruction  : 200    (build-time quality)
-efSearch        : 80     (query-time quality; higher = better recall, slower)
-```
-
-On the 5M-chunk corpus, `efSearch=80` gives ~95% recall@20 at ~5 ms latency per query. Empirically tuned against a held-out labeled set.
-
-**Rerank trade-off**:
-- Top-20 kNN is retrieved from OpenSearch
-- `qwen3-rerank` scores the 20 and returns top-5
-- Rerank adds ~30 ms + ~$0.0001/query but lifts answer-accuracy on ambiguous queries measurably
-
-**When rerank is skipped**: on the emergency lane, if the top kNN score is > 0.85 cosine (very confident match), rerank is skipped to save 30 ms. Complex lane always reranks.
-
-**Query-embedding latency**: `text-embedding-v4` on Model Studio takes ~20 ms for a typical 20–100 token query.
+Query-embedding latency: `text-embedding-v4` is ~20 ms for a 20 to 100 token query.
 
 ---
 
