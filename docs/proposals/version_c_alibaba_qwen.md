@@ -1,7 +1,7 @@
 ﻿# Technical Architecture Proposal
 
 **Nova Health Tech: GenAI Clinical Decision Support Assistant**
-**Version C: Alibaba Cloud + Qwen (Singapore)**
+**Version: Alibaba Cloud + Qwen (Singapore)**
 
 *Version 1.0 · May 2026*
 
@@ -98,11 +98,11 @@ Single-region SaaS on Alibaba Cloud Singapore. Components grouped by layer:
 
 [Alibaba Cloud operates two consoles from one physical cloud](https://www.alibabacloud.com/help/en/general-reference/latest/alibaba-cloud-overview): the **Mainland China site** (`aliyun.com`, primarily serves PRC customers) and the **International site** (`alibabacloud.com`, everywhere else). Some services are only exposed through one site or the other, even when both physically could reach the Singapore (`ap-southeast-1`) region.
 
-For Version C, all tenants are registered on the **International site**. When this document says:
+All tenants are registered on the **International site**. When this document says:
 
 - **"Singapore"** or **"SG"**: refers to the `ap-southeast-1` region (same physical region in either site)
 - **"Singapore International"** or **"SG Intl"**: specifically means "the `ap-southeast-1` region accessed through the International site". Used to call out services whose availability differs between sites. [Model Studio](https://www.alibabacloud.com/help/en/model-studio/what-is-model-studio), for example, is International-site only: its runtime endpoint is `https://dashscope-intl.aliyuncs.com/...` (the `-intl` suffix is the manifestation of this split)
-- **"Chinese Mainland"** or **"CN Mainland"**: the China site (Beijing, Shanghai, etc.). Out of scope for all Version C tenants. A few Qwen models (`qwen3-vl-embedding`, `qwen3-vl-rerank`, `gte-rerank-v2`) exist only on this site and are therefore unavailable to us: we work around them with the International-site alternatives
+- **"Chinese Mainland"** or **"CN Mainland"**: the China site (Beijing, Shanghai, etc.). Out of scope for all tenants. A few Qwen models (`qwen3-vl-embedding`, `qwen3-vl-rerank`, `gte-rerank-v2`) exist only on this site and are therefore unavailable to us: we work around them with the International-site alternatives
 
 Read "SG Intl" as "Singapore region via Alibaba Cloud International site".
 
@@ -1032,358 +1032,104 @@ Query-embedding latency: `text-embedding-v4` is ~20 ms for a 20 to 100 token que
 |---|---|---|
 | Control-plane API calls | [ActionTrail](https://www.alibabacloud.com/product/actiontrail) to SLS to OSS WORM | 6 years |
 | Application logs (FC, SAE) | [SLS (Log Service)](https://www.alibabacloud.com/product/log-service) | 90 days hot + 6 years WORM archive |
-| Model Studio invocation logs | Model Studio observability to SLS | 6 years |
-| PAI-EAS serving logs | SLS | 90 days + WORM archive |
+| Model Studio + PAI-EAS serving logs | SLS | 90 days + 6 years WORM archive |
 | Distributed traces | [ARMS LLM Trace Explorer](https://www.alibabacloud.com/help/en/arms/application-monitoring/user-guide/llm-trace-explorer) (OpenTelemetry) | 30 days |
 | Metrics (CPU, latency, errors) | ARMS application monitoring | 30 days |
-| Business metrics | Custom SLS log store to [DataV dashboards](https://www.alibabacloud.com/product/datav) | 6 years |
+| Business metrics | SLS log store to [DataV dashboards](https://www.alibabacloud.com/product/datav) | 6 years |
 
-**OpenTelemetry spans** emitted by the FC chat handler:
-
-```
-chat_request
-├── authn.idaas
-├── phi_mask.sddp
-├── cache.layer1_lookup
-├── retrieval
-│   ├── bm25_query
-│   ├── ann_query
-│   └── rerank
-├── llm_invoke
-│   ├── model_studio.call
-│   ├── content_moderation
-│   └── citation_validator
-└── cache.layer1_write
-```
-
-Each span carries `tenant_id`, `session_id`, `route`, `emergency_flag`, `model_version`, `prompt_version`.
+Each trace span carries `tenant_id`, `session_id`, `route`, `emergency_flag`, `model_version`, `prompt_version`.
 
 ### 11.2 AI-specific monitoring (drift, hallucination rate, latency SLOs)
 
-**SLOs** (monitored in real-time; alert on 5-minute window breach):
+SLOs (alert on 5-minute window breach):
 
 | Metric | Target | Alert threshold |
 |---|---|---|
-| Emergency-lane p95 latency | ≤ 2,000 ms | > 2,500 ms for 5 min |
-| Complex-lane p95 latency | ≤ 6,000 ms | > 7,500 ms for 10 min |
-| Guardrail block rate | < 3% | > 5% for 30 min (indicates drift) |
+| Emergency-lane p95 latency | <= 2,000 ms | > 2,500 ms for 5 min |
+| Complex-lane p95 latency | <= 6,000 ms | > 7,500 ms for 10 min |
+| Guardrail block rate | < 3% | > 5% for 30 min |
 | Citation validator fail rate | < 1% | > 2% for 30 min |
-| Grounding score p50 | ≥ 0.82 | < 0.75 for 30 min |
-| Content Moderation false-block rate (on vocab allow-list hits) | < 0.5% | > 1% for 30 min |
+| Grounding score p50 | >= 0.82 | < 0.75 for 30 min |
 | Model invocation 5xx error rate | < 0.1% | > 0.5% for 5 min |
-| Cache Layer-1 hit rate on emergency | 30–45% | < 20% sustained (cache misconfig?) |
+| Layer-1 cache hit rate (emergency) | 30 to 45% | < 20% sustained |
 
-**Drift detection**:
-- Embedding drift: weekly KL divergence between current query-embedding distribution and baseline; alerts on material shift (indicates corpus gaps)
-- Answer-length drift: p50 answer length over time; large increases indicate LLM rambling
-- Citation-density drift: average citations per answer; drops indicate grounding failure
-
-**Hallucination / un-grounded-answer monitoring**:
-- Citation validator catches fabricated citations to logged separately in SLS
-- Weekly sample of 100 answers goes to human clinical reviewers for qualitative grading
-- Reviewer flags feed back into the DPO dataset (monthly retrain)
+Drift signals monitored weekly: embedding distribution (KL divergence vs baseline), answer-length p50, citation density per answer. Hallucinations: citation-validator failures logged to SLS; weekly sample of 100 answers goes to clinical reviewers; flags feed the monthly DPO retrain.
 
 ### 11.3 Clinical audit trail and explainability
 
-Every clinician interaction is audit-traceable end-to-end. A clinical safety officer can answer:
+Every interaction is end-to-end traceable. A clinical safety officer can answer:
 
-| Question | Source |
+| Question | Source field |
 |---|---|
-| "Which guideline was this answer based on?" | `retrieved_chunk_ids` to source documents with page + revision |
-| "Which model version produced this?" | `model_version` + `prompt_version` hashes |
-| "What tools did the agent call?" | `tools_invoked` trace |
-| "Was PHI involved, and was it masked?" | SDDP scan result in ActionTrail; tokenization presence in audit record |
-| "What was the guardrail's verdict and grounding score?" | `guardrail_verdict`, `grounding_score` |
-| "Has this guideline been superseded since the answer was given?" | `chunk_id.revision` compared to current revision |
+| Which guideline backed this answer? | `retrieved_chunk_ids` with source + page + revision |
+| Which model + prompt produced it? | `model_version`, `prompt_version` hashes |
+| What tools did the agent call? | `tools_invoked` trace |
+| Was PHI involved and masked? | SDDP scan + tokenization flags in ActionTrail |
+| Guardrail verdict and grounding? | `guardrail_verdict`, `grounding_score` |
+| Has the cited guideline been superseded? | `chunk_id.revision` vs current revision |
 
-**Explainability for clinicians** (rendered in the UI):
-- Every answer shows inline `[n]` citations with hover tooltip = source + page
-- "Why this answer?" expander shows the full retrieved context chunks
-- "Model details" link shows the model family + version (for clinical trust-building; hospital admins sign off on which models are acceptable)
+UI explainability: inline `[n]` citations with source + page tooltip, "Why this answer?" expander showing retrieved chunks, and a "Model details" link showing family + version.
 
 ### 11.4 Regulatory reporting capabilities
 
-**Automated reports** (generated monthly, delivered to the hospital's compliance officer):
-
-1. **Usage summary**: query volume per specialty, per clinician cohort (aggregated)
-2. **Guardrail incidents**: every block, categorized by policy; trend over time
-3. **Data residency attestation**: every service's region, confirming SG-only operation
-4. **Retention attestation**: OSS WORM status, SLS archive confirmation
-5. **Access control review**: IDaaS roles + last login per clinician; break-glass events
-6. **Model/prompt version history**: what ran in production each day of the month
-7. **Training data provenance**: when each fine-tuned model was trained, on what data, with what clinician-review sample size
-8. **Incident log**: any SEV-2 or higher incident with root cause + remediation
-
-**On-demand exports**:
-- Per-patient query log (for data subject access requests under PDPA/GDPR)
-- Per-document usage log (which answers cited a given WHO guideline or internal trial)
-- Forensic timeline (for a named session, reconstruct full tool trace + retrieved content)
-
-**SIEM integration**: SLS audit logs shipped nightly to the hospital's existing SIEM (Splunk, Sentinel, QRadar) via cross-account role assumption for correlation with hospital-side events.
+Monthly automated reports to the hospital compliance officer: usage per specialty, guardrail incidents, data residency attestation (region per service), retention attestation (WORM status), access reviews with break-glass events, and model or prompt version history. On-demand exports: per-clinician query log, per-document usage log, and full forensic session replay. SLS audit logs ship nightly to the hospital SIEM (Splunk, Sentinel, QRadar) via cross-account role assumption.
 
 ---
 
 ## 12. Use Case Walkthroughs
 
-Four scenarios drawn from the brief's required capabilities. These show the architecture end-to-end: useful for non-technical executive reviewers and for evaluating which clinical moments the assistant is designed to win.
+Four scenarios drawn from the brief's required capabilities, each showing the architecture end-to-end.
 
 ### 12.1 Emergency care query (2-second path)
 
-**Scenario**: A night-shift cardiology resident gets a 40-year-old male with sudden crushing chest pain. They open Epic, pull up the chart, click "Ask Nova". The emergency toggle is ON by default in the acute-care module.
+Scenario: a night-shift cardiology resident sees a 40-year-old male with sudden crushing chest pain, opens Epic, clicks "Ask Nova" with the emergency toggle on.
 
-**What matters**: speed (≤ 2 s p95), deterministic routing, grounded answer with citation.
+Flow:
+1. Request hits CDN, API Gateway, and Function Compute `/chat` with `emergency=true`.
+2. IDaaS validates the token; DataWorks SDDP scans for PHI (none in this query).
+3. Tair Layer-1 semantic cache lookup: miss.
+4. Hybrid retrieval returns 5 chunks from `kb-cardio-internal` and `kb-who-guidelines`.
+5. Qwen3.5-Flash streams the answer with Qwen Context Cache hit on the system prefix.
+6. Content Moderation 2.0 and the citation validator pass; audit record written to SLS; cache stores the answer with a 10-minute TTL.
 
-```
-T+0     ms  Resident types: "40yo M, crushing chest pain 30 min, no prior hx.
-              Troponin pending. Next steps?"
-T+20    ms  Request hits CDN to API Gateway to FC /chat with emergency=true
-T+120   ms  IDaaS token validated; DataWorks SDDP masks no PHI in this query
-T+145   ms  Tair semantic cache lookup: miss (novel phrasing)
-T+215   ms  Hybrid retrieval: 5 chunks from kb-cardio-internal + kb-who-guidelines
-             top chunk: WHO "Acute coronary syndromes initial management" 2025
-T+225   ms  PHI-tokenized prompt assembled:
-             [EMERGENCY SYSTEM PROMPT] + [5 CITED CHUNKS] + [QUESTION]
-T+255   ms  Qwen3.5-Flash stream starts (Qwen Context Cache hit on prefix)
-T+255   ms  First tokens reach the resident's screen via SSE
-T+1,400 ms  Full answer complete (~240 tokens):
-             "Immediate priorities: (1) 12-lead ECG within 10 min [1]...
-              (2) Aspirin 300 mg chew unless contraindicated [2]..."
-T+1,510 ms  Content Moderation 2.0 pass + citation validator pass
-T+1,535 ms  Audit record written to SLS; semantic cache stores under 10-min TTL
-T+1,535 ms  Resident reads answer, orders ECG + troponin, calls cath lab
-```
-
-**Total end-to-end p95: ~1,700 ms. SLA met.**
-
-**Second clinician** asks a similar question 4 minutes later: cache hits at Layer 1, answer returns in ~150 ms.
-
-**Architecture surfaces exercised**: emergency if/else router (§6), Workflow Application path (§6.4), Qwen3.5-Flash + Qwen Context Cache L2 (§10.2), hybrid retrieval (§5.2), citation validator (§5.4), Content Moderation 2.0 (§6.5).
+End-to-end p95: ~1,700 ms. A second clinician with a similar question 4 minutes later hits cache and sees the answer in ~150 ms.
 
 ### 12.2 WHO protocol update propagation
 
-**Scenario**: WHO publishes a revised "Acute coronary syndromes initial management" guideline on day 1 of the month. The update changes the recommended aspirin dose for a specific contraindication profile.
+Scenario: WHO publishes a revised "Acute coronary syndromes initial management" guideline. The update must reach every clinician's next answer within 24 hours, prior cached answers must be invalidated, and the audit trail must preserve which clinicians saw which version.
 
-**What matters**: the change reaches every clinician's next answer within 24 hours; prior cached answers referencing the old guideline are invalidated; the audit trail preserves which clinicians saw what version.
+Flow:
+1. 02:30 SGT, CloudOps Scheduler fires the monthly WHO refresh workflow; FC diffs the publications index and detects one new revision.
+2. New PDF lands in OSS `/raw/who/<document_id>/<revision>.pdf`; ObjectCreated event triggers ingestion.
+3. Ingestion runs: Security Center malware scan, DataWorks SDDP (no PHI), DocMind parse with Qwen-VL-Max for figures, hierarchical chunker, `text-embedding-v4` + `tongyi-embedding-vision-plus`.
+4. Idempotent upsert to OpenSearch Vector Search: 318 chunks unchanged, 24 new or changed; `adbpg_graphrag.upload` re-extracts entities and relations for the 24 chunks.
+5. Tair cache flushes keys tagged `source:who-acs-2025`; ActionTrail logs the run; ARMS notifies the on-call.
 
-**Timeline**:
-
-```
-Day 1, 02:30 SGT   CloudOps Scheduler cron triggers the monthly WHO refresh Workflow
-02:30:15           FC downloads WHO publications index, diffs against prior state
-                    to identifies 1 new revision (document_id = hash(source+URI),
-                      new revision = hash(bytes))
-02:30:40           New PDF downloaded to OSS /raw/who/<document_id>/<revision>.pdf
-                    to ObjectCreated event
-02:31              Ingestion Workflow fires:
-                   a. Security Center malware scan: pass
-                   b. DataWorks SDDP PHI scan: no PHI (public WHO content)
-                   c. DocMind parse to 127 sections (tables + flowchart on p12 to Qwen-VL-Max)
-                   d. Hierarchical chunker to 342 chunks
-                   e. text-embedding-v4 (text) + tongyi-embedding-vision-plus (figures)
-02:33              Upsert into OpenSearch Vector Search
-                    to revision comparison: 318 chunks unchanged (skip),
-                                            24 new/changed (embed + index)
-02:34              adbpg_graphrag.upload on the 24 changed chunks
-                    to re-extracts entities/relations for the revised content
-02:35              Tair semantic cache flush: all keys tagged source:who-acs-2025
-                    to next clinician query that would have hit stale cache
-                      now gets a fresh generation against the new chunks
-02:36              ActionTrail audit entry: {ingest_run_id, document_id, revision,
-                                             chunk_delta: 24, graph_extraction_ms: 4300}
-02:36              ARMS alert sent to on-call: "Monthly WHO refresh OK, 24 chunks changed"
-```
-
-**Next clinician query that would have used the stale chunk** (any time after 02:35):
-
-```
-Clinician asks an ACS triage question
-FC /chat to Tair lookup to miss (flushed)
- to  Hybrid retrieval returns the new revision's chunk
- to  LLM generates answer citing the new [WHO ACS 2025, page 14, revision sha256:cd34...]
- to  Audit record pins chunk_id.revision = new hash
-```
-
-**Audit traceability answer**: "Which clinicians got answers that referenced the *old* revision between June and this month's refresh?"  to 
-
-```sql
-SELECT DISTINCT user_id, session_id, ts
-FROM sls_audit
-WHERE retrieved_chunk_ids CONTAINS 'chunk-<old-revision-hash>'
-  AND ts BETWEEN '<old-publish-date>' AND '<new-publish-date>'
-```
-
-If an answer is now considered materially incorrect, a notification workflow pages affected clinicians with the updated guidance.
-
-**Living WHO guidelines** (e.g. COVID-19 therapeutics) take an event-driven path instead of monthly cron: RSS webhook to API Gateway to FC to same ingestion Workflow to index within 10 minutes of publication.
-
-**Architecture surfaces exercised**: scheduled ingestion (§4.2, §4.5), DocMind + Qwen-VL-Max parsing (§4.3), idempotent upsert (§4.2), AnalyticDB PG GraphRAG re-extraction (§5.2), Tair semantic-cache invalidation (§10.2), ActionTrail audit (§8.6, §11.3).
+Subsequent queries retrieve the new revision and cite it with the new hash. Auditors can query SLS for clinicians who received answers citing the prior revision between dates. Living guidelines (e.g. COVID-19 therapeutics) take an event-driven RSS path and index within 10 minutes of publication.
 
 ### 12.3 Internal clinical trial query with patient-sensitive data
 
-**Scenario**: Oncology attending asks *"Has our ward's 2024 trastuzumab-deruxtecan trial shown cardiac events in patients with baseline LVEF < 50%? Here's my patient: 58F, NRIC S1234567X, MRN 892345, HER2+ breast, LVEF 48%."*
+Scenario: an oncology attending asks about cardiac events in a 2024 trastuzumab-deruxtecan trial with a specific patient's identifiers inline (NRIC, MRN, LVEF 48 percent).
 
-**What matters**: patient identifiers never reach the LLM; internal trial content is retrieved (cross-tenant isolation holds); answer cites the right trial and page; full audit reconstruction is possible later without exposing PHI.
+Flow:
+1. DataWorks SDDP runtime scan detects NRIC, MRN, and name; KMS-tokenizes them (e.g. `<NRIC_0>`, `<MRN_0>`, `<NAME_0>`). Age and clinical values are preserved. The session holds the decryption key only.
+2. Router classifies to `oncology-chemo` with cardiology and pharmacy as secondaries.
+3. The oncology agent fires `kb_retrieve` with a mandatory `tenant_id=hospital-xyz` filter plus `graph_retrieve` on the drug entity; Clinical Pharmacy runs a DDI side-channel.
+4. Retrieval returns 4 chunks from internal trial NCT-0xxx plus a 2-hop graph path showing known cardiotoxicity.
+5. Qwen3.5-Plus synthesizes using only the tokenized slice; Content Moderation and citation validator pass.
+6. FC de-tokenizes `<NAME_0>` back to the real patient name for the UI only; the audit record stores tokenized hashes and PHI-type counts, never raw values.
 
-**Flow**:
-
-```
-T+0     ms  Attending submits the question with PHI inline (NRIC, MRN)
-T+25    ms  CDN to API Gateway to FC /chat (emergency=false)
-T+100   ms  IDaaS token validated (role=clinical-lead; tenant=hospital-xyz)
-T+180   ms  DataWorks SDDP runtime scan detects:
-             - NRIC S1234567X     to <NRIC_0>
-             - MRN 892345         to <MRN_0>
-             - Female patient 58y to <NAME_0>, age preserved (clinical signal)
-            Reversible KMS-tokenized; decryption key kept in session only.
-            SLS audit line logs the DETECTION but not the raw value.
-
-T+220   ms  Tair semantic cache lookup: miss (patient-specific)
-T+280   ms  Router agent (Qwen3.5-Flash, response_format=json_object):
-             {"department": "oncology-chemo",
-              "secondary": ["cardiology-internal", "pharmacy"],
-              "confidence": 0.93,
-              "reason": "hormonal therapy with known cardiotoxicity; LVEF cutoff"}
-
-T+450   ms  Oncology-chemo agent fires tools in parallel:
-             kb_retrieve(topic="trastuzumab deruxtecan LVEF cardiac",
-                         source="internal-trials",
-                         tenant_id=hospital-xyz)  ← tenant filter critical
-             graph_retrieve(entity="trastuzumab-deruxtecan",
-                            relation="causes",
-                            hops=2)
-
-T+1,300 ms  kb_retrieve returns 4 chunks from internal trial NCT-0xxx (2024):
-             - p8: inclusion/exclusion criteria (LVEF ≥ 50%)
-             - p17: 2 cardiac events in n=47 enrolled patients
-             - p22: cardiotoxicity monitoring schedule
-             - p31: authors' recommendation for LVEF 45–49% subgroup (requires ECHO q3w)
-
-T+2,100 ms  graph_retrieve returns:
-             trastuzumab-deruxtecan to causes to LV dysfunction (grade 3, 4%)
-                                   to contraindicates to LVEF < 40%
-                                   to warns to prior anthracyclines
-
-T+2,800 ms  Clinical Pharmacy side-channel runs in parallel:
-             drug-interaction check against patient's current meds (via FHIR)
-
-T+4,300 ms  Qwen3.5-Plus synthesizes, seeing ONLY the tokenized patient slice:
-             "<NAME_0> (58F, HER2+ BC, LVEF 48%) is outside the enrollment
-              criteria of internal trial NCT-0xxx (inclusion required LVEF ≥ 50%)
-              [1]. The trial recorded 2 cardiac events at 6-month follow-up [2].
-              For patients with LVEF 45–49%, the trial authors recommended ECHO
-              every 3 weeks [3]. Clinical Pharmacy notes no DDI in current meds [4]."
-
-T+4,450 ms  Content Moderation 2.0 pass; citation validator pass
-T+4,500 ms  FC de-tokenizes <NAME_0> back to the real patient name in the UI only
-            (using the session-held decryption key)
-T+4,500 ms  UI renders answer with real patient name + PHI-free audit log
-
-[Audit record stored]
-{
-  "ts": "...",
-  "user_id": "sha256(clinician-id)",
-  "tenant_id": "hospital-xyz",
-  "question_hash": "sha256(tokenized-message-post-SDDP)",
-  "phi_detected": ["NRIC", "MRN"],
-  "phi_token_count": 2,
-  "retrieved_chunk_ids": ["trial-0xxx-p8", "trial-0xxx-p17", "trial-0xxx-p22", "trial-0xxx-p31"],
-  "graph_path": "trastuzumab-deruxtecan to LV dysfunction",
-  "tools_invoked": ["kb_retrieve", "graph_retrieve", "pharmacy_check"],
-  "model_version": "qwen3-plus-2025-02",
-  "answer_hash": "sha256(tokenized-answer)",
-  "guardrail_verdict": "pass"
-}
-```
-
-**What PHI does NOT go to**:
-- LLM prompt: no raw NRIC/MRN/name
-- Model Studio logs: Alibaba sees only tokens
-- Audit log: only tokenized-hash + PHI-type counts
-- Tair cache: tokenized form only (session-scoped decryption)
-
-**Cross-tenant isolation**: the `tenant_id=hospital-xyz` filter on `kb_retrieve` is enforced at the OpenSearch query layer. A request from Hospital-ABC cannot retrieve Hospital-XYZ's internal trial chunks even by random luck: the filter is mandatory and the Agent cannot override it.
-
-**Training-data safety**: this conversation will NEVER reach a fine-tuning dataset as-is. If the question is later used as a training seed, it's pulled from the SDDP-masked form (tokens, not PHI) and re-scanned with the stricter pre-training ruleset.
-
-**Architecture surfaces exercised**: DataWorks SDDP PHI mask (§8.2), KMS-backed tokenization (§8.2), IDaaS tenant scoping (§7.2), cross-tenant RBAC (§8.4), agentic retrieval (§6), GraphRAG traversal (§5.2), Clinical Pharmacy side-channel (§6 multi-agent), audit log without PHI (§8.6, §11.3).
+What PHI never reaches: the LLM prompt, Model Studio logs, the audit log (raw), or Tair cache. Cross-tenant isolation: the `tenant_id` filter is enforced at the OpenSearch query layer and the agent cannot override it. Training-data safety: if later used as a fine-tune seed, the tokenized form is pulled and re-scanned with the stricter pre-training ruleset.
 
 ### 12.4 Routine diagnostic question with source citation
 
-**Scenario**: An internal-medicine attending on rounds asks *"What's the first-line empiric antibiotic for community-acquired pneumonia in a previously healthy 45-year-old adult, outpatient treatment?"*
+Scenario: an internal-medicine attending asks "first-line empiric antibiotic for community-acquired pneumonia in a previously healthy 45-year-old adult, outpatient treatment".
 
-**What matters**: grounded in current guidelines (WHO + internal protocol), every claim cites a source the clinician can click to verify, delivered fast but not emergency-fast.
+Cache-hit path (most common for routine queries): IDaaS validates the token, SDDP finds no PHI, Tair Layer-1 returns a semantically similar answer (0.97 similarity), citations rehydrate, audit logs `cache_hit=layer1`. End-to-end: ~220 ms.
 
-**Flow**:
+Cache-miss path: router selects `infectious-disease` with `pulmonology` and `pharmacy` secondaries. `kb_retrieve` returns chunks from WHO "Pneumonia management in adults" 2025 and the internal 2025 antibiogram; `icd11_lookup` returns J15.9; pharmacy side-channel confirms no DDI. Qwen3.5-Plus generates the answer with three citations; validator resolves 3 of 3; stream ends at ~3,400 ms.
 
-```
-T+0     ms  Question submitted; emergency=false
-T+30    ms  CDN to API Gateway to FC /chat
-T+110   ms  IDaaS token validated (role=clinician)
-T+165   ms  DataWorks SDDP runtime scan: no PHI in this question
-T+200   ms  Tair semantic cache lookup: HIT at Layer 1
-            (similar question answered 40 minutes ago; similarity 0.97)
-T+205   ms  Cache payload decrypted; citations rehydrated
-T+220   ms  Audit log written (cache_hit=layer1)
-T+220   ms  Response streamed back to the clinician
-```
-
-**Total: 220 ms**. The cache hit isn't because medicine is one-answer-fits-all: it's because the *prior* asker's question was about the same clinical scenario with the same constraint set (outpatient, immunocompetent, adult, CAP). The 0.95 threshold guards against merging subtly different questions.
-
-**If this had been a cache miss**, the flow looks like:
-
-```
-T+200   ms  Cache miss
-T+380   ms  Router to {"department": "infectious-disease",
-                       "secondary": ["pulmonology", "pharmacy"], "confidence": 0.95}
-
-T+440   ms  Infectious Disease agent:
-             kb_retrieve(topic="community-acquired pneumonia empiric",
-                         source="WHO,internal-protocols",
-                         max_age_days=730)
-             icd11_lookup(term="community-acquired pneumonia")
-               to J15.9 (Bacterial pneumonia, unspecified)
-
-T+1,400 ms  Returned chunks:
-             [1] WHO "Pneumonia management in adults" 2025, p. 22
-                  First-line empiric outpatient: amoxicillin 1 g PO TID × 5 days
-                  (Grade A evidence) if no comorbidity
-             [2] Internal hospital antibiogram 2025, p. 4
-                  Local S. pneumoniae susceptibility: 96% amoxicillin, 82% macrolides
-             [3] Nova pharmacy side-channel flags no interactions
-
-T+3,200 ms  Qwen3.5-Plus generates:
-             "For a previously healthy 45-year-old adult with outpatient CAP, the
-              first-line empiric antibiotic is amoxicillin 1 g orally three times
-              daily for 5 days [1]. Your hospital's 2025 antibiogram shows 96%
-              local S. pneumoniae susceptibility to amoxicillin [2]. Macrolides
-              are an alternative for penicillin-allergic patients [1].
-
-              Reminders:
-              - ICD-11 code for documentation: J15.9
-              - Re-evaluate at 48–72 hours; escalate if not improving
-              - Clinician review required before prescribing [Clinical Pharmacy]"
-
-T+3,350 ms  Content Moderation 2.0 pass; citation validator: 3/3 citations resolve
-T+3,400 ms  Stream ends; audit written
-```
-
-**Citation payload returned to the UI**:
-
-```json
-{
-  "citations": [
-    {"n": 1, "source": "WHO Pneumonia Management 2025", "page": 22,
-     "revision": "sha256:ab12...", "url": "https://who.int/publications/..."},
-    {"n": 2, "source": "Hospital XYZ antibiogram 2025", "page": 4,
-     "revision": "sha256:cd34...", "internal": true},
-    {"n": 3, "source": "Nova Clinical Pharmacy check", "tool_run_id": "..."}
-  ]
-}
-```
-
-The UI renders `[1]` / `[2]` / `[3]` as hoverable inline chips. Clicking `[1]` opens the WHO PDF at page 22. Clicking `[2]` opens a gated preview of the internal antibiogram (requires `curator:read` scope or explicit tenant grant). Clicking `[3]` expands the pharmacy tool trace.
-
-**Architecture surfaces exercised**: Tair semantic cache hit path (§10.2), router classification (§6.2), hybrid retrieval + icd11_lookup (§5.2), citation validator + UI traceability (§5.4), Clinical Pharmacy side-channel (§6), ICD-11 code in output (§4.1).
+Citations render as hoverable chips: clicking `[1]` opens the WHO PDF at the cited page, `[2]` opens a gated preview of the internal antibiogram (scope-checked), `[3]` expands the pharmacy tool trace.
 
 ---
 
@@ -1416,7 +1162,7 @@ The UI renders `[1]` / `[2]` / `[3]` as hoverable inline chips. Clicking `[1]` o
 | Regulator audit requests specific audit format | Medium | Low | SLS export to regulator-specific format via scheduled report job; collaborate with tenant on pre-approved templates |
 | WHO ICD-11 license terms change | Very Low | Medium | Registered OAuth2 client subject to WHO terms; changes tracked; worst case: snapshot-only mode with staleness banner |
 | GDPR DSAR (if applicable) timeline missed | Low | Medium | Tenant-scoped DSAR runbook tested monthly; `tenant_id` + `user_id` indexed in SLS for fast retrieval |
-| Hospital client cannot accept Singapore residency | Medium | N/A for Version C (would recommend a different version or region) | Hybrid to Apsara Stack offered; or pivot to Alibaba Frankfurt / Virginia Intl region with client's PDPA/GDPR assessment |
+| Hospital client cannot accept Singapore residency | Medium | Hybrid to Apsara Stack offered; or pivot to Alibaba Frankfurt / Virginia Intl region with client's PDPA/GDPR assessment |
 
 ### 13.3 Operational risks
 
@@ -1598,60 +1344,7 @@ Reference:
 ---
 
 
-## 16. Appendices
-
-### 16.A Architecture diagrams
-
-All diagrams live in [`../architecture/diagrams/`](../architecture/diagrams/) and are embedded inline in each section. Canonical SVG sources:
-
-| # | Diagram | Referenced in | File |
-|---|---|---|---|
-| 1 | Cover one-page summary | Top of this document | [`v_c_cover_summary.svg`](../architecture/diagrams/v_c_cover_summary.svg) |
-| 2 | High-level architecture | §3.1 | [`v_c_high_level_architecture.svg`](../architecture/diagrams/v_c_high_level_architecture.svg) |
-| 3 | Data pipeline architecture | §4 | [`v_c_data_pipeline.svg`](../architecture/diagrams/v_c_data_pipeline.svg) |
-| 4 | RAG architecture (hybrid + GraphRAG) | §5.2 | [`v_c_rag_architecture.svg`](../architecture/diagrams/v_c_rag_architecture.svg) |
-| 5 | Model orchestration + routing | §6 | [`v_c_model_orchestration.svg`](../architecture/diagrams/v_c_model_orchestration.svg) |
-| 6 | Corporate integration | §7 | [`v_c_corporate_integration.svg`](../architecture/diagrams/v_c_corporate_integration.svg) |
-| 7 | Security architecture (PHI flow + zero-trust VPC + audit) | §8 | [`v_c_security_architecture.svg`](../architecture/diagrams/v_c_security_architecture.svg) |
-| 8 | Deployment architecture (single-region multi-AZ) | §9 | [`v_c_deployment_architecture.svg`](../architecture/diagrams/v_c_deployment_architecture.svg) |
-| 9 | Latency budget breakdown | §10.1 | [`v_c_latency_budget.svg`](../architecture/diagrams/v_c_latency_budget.svg) |
-| 10 | Cache strategy (3 layers) | §10.2 | [`v_c_cache_strategy.svg`](../architecture/diagrams/v_c_cache_strategy.svg) |
-
-### 16.B Technology vendor comparison matrix
-
-Summary of why Alibaba wins for the SG-native scenario:
-
-| Criterion | AWS (Version A/B) | Alibaba (Version C) | Winner |
-|---|---|---|---|
-| SG chat inference | ✅ (Claude/Nova) / ❌ (Qwen: Sydney) | ✅ (Qwen SG Intl) | Tie (A) / C (B) |
-| SG text embeddings | ❌ (Tokyo) | ✅ (`text-embedding-v4`) | C |
-| SG reranker | ❌ (Tokyo) | ✅ (`qwen3-rerank`) | C |
-| SG multimodal embeddings | ❌ (us-east-1) | ✅ (`tongyi-embedding-vision-plus`) | C |
-| Managed GraphRAG | ✅ Bedrock KB + Neptune Analytics | ✅ AnalyticDB PG GraphRAG | Tie |
-| SG PDF parsing | ❌ BDA (Sydney) | ✅ DocMind | C |
-| SG fine-tuning platform | ❌ (Bedrock US only) | ✅ PAI | C |
-| Redis-compatible cache | ✅ ElastiCache Redis OSS | ✅ Tair (Redis OSS-compatible) | Tie |
-| Prompt/prefix cache on our models | ✅ Claude+Nova / ❌ Qwen | ✅ Qwen Context Cache | Tie (A) / C (B) |
-| Monthly cost for same workload | $2,955–$7,295 | $2,220 | **C** |
-| Data residency story | Mixed-region | SG-native | **C** |
-
-### 16.C Compliance mapping
-
-| Control | HIPAA ref | PDPA ref | Implementation |
-|---|---|---|---|
-| Administrative safeguards | §164.308 | Protection Obligation | RAM roles, resource policies, IDaaS MFA |
-| Physical safeguards | §164.310 |: (cloud provider) | Alibaba Cloud DC certifications |
-| Access controls | §164.312(a) | Protection Obligation | IDaaS federation + RAM scoping + VPC endpoints |
-| Audit controls | §164.312(b) | Accountability Obligation | ActionTrail + SLS + OSS WORM 6-year |
-| Integrity | §164.312(c) | Data Protection | KMS BYOK; HMAC on critical payloads |
-| Transmission security | §164.312(e) | Protection Obligation | TLS 1.3; PrivateLink; IPsec VPN |
-| Documentation retention | §164.316 | Retention Obligation | OSS WORM 6-year; SLS archive |
-| Breach notification | §164.400 | Notification Obligation | SLS alert to pager to 72-hr notification workflow |
-| De-identification | §164.514 | Protection Obligation | DataWorks SDDP + tokenization |
-| Right to access | §164.524 | Access Obligation | Per-tenant DSAR runbook via SLS queries |
-| Right to amend | §164.526 | Correction Obligation | Document-replacement ingest path; RAG re-index |
-
-### 16.D Glossary
+## 16. Glossary
 
 | Term | Meaning |
 |---|---|
@@ -1671,8 +1364,8 @@ Summary of why Alibaba wins for the SG-native scenario:
 | **Bailian** | OpenAPI product name for Model Studio |
 | **DashScope** | Runtime API gateway for Model Studio |
 | **SG Intl** | Shorthand for "Singapore region (`ap-southeast-1`) accessed through the Alibaba Cloud International site" (`alibabacloud.com`). Distinguishes from "SG on CN Mainland site" for services that differ by site: e.g. [Model Studio](https://www.alibabacloud.com/help/en/model-studio/what-is-model-studio) is International-only with runtime endpoint `dashscope-intl.aliyuncs.com`. See [§1.5](#15-a-note-on-singapore-international--sg-intl). |
-| **International site** | `alibabacloud.com`: Alibaba's console for customers outside Mainland China. All Version C tenants live here. |
-| **CN Mainland site** | `aliyun.com`: Alibaba's console for Mainland China customers. Out of scope for Version C; hosts some Qwen variants (`qwen3-vl-embedding`, `qwen3-vl-rerank`, `gte-rerank-v2`) that are not available via International site. |
+| **International site** | `alibabacloud.com`: Alibaba's console for customers outside Mainland China. All tenants live here. |
+| **CN Mainland site** | `aliyun.com`: Alibaba's console for Mainland China customers. Out of scope; hosts some Qwen variants (`qwen3-vl-embedding`, `qwen3-vl-rerank`, `gte-rerank-v2`) that are not available via International site. |
 | **Tair** | Alibaba's Redis OSS-compatible managed service |
 | **SAE** | Serverless App Engine (Alibaba's managed container runtime) |
 | **WORM** | Write Once Read Many (immutable object storage) |
