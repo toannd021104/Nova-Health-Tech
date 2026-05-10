@@ -178,92 +178,6 @@ Reference:
 
 ![High-level architecture](../architecture/diagrams/v_c_high_level_architecture.svg)
 
-ASCII equivalent (for text-only renderers):
-
-```
-              ┌──────────────────────────────────────────────────────────────┐
-              │   Hospital network                                            │
-              │   ├── Clinician workstations + EHR iframe                     │
-              │   │     egress firewall whitelists:                           │
-              │   │       • api.nova-health.sg (Nova API domain)              │
-              │   │       • Nova published IP range (CDN + API Gateway)       │
-              │   │                                                            │
-              │   └── Backend data plane                                       │
-              │         ├── On-prem EHR FHIR (if not Internet-reachable)      │
-              │         ├── SharePoint Server / SMB / NFS trial shares        │
-              │         └── Customer Gateway (IPsec endpoint)                 │
-              └──┬──────────────────────────────────────────────┬────────────┘
-                 │                                              │
-   CONTROL PLANE │ HTTPS + IDaaS JWT             DATA PLANE     │ Site-to-Site
-   (clinician    │ public Internet               (backend       │ IPsec VPN
-    chat, EHR    │ TLS 1.3 + WAF + IP allow-list  PHI transfer, │ IKEv2
-    iframe)      │                                SharePoint +  │ AES-256-GCM
-                 │                                FHIR + uploads)│ dual-tunnel
-                 ▼                                              ▼
-     ┌──────────────────────────────────────────┐    ┌────────────────────────┐
-     │ Nova edge: CDN + Anti-DDoS + WAF         │    │ VPN Gateway            │
-     │  · per-tenant WAF IP allow-list          │    │  (private side of VPC)  │
-     │  · OWASP + rate-limit rules              │    └───────────┬────────────┘
-     └──────┬───────────────────────────────────┘                │
-            │                                                    │
-     ┌──────▼──────────┐                                         │
-     │ API Gateway     │                                         │
-     │  + RAM / IDaaS  │                                         │
-     │    authorizer   │                                         │
-     └──────┬──────────┘                                         ▼
-            │                                    ┌───────────────────────────┐
-            │                                    │ Private SLB + IDaaS        │
-            │                                    │  OIDC/SAML ← hospital IdP  │
-            │                                    │                            │
-            │                                    │ SAE container:             │
-            │                                    │  Upload Portal (over VPN)  │
-            │                                    └───────────┬────────────────┘
-            │                                                │
-            ▼                                                ▼
-   ┌──────────────────────────────┐            ┌──────────────────────────────┐
-   │ Function Compute /chat (VPC) │            │ OSS raw bucket               │
-   │  0. RAM/IDaaS token check    │◄─ sem cch─┤ /raw/scheduled/...           │
-   │  1. PHI mask (DataWorks SDDP) │  hit ret   │ /raw/manual/...              │
-   │  2. if/else on emergency      │  early     │ /raw/icd11/...               │
-   │     toggle (pure, no LLM)     │            │ /raw/who/...                 │
-   │  3. Model Studio Agent /      │            └──────────┬───────────────────┘
-   │     Workflow app invoke       │                       │ ObjectCreated
-   │  4. ground-check + audit      │                       ▼
-   └─────┬──────────────┬──────────┘          ┌──────────────────────────────┐
-         │              │                     │ Function Workflow             │
- Layer 1 │    Layer 2   │  Generation         │  DocMind parse to chunk to      │
- Tair    │    Qwen      │  (Model Studio +    │  embed to KB + graph sync      │
- +Tair   │    Context   │   PAI-EAS):         │                               │
- Vector  │    Cache     │   FAST LANE         │ + Security Center scan        │
- semantic│  (implicit + │     Qwen3.5-Flash   │ + SDDP PHI scan               │
- cache   │   explicit)  │   COMPLEX LANE      │                               │
-         │              │     Qwen3.5-Plus    │                               │
-         │              │       teacher (40%) │                               │
-         │              │     Qwen3-8B student│                               │
-         │              │       PAI-EAS (60%) │                               │
-         │              │     Qwen3-VL-Plus   │                               │
-         │              │       (Radiology)   │                               │
-         │              │   ROUTER:           │                               │
-         │              │     Qwen3.5-Flash   │                               │
-         │              │       JSON mode     │                               │
-         │              │   + Content Mod 2.0 │                               │
-         │              │                     └──────────┬────────────────────┘
-         │              │                                ▼
-         │              │                ┌────────────────────────────┐
-         │              │                │ Model Studio Knowledge Base│
-         │              │                │  kb-who-guidelines         │
-         │              │                │  kb-internal-trials        │
-         │              │                │  kb-treatment-protocols    │
-         │              │                │  kb-icd11                  │
-         │              │                │  on OpenSearch Vector      │
-         │              │                │  Search Edition (HA)       │
-         │              │                ├────────────────────────────┤
-         │              │                │ AnalyticDB PG GraphRAG     │
-         │              │                │  (4-core 32GB, 3 zones)    │
-         │              │                └────────────────────────────┘
-         ▼              ▼
-  All traffic to ActionTrail to SLS to OSS (WORM, 6-year retention)
-```
 
 ### 3.2 Core architectural principles
 
@@ -311,9 +225,25 @@ ASCII equivalent (for text-only renderers):
 
 ![Data pipeline architecture](../architecture/diagrams/v_c_data_pipeline.svg)
 
-### 4.1 Data sources
+The diagram above shows two zones: on-prem source systems on the left, and Alibaba Cloud on the right, connected by an IPsec VPN for bulk data transfer. Within Alibaba Cloud, the pipeline runs in two stages.
 
-| Source | Access method | Volume | Freshness |
+**Stage 1: Ingestion and storage.** Source documents (PACS, LIS, HIS, file shares, and other on-prem systems) are pushed to an OSS raw bucket under the path `/raw/<source>/<document_id>/<revision>.pdf`. Each upload fires an ObjectCreated event that hands off to Stage 2. External sources (EHR systems, WHO API) connect via the External API / Integration path on the right.
+
+**Stage 2: Function Workflow (steps 1 to 9).** The event triggers a sequential processing chain:
+
+1. **Security Center** runs a malware scan on the raw file.
+2. **DataWorks SDDP** scans for PHI. Documents that contain PHI are quarantined and do not proceed further.
+3. **DocMind Parse** extracts structured text from the document. Complex pages (multi-page tables, flowcharts, embedded figures) are forwarded to Qwen-VL-Max for vision-assisted extraction.
+4. **Hierarchical Chunker** splits the parsed content into parent chunks (1,500 tokens, passed to the LLM) and child chunks (300 tokens, 15 percent overlap, section-aware boundaries).
+5. **text-embedding-v4** generates 1,024-dimension dense vectors for text chunks.
+6. **tongyi-embedding-vision-plus** generates 1,152-dimension multimodal vectors for figure-bearing chunks.
+7. **OpenSearch Vector Search Edition** receives an idempotent upsert of the new vectors. Unchanged chunks (same `document_id` + `revision` hash) are skipped.
+8. **AnalyticDB PG** runs `adbpg_graphrag.upload` on the changed chunks to extract entities and relations and update the knowledge graph.
+9. **Tair** flushes all semantic cache keys tagged with `source:<document_id>`, ensuring the next query retrieves fresh content rather than a stale cached answer.
+
+Throughout the entire chain, **ActionTrail** records an immutable audit entry covering every step, from the raw file landing in OSS to the final cache flush. Azure Entra ID and SharePoint connect via the Identity / Auth path for federated access to internal documents.
+
+### 4.1 Data sources
 |---|---|---|---|
 | Internal clinical trial reports | SharePoint Online (Graph webhook) or SharePoint Server / SMB (both over IPsec VPN, §7.6.2) | Hundreds per tenant | Weekly + webhook |
 | Internal treatment protocols | Same as above | Dozens per tenant | Same |
@@ -462,29 +392,9 @@ Query expansion: on a detected disease mention, `icd11_expand_query(term)` injec
 
 ### 5.4 Citation traceability
 
-Every answer includes inline `[n]` citations that map to retrieved chunks. A citation validator runs before the client response:
+Every answer includes inline `[n]` citations that map to retrieved chunks. A citation validator runs before the client response. Fail action: block the response, log the attempt, return "I cannot answer this from the current context".
 
-```python
-def validate_citations(answer, retrieved_chunks):
-    for cid in extract_citation_ids(answer):
-        if cid not in [c.chunk_id for c in retrieved_chunks]:
-            return False  # hallucinated citation
-    return True
-```
 
-Fail action: block the response, log the attempt, return "I cannot answer this from the current context".
-
-Citation payload in the UI:
-
-```json
-{
-  "answer": "Stroke onset within 4.5 hours is eligible for IV thrombolysis [1] subject to contraindication screening [2].",
-  "citations": [
-    {"n": 1, "source": "WHO Acute Stroke Guideline 2025", "page": 42, "revision": "sha256:ab12..."},
-    {"n": 2, "source": "Internal protocol CVA-002 v3", "page": 7, "revision": "sha256:cd34..."}
-  ]
-}
-```
 
 ### 5.5 Freshness and versioning
 
@@ -718,50 +628,9 @@ Chat UI, EHR iframe, Upload Portal authentication all use public HTTPS.
 
 Backend flows carrying raw PHI in bulk (SharePoint, SMB, on-prem FHIR callback, Upload Portal) run over Site-to-Site IPsec VPN on [Alibaba VPN Gateway](https://www.alibabacloud.com/help/en/vpn-gateway).
 
-| Attribute | Value |
-|---|---|
-| Product | VPN Gateway, IPsec-VPN feature |
-| Tunnel type | Site-to-Site IPsec-VPN |
-| Crypto | IKEv2, AES-256-GCM, SHA-2, PFS group 14 |
-| HA | Dual-tunnel, BGP dynamic routing |
-| Throughput | 5 to 1000 Mbps (resizable); baseline 100 Mbps per tenant |
-| Transport | Public Internet (encrypted) |
-| SLA | 99.95 percent |
 
-Hospital side: existing firewall as Customer Gateway (Cisco ASA, Juniper SRX, Fortinet, Palo Alto, Huawei, H3C, strongSwan, vyOS). Hospital supplies static public IP, pre-shared key, subnet CIDR.
 
-Connection setup:
-
-```
-1. Nova provisions VPN Gateway in SG VPC (2 public IPs, dual-tunnel)
-2. PSK generated, stored in Credentials Manager (90-day rotation)
-3. PSK shared via PGP-encrypted envelope
-4. Hospital configures Phase 1 (IKEv2, AES-256-GCM, SHA-2, DH 14) and Phase 2 (ESP, PFS 14)
-5. Tunnels establish, BGP brings up routes
-6. Smoke test
-```
-
-Baseline cost: ~$110–150 per tenant per month.
-
-#### 7.6.3 Turnkey alternative: [Smart Access Gateway (SAG)](https://www.alibabacloud.com/product/smart-access-gateway)
-
-Hardware appliance (SAG-100WM or SAG-1000) plugs into hospital LAN and auto-establishes a pre-configured tunnel. ~$50–150/mo rental. For clinics without a dedicated network team.
-
-#### 7.6.4 Not used
-
-| Service | Note |
-|---|---|
-| [Apsara Stack](https://www.alibabacloud.com/product/apsara-stack) | On-prem; contract-only |
-| [Express Connect](https://www.alibabacloud.com/product/express-connect) | $1,500–5,000+/mo; no material latency gain vs VPN |
-| SSL-VPN (client-level) | Clinician access uses IDaaS federation instead |
-| VPN for clinician chat | Public HTTPS plus IDaaS plus WAF is the control |
-| [Cloud Enterprise Network (CEN)](https://www.alibabacloud.com/product/cen) | Not baseline; path prepared for future DR |
-
----
-
-## 8. Security Architecture
-
-![Security architecture: PHI flow + zero-trust VPC + audit](../architecture/diagrams/v_c_security_architecture.svg)
+## 8. Security
 
 ### 8.1 Threat model
 
@@ -802,22 +671,7 @@ Service-mesh internal traffic uses ASM mTLS where supported. Data under an old k
 
 ### 8.4 Network zero-trust
 
-Default-deny VPC security groups:
-
-```
-VPC nova-prod-sg
-  /24 public subnet:     API Gateway, WAF, CDN egress
-  /23 private-app:       FC /chat runtime
-  /23 private-data:      OpenSearch, AnalyticDB PG, Tair
-  /24 private-mgmt:      admin jump host (OIDC + MFA)
-
-Security groups:
-  sg-edge:  allow 443 from 0.0.0.0/0 (via WAF)
-  sg-app:   allow 443 from sg-edge; no Internet egress
-  sg-data:  allow 6379 (Tair), 5432 (AnalyticDB PG), 443 (OpenSearch) from sg-app ONLY
-  sg-mgmt:  allow 22 from Nova admin VPN only, MFA-gated
-  sg-vpn:   IPsec endpoints only
-```
+Default-deny VPC security groups.
 
 No public Internet egress from chat FC. LLM calls use PrivateLink. WHO and PubMed calls go through NAT Gateway with destination IP allow-list.
 
@@ -833,35 +687,8 @@ Principles: every API call carries an IDaaS-issued JWT; no shared long-lived cre
 | `nova-engineer` | `admin:configure`, `kb:read` (audit-logged, read-only) |
 | `nova-sre` | `admin:configure` plus break-glass on `admin:*` |
 
-Credentials Manager holds WHO OAuth (90-day rotation), Graph app credentials (90-day), Model Studio API keys (60-day), webhook signing keys. No secrets in Git. FC retrieves at cold-start via RAM role assumption, in-memory only.
 
 ### 8.6 Audit and non-repudiation
-
-Pipeline: ActionTrail (control plane) + FC app logs + Model Studio observability to SLS to OSS WORM, 6-year retention.
-
-Per-interaction record:
-
-```json
-{
-  "ts": "2026-05-10T14:22:08.117Z",
-  "tenant_id": "hospital-xyz",
-  "user_id": "sha256(clinician-id)",
-  "session_id": "sha256(...)",
-  "question_hash": "sha256(tokenized-message)",
-  "emergency_toggle": true,
-  "route": "emergency.cardiology-internal",
-  "retrieved_chunk_ids": ["chunk-abc", "chunk-def"],
-  "tools_invoked": ["kb_retrieve", "icd11_lookup"],
-  "model_version": "qwen3-flash-2025-02",
-  "prompt_version": "emergency_v3.md@sha256:...",
-  "guardrail_verdict": "pass",
-  "grounding_score": 0.87,
-  "citations": [{"n": 1, "chunk_id": "chunk-abc"}],
-  "answer_hash": "sha256(tokenized-answer)",
-  "latency_ms": 1642,
-  "cache_hit": "layer2"
-}
-```
 
 No raw PHI in audit logs, only hashes and tokenized stand-ins. Session decryption keys are destroyed at session end. OSS Object Lock is WORM; even Nova admins cannot delete. SLS uses append-only shards. Each record carries a monotonic sequence number per tenant.
 
@@ -919,10 +746,6 @@ ACK cluster available as optional footprint on client contract.
 
 Code CI/CD: GitHub Actions to Alibaba Cloud. Dev push to lint and tests to staging deploy to integration tests to manual approval to production deploy to smoke test.
 
-Model CI/CD: PAI Model Gallery training to eval harness (Qwen3.5-Plus judge) to gate (>= 95 percent teacher) to PAI-EAS feature flag to 5 percent canary for 72 hours to full ramp. Previous version retained for 30-day rollback.
-
-Prompt CI/CD: prompts in Git, referenced by hash in audit log. Production changes require PR review and eval-harness re-run.
-
 ### 9.5 Disaster recovery
 
 | Component | DR | RPO | RTO |
@@ -944,32 +767,9 @@ Runbooks in Git: incident-response, restore-opensearch, restore-analyticdb, mode
 
 ## 10. Performance Optimization
 
-![Latency budget: emergency p95 bars](../architecture/diagrams/v_c_latency_budget.svg)
+### 10.1 Latency (emergency, 2-second target)
 
-### 10.1 Latency budget (emergency, 2-second target)
-
-Cold path, Layer-1 miss:
-
-```
-25 ms     Tair semantic cache miss
-100 ms    IDaaS token + DataWorks SDDP PHI mask
-70 ms     Hybrid retrieval + qwen3-rerank
-300 ms    Qwen3.5-Flash first-token (Qwen Context Cache hit on system prefix)
-1,100 ms  Qwen3.5-Flash full answer (250 tokens, streaming)
-110 ms    Content Moderation 2.0 + citation validator
-total     <= 1,705 ms p95
-```
-
-Tair semantic cache hit (30 to 45 percent of emergency queries):
-
-```
-25 ms     Tair hit
-100 ms    IDaaS + SDDP
-30 ms     Cache decrypt + citation rehydrate + audit
-total     <= 155 ms p95
-```
-
-Complex-lane budget 6,000 ms allows multi-tool agent synthesis.
+On the cold path, a request clears IDaaS validation, SDDP PHI masking, hybrid retrieval with reranking, and Qwen3.5-Flash streaming before Content Moderation and citation validation close the chain — all within the 2-second emergency SLA. When Tair returns a semantic cache hit (30 to 45 percent of emergency queries), the path collapses to token validation, cache decrypt, and citation rehydrate, returning in well under a second. The complex lane runs under a 6-second budget, giving the multi-tool agent headroom for parallel retrieval, graph traversal, and synthesis.
 
 ### 10.2 Caching strategy
 
@@ -1076,79 +876,22 @@ Monthly automated reports to the hospital compliance officer: usage per specialt
 
 ---
 
-## 12. Use Case Walkthroughs
+## 12. Risks & Mitigations
 
-Four scenarios drawn from the brief's required capabilities, each showing the architecture end-to-end.
-
-### 12.1 Emergency care query (2-second path)
-
-Scenario: a night-shift cardiology resident sees a 40-year-old male with sudden crushing chest pain, opens Epic, clicks "Ask Nova" with the emergency toggle on.
-
-Flow:
-1. Request hits CDN, API Gateway, and Function Compute `/chat` with `emergency=true`.
-2. IDaaS validates the token; DataWorks SDDP scans for PHI (none in this query).
-3. Tair Layer-1 semantic cache lookup: miss.
-4. Hybrid retrieval returns 5 chunks from `kb-cardio-internal` and `kb-who-guidelines`.
-5. Qwen3.5-Flash streams the answer with Qwen Context Cache hit on the system prefix.
-6. Content Moderation 2.0 and the citation validator pass; audit record written to SLS; cache stores the answer with a 10-minute TTL.
-
-End-to-end p95: ~1,700 ms. A second clinician with a similar question 4 minutes later hits cache and sees the answer in ~150 ms.
-
-### 12.2 WHO protocol update propagation
-
-Scenario: WHO publishes a revised "Acute coronary syndromes initial management" guideline. The update must reach every clinician's next answer within 24 hours, prior cached answers must be invalidated, and the audit trail must preserve which clinicians saw which version.
-
-Flow:
-1. 02:30 SGT, CloudOps Scheduler fires the monthly WHO refresh workflow; FC diffs the publications index and detects one new revision.
-2. New PDF lands in OSS `/raw/who/<document_id>/<revision>.pdf`; ObjectCreated event triggers ingestion.
-3. Ingestion runs: Security Center malware scan, DataWorks SDDP (no PHI), DocMind parse with Qwen-VL-Max for figures, hierarchical chunker, `text-embedding-v4` + `tongyi-embedding-vision-plus`.
-4. Idempotent upsert to OpenSearch Vector Search: 318 chunks unchanged, 24 new or changed; `adbpg_graphrag.upload` re-extracts entities and relations for the 24 chunks.
-5. Tair cache flushes keys tagged `source:who-acs-2025`; ActionTrail logs the run; ARMS notifies the on-call.
-
-Subsequent queries retrieve the new revision and cite it with the new hash. Auditors can query SLS for clinicians who received answers citing the prior revision between dates. Living guidelines (e.g. COVID-19 therapeutics) take an event-driven RSS path and index within 10 minutes of publication.
-
-### 12.3 Internal clinical trial query with patient-sensitive data
-
-Scenario: an oncology attending asks about cardiac events in a 2024 trastuzumab-deruxtecan trial with a specific patient's identifiers inline (NRIC, MRN, LVEF 48 percent).
-
-Flow:
-1. DataWorks SDDP runtime scan detects NRIC, MRN, and name; KMS-tokenizes them (e.g. `<NRIC_0>`, `<MRN_0>`, `<NAME_0>`). Age and clinical values are preserved. The session holds the decryption key only.
-2. Router classifies to `oncology-chemo` with cardiology and pharmacy as secondaries.
-3. The oncology agent fires `kb_retrieve` with a mandatory `tenant_id=hospital-xyz` filter plus `graph_retrieve` on the drug entity; Clinical Pharmacy runs a DDI side-channel.
-4. Retrieval returns 4 chunks from internal trial NCT-0xxx plus a 2-hop graph path showing known cardiotoxicity.
-5. Qwen3.5-Plus synthesizes using only the tokenized slice; Content Moderation and citation validator pass.
-6. FC de-tokenizes `<NAME_0>` back to the real patient name for the UI only; the audit record stores tokenized hashes and PHI-type counts, never raw values.
-
-What PHI never reaches: the LLM prompt, Model Studio logs, the audit log (raw), or Tair cache. Cross-tenant isolation: the `tenant_id` filter is enforced at the OpenSearch query layer and the agent cannot override it. Training-data safety: if later used as a fine-tune seed, the tokenized form is pulled and re-scanned with the stricter pre-training ruleset.
-
-### 12.4 Routine diagnostic question with source citation
-
-Scenario: an internal-medicine attending asks "first-line empiric antibiotic for community-acquired pneumonia in a previously healthy 45-year-old adult, outpatient treatment".
-
-Cache-hit path (most common for routine queries): IDaaS validates the token, SDDP finds no PHI, Tair Layer-1 returns a semantically similar answer (0.97 similarity), citations rehydrate, audit logs `cache_hit=layer1`. End-to-end: ~220 ms.
-
-Cache-miss path: router selects `infectious-disease` with `pulmonology` and `pharmacy` secondaries. `kb_retrieve` returns chunks from WHO "Pneumonia management in adults" 2025 and the internal 2025 antibiogram; `icd11_lookup` returns J15.9; pharmacy side-channel confirms no DDI. Qwen3.5-Plus generates the answer with three citations; validator resolves 3 of 3; stream ends at ~3,400 ms.
-
-Citations render as hoverable chips: clicking `[1]` opens the WHO PDF at the cited page, `[2]` opens a gated preview of the internal antibiogram (scope-checked), `[3]` expands the pharmacy tool trace.
-
----
-
-## 13. Risks & Mitigations
-
-### 13.1 Technical risks
+### 12.1 Technical risks
 
 | Risk | Probability | Impact | Mitigation |
 |---|---|---|---|
 | AnalyticDB PG `adbpg_graphrag` extension unavailable on target minor version | Low | High | Verify minor >= 7.2.1.4 at deploy; avoid 7.3.0.0 and 7.3.1.0 |
 | WHO ICD-11 API outage | Medium | Low | Daily snapshot KB is the fallback; `icd11_lookup` degrades with staleness banner |
 
-### 13.2 Compliance risks
+### 12.2 Compliance risks
 
 | Risk | Probability | Impact | Mitigation |
 |---|---|---|---|
 | Hospital cannot accept the selected residency zone | Medium | Varies | Hybrid to Apsara Stack offered; or pivot to an alternate Alibaba Intl region subject to tenant assessment |
 
-### 13.3 Operational risks
+### 12.3 Operational risks
 
 | Risk | Probability | Impact | Mitigation |
 |---|---|---|---|
@@ -1166,11 +909,11 @@ Residual risk after mitigation on every item is LOW or VERY LOW; nothing blocks 
 
 ---
 
-## 14. Implementation Roadmap
+## 13. Implementation Roadmap
 
 One product, no phases. Every capability is active on day one. The roadmap describes a pre-launch build window that finishes before cut-over, plus the continuous-operations cadence after.
 
-### 14.1 Pre-launch build
+### 13.1 Pre-launch build
 
 Six- to ten-week window with parallel workstreams. Actual duration depends on the tenant's IdP and FHIR readiness.
 
@@ -1186,7 +929,7 @@ Six- to ten-week window with parallel workstreams. Actual duration depends on th
 
 Launch gate (all must be green): emergency p95 <= 2,000 ms on a 10,000-query load test; complex p95 <= 6,000 ms; guardrail block rate < 3% on the red-team set; zero PHI leaks in 500-sample output audit; grounding p50 >= 0.82 on eval-harness holdout; student model >= 95% of teacher on clinical-question holdout; all runbooks rehearsed; tenant sign-off.
 
-### 14.2 Continuous operations (post-launch)
+### 13.2 Continuous operations (post-launch)
 
 | Cadence | Activity |
 |---|---|
@@ -1201,16 +944,7 @@ Launch gate (all must be green): emergency p95 <= 2,000 ms on a 10,000-query loa
 | Event-driven | Retrain student on adversarial examples after guardrail incidents; emergency rollback on regression |
 | Annually | Third-party penetration test; compliance recertification; clinical-safety review |
 
-### 14.3 Milestone dependencies
-
-Foundation precedes all other workstreams. Data pipeline must precede model fine-tuning (teacher needs grounded context to generate training data). Orchestration depends on both. Clinical embedding depends on the tenant's FHIR and IdP readiness and is usually the critical path. Performance and compliance tuning starts once end-to-end chat works in staging (around week 5 to 6).
-
-### 14.4 Go / no-go gates
-
-Mid-build (~week 5): end-to-end chat in staging against real data, 40 agents routable. If slipped > 2 weeks, replan.
-Pre-launch (~week 9): launch-gate criteria met; clinical safety officer sign-off. Any red criterion is fixed before production traffic.
-
-### 14.5 Team structure
+### 13.3 Team structure
 
 | Function | Owner |
 |---|---|
@@ -1220,10 +954,10 @@ Pre-launch (~week 9): launch-gate criteria met; clinical safety officer sign-off
 | Day-to-day ops and on-call | Nova SRE (2 engineers on rotation) |
 | Compliance reporting | Nova compliance lead |
 | Incident response | SRE on-call + architect + clinical-safety backup |
-| Vendor management (Alibaba TAM) | Nova architect + TAM |
+| Vendor management (Alibaba Cloud Solutions Architect) | Nova architect |
 | EHR integration per tenant | Nova integrations engineer |
 
-### 14.6 Roll-back strategy
+### 13.4 Roll-back strategy
 
 | Change type | Mechanism | Window |
 |---|---|---|
@@ -1238,7 +972,7 @@ SEV-1 rollbacks are SRE-led, architect notified after. SEV-2+ rollbacks require 
 
 ---
 
-## 15. Estimation Cost
+## 14. Estimation Cost
 
 Assumptions: 500 physicians, 40 queries per day, 30/70 emergency to complex split, 3,000 input + 350 output tokens emergency, 3,000 + 600 complex. All list prices, USD, early 2026.
 
