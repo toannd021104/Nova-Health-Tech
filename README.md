@@ -47,7 +47,18 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
     ├── frontend/
     ├── backend/
     ├── template.yaml
-    └── README.md
+    ├── README.md
+    └── ec2/                                            ← DEPLOYED demo on t4g.small in Singapore (LangGraph + FAISS)
+        ├── deploy.py
+        ├── setup_instance.py
+        ├── user_data.sh
+        ├── NAMING.md                                   ← HA-<b64> resource map
+        ├── README.md
+        └── app/                                        ← FastAPI + LangChain + LangGraph
+            ├── graph.py                                ← classify → retrieve → answer
+            ├── rag.py                                  ← FAISS + Cohere Embed v4 on Bedrock
+            ├── server.py                               ← /api/chat + optional EntraID OIDC
+            └── static/
 ```
 
 ## Read order

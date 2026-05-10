@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Nova Health Tech — Clinical Portal (Demo)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <strong>Nova Health Tech</strong>
+      <span class="muted">Clinical Decision Support — Singapore Demo</span>
+    </div>
+    <div id="user-box" class="muted">…</div>
+  </header>
+
+  <main class="layout">
+    <section class="clinical">
+      <h2>Patient roster</h2>
+      <ul class="roster">
+        <li><strong>P-8821</strong> — 68M, chest pain, ST-elevation II/III <span class="tag urgent">URGENT</span></li>
+        <li><strong>P-7734</strong> — 52F, febrile, WBC 18k, suspected sepsis <span class="tag urgent">URGENT</span></li>
+        <li><strong>P-4401</strong> — 71M, newly diagnosed T2DM, HbA1c 9.8</li>
+        <li><strong>P-9920</strong> — 34F, migraine review</li>
+      </ul>
+
+      <h2>Active patient: P-8821</h2>
+      <div class="card">
+        <p><strong>Presenting:</strong> Acute substernal chest pain, radiating to left arm, onset 45 min ago.</p>
+        <p><strong>Vitals:</strong> BP 148/92, HR 104, SpO₂ 96% RA, T 37.1°C.</p>
+        <p><strong>ECG:</strong> ST elevation in leads II, III, aVF. Reciprocal depression in I, aVL.</p>
+        <p><strong>Allergies:</strong> NKDA.</p>
+        <p><strong>Meds:</strong> Atorvastatin 40 mg, Lisinopril 10 mg.</p>
+      </div>
+
+      <h2>Available knowledge (real data indexed)</h2>
+      <ul class="trials">
+        <li>WHO Therapeutics and COVID-19: living guideline (B09540-eng.pdf)</li>
+        <li>Chapter 1 (internal clinical trial protocol excerpt)</li>
+        <li>ICD-11 MMS root + ~20 chapter entities (JSON)</li>
+      </ul>
+
+      <p class="disclaimer">Demo data only. Never enter real patient identifiers.</p>
+    </section>
+
+    <aside class="assistant">
+      <div class="assistant-header">
+        <strong>🩺 Nova AI Assistant</strong>
+        <span id="model-label" class="muted">Haiku 4.5 / Sonnet 4.5 routed</span>
+      </div>
+      <div id="chat" class="chat">
+        <div class="msg assistant-msg">
+          Ask me about the indexed guidelines and protocols. Answers are grounded in real documents from the S3 corpus and cite their source.
+          I am decision support, not a diagnosis.
+        </div>
+      </div>
+      <form id="chat-form" class="chat-form">
+        <textarea id="chat-input" placeholder="e.g., What's recommended for severe COVID-19?" rows="2"></textarea>
+        <button type="submit" id="send-btn">Send</button>
+      </form>
+      <div class="suggestions">
+        <button class="suggestion">Immediate management for inferior STEMI?</button>
+        <button class="suggestion">What does WHO recommend for hospitalized COVID-19?</button>
+        <button class="suggestion">ICD-11 code for sepsis without septic shock</button>
+      </div>
+    </aside>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

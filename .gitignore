@@ -32,3 +32,13 @@ node_modules/
 # Large third-party corpora — fetch at runtime, don't commit
 data/pubmed/pubmed_medrag_sample.jsonl
 data/pubmed/*.jsonl
+
+# EC2 deploy artifacts
+aws-demo/ec2/.outputs.env
+aws-demo/ec2/nova-app.tar.gz
+
+# Ad-hoc test payloads
+scripts/_test_*.json
+
+# Internal Nova documents — do not commit
+data/clinical-trials/protocols/
