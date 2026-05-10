@@ -42,3 +42,16 @@ scripts/_test_*.json
 
 # Internal Nova documents — do not commit
 data/clinical-trials/protocols/
+
+# Department PMC reference PDFs — re-downloadable via
+# `python scripts/download_department_refs.py`. Keep the README for
+# reviewers, drop the actual PDFs so the repo stays small.
+data/clinical-trials/departments/*/*.pdf
+
+# User's local Alibaba Cloud reference downloads (copyrighted vendor docs)
+reference/
+
+# POC build artifacts (FAISS indexes, Lambda zips)
+poc/build/
+poc/*.zip
+/tmp/poc-build-*/

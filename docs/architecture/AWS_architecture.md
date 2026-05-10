@@ -121,12 +121,22 @@ See `docs/architecture/framework_choice.md`.
 
 ### 5.2 Router and lanes
 
-Routing is a **pure if/else on the explicit emergency toggle** sent by the chat UI — no classifier LLM call. This matches `aws-demo/ec2/app/graph.py` (`_route_next`) and is covered in `docs/architecture/workflow_detailed.md` §Step 5.
+Routing has two distinct steps driven by different logic:
+
+**Step 1 — Lane selection (pure if/else, no LLM call).** Matches `aws-demo/ec2/app/graph.py` (`_route_next`) and `docs/architecture/workflow_detailed.md` §Step 5.
+
+```python
+def _route_lane(state):
+    return "emergency" if state["emergency"] else "complex"
+```
+
+**Step 2 — Department selection (router agent, complex lane only).** The complex lane runs a lightweight router that reads the clinician's prompt + attachments and picks one of the 40 department agents described in `docs/architecture/technology_options.md` §3b. Emergency lane bypasses this step.
 
 | Question class | Model | Hyperparameters | Guardrail | Latency target |
 |---|---|---|---|---|
-| Emergency / acute (toggle ON) | **Claude Haiku 4.5** (streaming) with optional Nova Lite distillation student behind a feature flag | `temperature=0.1, max_tokens=700, stop=[...]` — Claude rejects sending temperature + top_p together | Strict PHI + emergency disclaimer | **≤ 2 s** |
-| Complex differential (toggle OFF — default) | **Claude Sonnet 4.5** (streaming) | `temperature=0.2, max_tokens=1500` | Standard | 3–6 s |
+| Emergency / acute (toggle ON — bypass router) | **Claude Haiku 4.5** (streaming) with optional Nova Lite distillation student behind a feature flag | `temperature=0.1, max_tokens=700, stop=[...]` — Claude rejects sending temperature + top_p together | Strict PHI + emergency disclaimer | **≤ 2 s** |
+| Router agent (picks department on complex lane) | **Nova Micro** with structured-output system prompt | `temperature=0, max_tokens=150` (JSON only) | Standard | ~150 ms |
+| Complex differential (toggle OFF, department picked) | **Claude Sonnet 4.5** for most specialists; **Sonnet 4.5 vision** if the selected department is Radiology or the user attached an image | `temperature=0.2, max_tokens=1500` | Standard | 3–6 s |
 | Literature / citation | Haiku 4.5, grounded-only mode | `temperature=0.1` | No-hallucination | 1.5–2 s |
 | Patient-education phrasing | Haiku 4.5 with tone preset | `temperature=0.2` | Standard + tone | 1–2 s |
 
@@ -134,6 +144,17 @@ Routing is a **pure if/else on the explicit emergency toggle** sent by the chat 
 - The fast lane serves a **Nova Lite student distilled from Sonnet 4.5** via Bedrock Model Distillation — trained during the pre-launch build and active from day one. Base Haiku 4.5 is the same-API fallback when the custom model endpoint is unavailable. Haiku 4.5 itself cannot be fine-tuned on Bedrock (only Claude 3 Haiku is). See `docs/architecture/model_customization_research.md`.
 - **Claude Opus is not used** — priced out for this volume and Sonnet covers the complex lane.
 - **Nova Micro / Nova Pro** are available in Singapore and are the cost-sensitive alternative (Version A1+); see `docs/pricing/cost_analysis.md`.
+- **Radiology agent needs vision** — uses Claude Sonnet 4.5 which natively accepts images in the Converse API.
+
+### 5.4 Multi-agent department topology (complex lane)
+
+The assistant mirrors a Vietnamese tertiary hospital's clinical structure. Forty specialty agents live behind the router; the clinician sees only the natural-language answer + a route badge ("Cardiology"). Full Vietnamese → English department mapping + KB-namespace assignment in `docs/architecture/technology_options.md` §3b.
+
+- Emergency lane bypasses the router entirely.
+- Radiology receives image attachments + DICOMs.
+- Clinical Pharmacy is a side-channel auto-invoked on any prescribing question.
+- Config-driven enable/disable per hospital tenant — 12-department core for small hospitals, all 40 for teaching hospitals.
+- Implementation: Bedrock Agents with per-department action groups; a small Lambda drives the routing.
 
 ### 5.3 Agent tools
 
@@ -182,7 +203,7 @@ There is **no pilot / PoC / staged rollout**. When we go live, every capability 
 | Hybrid retrieval (BM25 + kNN + Cohere Rerank 3.5) on both lanes | ✅ on |
 | Emergency toggle + if/else router | ✅ on |
 | **Fine-tuned Nova Lite student** distilled from Sonnet 4.5 via Bedrock Model Distillation | ✅ **trained before launch, serving 100% of fast-lane traffic** |
-| Multi-agent specialist topology (GP / triage + Emergency + ID + Oncology + Cardio + Pediatrics + Pharmacology) on complex lane | ✅ on (toggleable per hospital client) |
+| Multi-agent topology mirroring a Vietnamese tertiary hospital (40 clinical departments, router bypassed on emergency, Radiology uses vision-capable model on image uploads) | ✅ on (configurable set active per hospital tenant) |
 | Managed GraphRAG (Bedrock Knowledge Bases GraphRAG on Neptune Analytics) on the WHO + protocol corpus | ✅ on |
 | Layer-1 semantic cache + Layer-2 Bedrock Prompt Caching | ✅ on |
 | Bedrock Reserved Tier on the emergency lane | ✅ on (sized to peak TPM) |

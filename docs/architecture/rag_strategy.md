@@ -82,7 +82,7 @@ Why we put this at launch, not "maybe later":
 - The complex lane already has questions that want graph traversal ("patients on warfarin with a history of AFib who also take amiodarone — what's the interaction story?"). Vector search alone answers poorly; the agent needs to walk entity relations.
 - Global-scope questions ("summarize the common failure modes across the last 12 months of WHO sepsis updates") are exactly what community-summary graph retrieval is designed for.
 - Both services handle entity extraction automatically — **no manual KG construction**. That removes the main complexity objection against GraphRAG.
-- Self-hosted alternatives (Microsoft GraphRAG, LightRAG, LazyGraphRAG) stay on the shelf only for on-prem (Apsara Stack) deployments where the managed service can't run.
+- Self-hosted alternatives (Microsoft GraphRAG, LightRAG) stay on the shelf only for on-prem (Apsara Stack) deployments where the managed service can't run.
 
 ### Graph retrieval as a tool the agent picks
 

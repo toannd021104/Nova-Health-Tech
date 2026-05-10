@@ -14,6 +14,19 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 ├── README.md                                           ← this file
 ├── askAli_AI_Assistant.txt                             ← vendor research (kept for reviewers)
 │
+├── poc/                                                ← 10-day interview POC (cheapest AWS Singapore)
+│   ├── README.md                                        ← scope + $1.50 cost math for 100 questions
+│   ├── app/                                             ← FastAPI + LangGraph + FAISS
+│   │   ├── agents/__init__.py                           ← 12 demo departments (Vietnamese→English)
+│   │   ├── router.py                                    ← Nova Micro department classifier
+│   │   ├── graph.py                                     ← lane → router → retrieve → generate
+│   │   ├── rag.py                                       ← Cohere Embed v4 + FAISS per namespace
+│   │   ├── server.py                                    ← FastAPI (Mangum wrapper for Lambda)
+│   │   └── static/                                      ← light-theme chat UI with emergency toggle
+│   ├── deploy.py                                        ← build-only → FAISS + Lambda zip
+│   ├── teardown.py
+│   └── requirements.txt
+│
 ├── data/                                               ← REAL source data for RAG ingestion
 │   ├── README.md
 │   ├── who/                                            ← 8 WHO guideline PDFs (100+ pages, text + tables + figures)
@@ -22,6 +35,7 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 │   │   ├── entities/*.json                             ← 316 real entities (chapter-level walk)
 │   │   └── search_*.json                               ← sepsis / stroke / MI
 │   └── clinical-trials/protocols/                      ← drop internal trial PDFs here
+│   └── clinical-trials/departments/                    ← 36 open-access PMC papers mapped to 12 demo departments (radiology has figure-heavy PDFs)
 │
 ├── docs/
 │   ├── architecture/
@@ -46,6 +60,7 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 ├── scripts/
 │   ├── download_who_icd.py                             ← live WHO ICD-11 API (OAuth2)
 │   ├── download_clinicaltrials.py                      ← ClinicalTrials.gov v2 API
+│   ├── download_department_refs.py                     ← PMC open-access PDFs per department
 │   └── ingest_to_bedrock_kb.py                         ← push /data to S3 + trigger KB sync
 │
 └── aws-demo/                                           ← simple public web UI + Lambda → Bedrock (verification demo)

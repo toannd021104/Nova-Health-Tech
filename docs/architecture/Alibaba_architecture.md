@@ -110,16 +110,37 @@ See `docs/architecture/framework_choice.md`. Two application types per Alibaba's
 
 ### 5.2 Router and lanes
 
-Routing is a **pure if/else on the explicit emergency toggle** sent by the chat UI — no classifier LLM call. Same rule as Version A; matches `aws-demo/ec2/app/graph.py` (`_route_next`) and `docs/architecture/workflow_detailed.md` §Step 5.
+Routing has two distinct steps driven by different logic:
+
+**Step 1 — Lane selection (pure if/else, no LLM call).** The chat UI exposes an explicit emergency toggle. Its state is authoritative:
+
+```python
+def _route_lane(state):
+    return "emergency" if state["emergency"] else "complex"
+```
+
+**Step 2 — Department selection (router agent, complex lane only).** The complex lane runs a lightweight router that reads the clinician's prompt + attachments and picks one of the 40 department agents (see §5.4). Emergency lane skips this step entirely.
 
 | Question class | Model | Hyperparameters | Guardrail | Latency target |
 |---|---|---|---|---|
-| Emergency / acute (toggle ON) | **Qwen3.5-Flash** (streaming) with optional Qwen3-8B distillation student behind a feature flag | `temperature=0.1, top_p=0.7, top_k=40, seed=42` | Strict PHI + emergency disclaimer | **≤ 2 s** |
-| Complex differential (toggle OFF — default) | **Qwen3.5-Plus** (Feb 2026 release; replaced Qwen-Max here) (streaming) | `temperature=0.2, top_p=0.9` | Standard | 3–6 s |
+| Emergency / acute (toggle ON — bypass router) | **Qwen3.5-Flash** (streaming) with optional Qwen3-8B distillation student behind a feature flag | `temperature=0.1, top_p=0.7, top_k=40, seed=42` | Strict PHI + emergency disclaimer | **≤ 2 s** |
+| Router agent (picks department on complex lane) | Qwen3.5-Flash structured output | `temperature=0, response_format=json` | Standard | ~200 ms |
+| Complex differential (toggle OFF, department picked) | **Qwen3.5-Plus** for most specialists; **Qwen3-VL** if the selected department is Radiology or the user attached an image | `temperature=0.2, top_p=0.9` | Standard | 3–6 s |
 | Literature / citation | Qwen3.5-Flash, grounded-only mode | `temperature=0.1, top_p=0.7, top_k=40` | No-hallucination | 1.5–2 s |
 | Patient-education phrasing | Qwen3.5-Flash with tone preset | `temperature=0.2, top_p=0.9` | Standard + tone | 1–2 s |
 
 Qwen APIs are OpenAI-compatible, so the same router code works against Model Studio's Singapore endpoint (`https://dashscope-intl.aliyuncs.com/compatible-mode/v1`). Qwen supports `seed`, which we pin per deployment to maximize determinism.
+
+### 5.4 Multi-agent department topology (complex lane)
+
+The clinical assistant mirrors the structure of a Vietnamese tertiary hospital. Forty specialty agents live behind the router — the clinician never sees the list. See `docs/architecture/technology_options.md` §3b for the full Vietnamese → English mapping and KB-namespace assignment per department. Summary for this doc:
+
+- **40 agents total** — Emergency, ICU, Anesthesiology, Infection Control, Cardiology (Internal / Interventional / Surgery), Thoracic-Vascular, Pulmonology, PFT, Gastroenterology, Endoscopy, HPB Surgery, GI Surgery, Colorectal, Nephrology-Dialysis, Urology, Endocrinology, Rheumatology, Orthopedics, Neurology, Neurosurgery, Medical Oncology, Breast, Obstetrics-Gynecology, Neonatology, Geriatrics-Palliative, Ophthalmology, ENT, OMFS, Dermatology, Plastic, Rehabilitation, Clinical Pharmacy, Nutrition, Microbiology, Clinical Laboratory, Pathology, Radiology, and two side-channel agents (Router, General Medicine fallback).
+- **Emergency always bypasses the router** via the if/else lane selector in §5.2. The clinician sees the route badge (e.g. "Emergency Medicine") so they know which specialty answered.
+- **Radiology needs vision** — if the user attaches an image or a DICOM, the router forces the Radiology agent on **Qwen3-VL-Plus** (Alibaba SG International). The agent can describe findings but always defers final interpretation to a human radiologist.
+- **Clinical Pharmacy is a side-channel** auto-invoked alongside any prescribing question. The primary specialist answers; the pharmacist adds a drug-interaction + dosing-check note.
+- **Config-driven enable/disable per hospital tenant** — a 20-bed hospital starts with a 12-department core; a 1,200-bed teaching hospital turns on all 40.
+- **Implementation**: one Model Studio Agent Application per department, each with its own system prompt + tool set + KB binding. A Workflow Application drives the routing.
 
 ### 5.3 Agent tools (Model Studio plug-ins)
 
@@ -167,7 +188,7 @@ There is **no pilot / PoC / staged rollout**. When Version C goes live, every ca
 | Emergency toggle + if/else router | ✅ on |
 | Qwen3.5-Flash on the emergency lane + Qwen3.5-Plus on the complex lane | ✅ on |
 | **Fine-tuned Qwen3-8B student on PAI-EAS** (SFT + LoRA distilled from Qwen3.5-Plus) | ✅ **trained before launch, serving the emergency lane in production** |
-| Multi-agent specialist topology (GP / triage + Emergency + ID + Oncology + Cardiology + Pediatrics + Pharmacology) on complex lane (Model Studio Agent + Workflow Application) | ✅ on (toggleable per hospital client) |
+| Multi-agent topology mirroring a Vietnamese tertiary hospital (40 clinical departments, router bypassed on emergency, Radiology uses vision-capable model on image uploads) | ✅ on (configurable set active per hospital tenant) |
 | Managed GraphRAG (AnalyticDB for PostgreSQL GraphRAG service) on the WHO + protocol corpus | ✅ on |
 | Layer-1 Tair semantic cache + Layer-2 Qwen Context Cache (implicit + explicit on the system-prompt prefix) | ✅ on |
 | Qwen Provisioned Throughput Units on the emergency lane | ✅ on (sized to peak TPM) |

@@ -66,7 +66,7 @@ This is the big question: plain vector RAG, hybrid RAG, agentic RAG, or knowledg
 | **C. Agentic RAG (iterative retrieve → reason → retrieve)** | Multi-hop: "what does treatment X do for patient with condition Y and allergy Z?" | Higher answer quality on multi-hop; the agent can call PubMed / ICD-11 / SharePoint as separate tools and compose | 3–10× more tokens, 2–5× latency vs one-pass (per the 2026 production guide) | ~$0.006–0.015 per complex call vs $0.0026 one-pass | Medium | **Default for complex differential lane (non-emergency)** |
 | **D. Knowledge-Graph RAG — managed service per cloud** | "Global" questions that span the whole corpus: "what are the main themes across all WHO sepsis guidelines?" Entity disambiguation (sepsis vs septic shock vs severe sepsis) | Managed extraction, graph store, and hybrid graph+vector retrieval — no self-hosted Neo4j / NetworkX to babysit. Answers global queries plain RAG can't. Built-in on both clouds. | Graph construction bills for the LLM calls that extract entities/relations; retrieval adds graph-traversal latency (usually 100–300 ms) on top of vector kNN. | Ingest: one-time per document (LLM token cost for extraction). Query: graph traversal is roughly 2–3× base vector cost per lookup. | Medium (managed) vs High (self-hosted) | **Launch default on both clouds — Alibaba AnalyticDB for PostgreSQL GraphRAG service (Version C), Amazon Bedrock Knowledge Bases GraphRAG on Neptune Analytics (Versions A and B)** |
 | **E. Agentic Medical Graph-RAG (AMG-RAG, MedGraphRAG) — research-tier** | Automates continuous MKG updates + integrates reasoning + PubMed live | Research-leading on MedQA benchmarks; designed for clinical use | Most complex of the lot; more research than production; no managed offering | Research-tier cost | **Very High** | Research — not included in the launch build |
-| **F. Open-source LazyGraphRAG / LightRAG (self-hosted)** | Same pattern as D, but you run it | Portable; no vendor lock-in; the Microsoft LazyGraphRAG paper shows ~700× cheaper query cost than full GraphRAG on global queries | You own the pipeline — entity extractor version bumps, graph store ops, reindex schedule | LazyGraphRAG paper reports ~0.1 % of full-GraphRAG indexing cost | High | **Only if the managed D is unavailable** (e.g. an on-prem Apsara Stack or a hospital that forbids the managed service) |
+| **F. Open-source Microsoft GraphRAG / LightRAG (self-hosted)** | Same pattern as D, but you run it | Portable; no vendor lock-in | You own the pipeline — entity extractor version bumps, graph store ops, reindex schedule | LLM token cost for extraction + your own graph-store infra | High | **Only if the managed D is unavailable** (e.g. on-prem Apsara Stack or a client that forbids the managed service) |
 
 ### Our stack
 
@@ -78,7 +78,7 @@ This is the big question: plain vector RAG, hybrid RAG, agentic RAG, or knowledg
   - `pubmed_search(query, max_results)` — runtime E-utilities (free tier key)
 - **Indexing cadence for D**: the graph is built at ingestion time over the WHO + internal guideline corpus (not PubMed — PubMed stays runtime-only). Every monthly WHO refresh and every SharePoint webhook triggers an incremental graph update. Both managed services handle re-indexing automatically.
 - **Not E** — research-tier only; revisit once AMG-RAG has a managed offering and a stable eval harness.
-- **Option F (self-hosted LazyGraphRAG / LightRAG / Microsoft GraphRAG)** is held in reserve for on-prem or Apsara Stack deployments where the managed service isn't available.
+- **Option F (self-hosted Microsoft GraphRAG / LightRAG)** is held in reserve for on-prem or Apsara Stack deployments where the managed service isn't available.
 
 ### Why agentic RAG is worth the cost on the complex lane
 
@@ -88,7 +88,7 @@ This is the big question: plain vector RAG, hybrid RAG, agentic RAG, or knowledg
 
 The emergency lane is single-hop ("sepsis bundle dose?"). The complex lane is multi-hop ("54-year-old with eGFR 35 and a sulfa allergy, what antibiotic for UTI?") — the agent pays for itself.
 
-Sources: [AnalyticDB for PostgreSQL — GraphRAG service (Alibaba Cloud docs)](https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql/user-guide/use-the-graphrag-service), [Amazon Bedrock Knowledge Bases GraphRAG on Neptune Analytics (AWS GA March 2025)](https://aws.amazon.com/blogs/machine-learning/announcing-general-availability-of-amazon-bedrock-knowledge-bases-graphrag-with-amazon-neptune-analytics/), [Agentic RAG: The 2026 Production Guide](https://www.marsdevs.com/guides/agentic-rag-2026-guide), [Agentic Medical Knowledge Graphs (AMG-RAG)](https://arxiv.org/abs/2502.13010), [MedGraphRAG](https://arxiv.org/abs/2408.04187), [LazyGraphRAG — fallback for self-hosted](https://www.microsoft.com/en-us/research/blog/lazygraphrag-setting-a-new-standard-for-quality-and-cost/).
+Sources: [AnalyticDB for PostgreSQL — GraphRAG service (Alibaba Cloud docs)](https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql/user-guide/use-the-graphrag-service), [Amazon Bedrock Knowledge Bases GraphRAG on Neptune Analytics (AWS GA March 2025)](https://aws.amazon.com/blogs/machine-learning/announcing-general-availability-of-amazon-bedrock-knowledge-bases-graphrag-with-amazon-neptune-analytics/), [Agentic RAG: The 2026 Production Guide](https://www.marsdevs.com/guides/agentic-rag-2026-guide), [Agentic Medical Knowledge Graphs (AMG-RAG)](https://arxiv.org/abs/2502.13010), [MedGraphRAG](https://arxiv.org/abs/2408.04187), [Microsoft GraphRAG — reference implementation for self-hosted fallback](https://microsoft.github.io/graphrag/).
 
 ---
 
@@ -117,26 +117,75 @@ This is where your "multi-agent like different specialty doctors" question fits.
 | **C. Multi-specialist parallel (MoA pattern, all specialists run simultaneously, moderator agent aggregates)** | Maximum reasoning depth; mirrors tumor-board style discussion | Highest clinical quality on hard cases; research shows it beats single-agent on MedQA by 3–8 % | 3–5× cost; 2–3× latency; much harder to audit who said what | Premium tier only | High | Research-tier — not included in the launch build |
 | **D. Multi-agent with RL-trained router (MedRoute, MMedAgent-RL pattern)** | The router itself is RL-trained to pick specialists dynamically | Higher routing accuracy than rule-based | Requires a training pipeline, labeled routing data, evaluation harness | Training + inference | High | Continuous-ops upgrade path — swap in once we have ≥ 10k routing-labeled production interactions |
 
-### Proposed specialty topology (Option B) on Version C
+### Proposed specialty topology (Option B) — full Vietnamese-hospital department set
 
-Specialties we'd actually wire up — based on WHO / ICD-11 chapters that have distinct treatment logic and a realistic volume at Nova's hospital clients:
+We model the assistant after a real Vietnamese tertiary hospital's clinical structure (the 40 departments you'd find at a large teaching hospital). The UI doesn't expose the list — a **router agent** reads the clinician's prompt and routes to the right specialty automatically. Only the **emergency toggle** is a hard if/else and bypasses the router entirely.
 
-| Agent | Primary knowledge base / tool | Model | Typical queries |
-|---|---|---|---|
-| **Triage / GP agent** | kb-who-guidelines + kb-icd11 | Qwen3.5-Flash | Classifies the case, routes to the specialist, integrates final answer |
-| **Emergency medicine** | kb-who-emergency + sepsis + stroke + MI protocols | Qwen3.5-Flash (low temp, high grounding) | Emergency toggle always routes here |
-| **Infectious disease** | kb-who-antimicrobial + treatment-protocols tagged `infectious` | Qwen3.5-Plus | Antibiotic choice, resistance patterns, empiric coverage |
-| **Oncology** | kb-who-oncology + internal trials tagged `oncology` | Qwen3.5-Plus | Staging, regimen selection, protocol deviations |
-| **Cardiology** | kb-cardio + internal cardiology trials | Qwen3.5-Plus | ACS pathways, dosing, device patient considerations |
-| **Pediatrics** | kb-pediatrics-dosing + weight-based calcs | Qwen3.5-Plus (strict PHI + age filter) | Weight-based dosing, age-appropriate contraindications |
-| **Obs / Gyn** | kb-who-maternal + obstetric emergency | Qwen3.5-Plus | Pre-eclampsia, post-partum hemorrhage |
-| **Pharmacology / drug-interaction** | kb-drug-interactions + openFDA | Qwen3.5-Flash + tool | Any query with ≥ 2 drugs or a known allergy |
+Department → agent mapping (Vietnamese name · English routing label · primary KB namespaces · typical queries):
 
-Simpler fallback if multi-agent proves operationally heavy: **3 specialties + GP + Emergency** (most common hospital services). You don't need all 8 from day 1. Start with Emergency + ID + General; add specialties per client demand.
+| Agent | Vietnamese name | English name / routing label | Primary KB namespaces | Typical queries |
+|---|---|---|---|---|
+| **Router / Triage** | *Khoa Khám bệnh* + *Khoa Khám sức khoẻ theo yêu cầu* | General Medicine / Triage | kb-who-general + kb-icd11 | First-pass classification; routes to the right specialist below |
+| **Emergency Medicine** | *Khoa Cấp cứu* | Emergency Medicine | kb-who-emergency + sepsis/stroke/MI protocols | **Emergency toggle always routes here, bypassing the router** |
+| **ICU** | *Khoa Hồi sức tích cực* | Intensive Care | kb-who-critical-care + vasopressor + ventilation protocols | Organ-failure support, sedation, mechanical-ventilation tuning |
+| **Anesthesiology** | *Khoa Gây mê - Hồi sức* | Anesthesiology & Recovery | kb-anesthesia + perioperative | Airway management, regional anesthesia, PACU care |
+| **Infectious Disease / Infection Control** | *Khoa Kiểm soát nhiễm khuẩn* | Infection Control | kb-who-antimicrobial + openFDA | Antibiotic choice, resistance patterns, nosocomial outbreaks |
+| **Internal — Cardiology** | *Khoa Nội Tim mạch* | Internal Cardiology | kb-cardio + internal cardiology trials | ACS, heart failure, arrhythmia, device-patient considerations |
+| **Interventional Cardiology** | *Khoa Tim mạch can thiệp* | Interventional Cardiology | kb-cardio-intervention | PCI, TAVR indications, peri-procedural anticoagulation |
+| **Cardiac Surgery** | *Khoa Phẫu thuật Tim mạch* | Cardiac Surgery | kb-cardiac-surgery | CABG indication, valve surgery, post-op management |
+| **Thoracic & Vascular** | *Khoa Lồng ngực - Mạch máu* | Thoracic & Vascular Surgery | kb-vascular + kb-thoracic | Aortic disease, PAD, thoracotomy |
+| **Pulmonology** | *Khoa Hô hấp* | Pulmonology | kb-who-respiratory | COPD, asthma, pneumonia, lung cancer screening |
+| **Pulmonary Function** | *Khoa Thăm dò chức năng hô hấp* | Pulmonary Function Testing | kb-pulmonary-testing | PFT interpretation, spirometry, DLCO |
+| **Gastroenterology** | *Khoa Tiêu hoá* | Gastroenterology | kb-who-gi + kb-gastro-protocols | IBD, GI bleeding, liver disease |
+| **Endoscopy** | *Khoa Nội soi* | Endoscopy | kb-endoscopy | ERCP, EUS, therapeutic endoscopy |
+| **Hepatopancreatobiliary Surgery** | *Khoa Ngoại Gan - Mật - Tuỵ* | HPB Surgery | kb-hpb-surgery | Liver resection, pancreatic cancer, biliary reconstruction |
+| **GI Surgery** | *Khoa Ngoại Tiêu hoá* | GI Surgery | kb-gi-surgery | Colorectal resection, bariatric, esophageal |
+| **Colorectal / Anorectal** | *Khoa Hậu môn - Trực tràng* | Colorectal Surgery | kb-colorectal | Hemorrhoids, fistula, pelvic floor |
+| **Nephrology & Dialysis** | *Khoa Nội thận - Thận nhân tạo* | Nephrology & Hemodialysis | kb-who-kidney + kb-dialysis | CKD staging, dialysis access, electrolytes |
+| **Urology** | *Khoa Tiết niệu* | Urology | kb-urology | BPH, urolithiasis, GU cancers |
+| **Endocrinology** | *Khoa Nội tiết* | Endocrinology | kb-who-diabetes + kb-thyroid | T1/T2 DM, thyroid, adrenal |
+| **Musculoskeletal** | *Khoa Nội cơ xương khớp* | Rheumatology / MSK | kb-rheumatology | RA, OA, autoimmune, DMARDs |
+| **Orthopedics** | *Khoa Chấn thương chỉnh hình* | Orthopedic Surgery | kb-ortho | Fracture care, arthroplasty, spine |
+| **Neurology** | *Khoa Thần kinh* | Neurology | kb-who-neurology + kb-stroke | Stroke pathway, seizure, neurodegenerative |
+| **Neurosurgery** | *Khoa Ngoại Thần kinh* | Neurosurgery | kb-neurosurg | Craniotomy, spine, endovascular |
+| **Oncology — Chemotherapy** | *Khoa Hoá trị ung thư* | Medical Oncology | kb-who-oncology + internal trials tagged `oncology` | Regimen selection, protocol deviations, dose adjustments |
+| **Breast (Oncology & Surgery)** | *Khoa Tuyến vú* | Breast Surgery / Oncology | kb-breast | Breast cancer, reconstruction, screening |
+| **Obstetrics & Gynecology** | *Khoa Phụ sản* | Obstetrics & Gynecology | kb-who-maternal + kb-obgyn | Pre-eclampsia, PPH, pregnancy |
+| **Neonatology** | *Khoa Sơ sinh* | Neonatology | kb-neonatology + weight-based dosing | NICU care, preemie dosing |
+| **Geriatrics & Palliative Care** | *Khoa Lão - Chăm sóc giảm nhẹ* | Geriatrics & Palliative | kb-geriatrics + kb-who-palliative | Polypharmacy, frailty, end-of-life |
+| **Ophthalmology** | *Khoa Mắt* | Ophthalmology | kb-ophthalmology | Glaucoma, diabetic retinopathy, cataract |
+| **ENT** | *Khoa Tai Mũi Họng* | Otorhinolaryngology | kb-ent | Sinus, otology, head-neck cancer |
+| **Oromaxillofacial** | *Khoa Phẫu thuật Hàm mặt - Răng hàm mặt* | Oral & Maxillofacial Surgery | kb-ofms | Facial trauma, dental surgery |
+| **Dermatology** | *Khoa Da liễu - Thẩm mỹ da* | Dermatology | kb-derm | Skin conditions, phototherapy, cosmetic |
+| **Plastic Surgery** | *Khoa Tạo hình - Thẩm mỹ* | Plastic Surgery | kb-plastics | Reconstruction, flap design |
+| **Physical Medicine & Rehab** | *Khoa Phục hồi chức năng* | Rehabilitation | kb-rehab | Post-stroke, post-op PT, spinal cord |
+| **Clinical Pharmacy** | *Khoa Dược* | Clinical Pharmacy | kb-drug-interactions + openFDA | Any query with ≥ 2 drugs or a known allergy — always consulted as a side-channel, not only as the primary |
+| **Nutrition & Dietetics** | *Khoa Dinh dưỡng, Tiết chế* | Clinical Nutrition | kb-nutrition | Enteral/parenteral nutrition, renal/diabetic diets |
+| **Microbiology** | *Khoa Vi sinh* | Microbiology Lab | kb-microbiology | Culture interpretation, susceptibility |
+| **Clinical Laboratory** | *Khoa Xét nghiệm* | Clinical Laboratory | kb-lab | Lab interpretation, reference ranges |
+| **Pathology** | *Khoa Giải phẫu bệnh* | Anatomic Pathology | kb-pathology | Tissue-diagnosis interpretation |
+| **Radiology & Diagnostic Imaging** | *Khoa Chẩn đoán hình ảnh* | Diagnostic Radiology | kb-radiology + **figure-heavy multimodal corpus** | Imaging-triage questions; **vision-enabled agent** (Qwen3-VL / Nova Pro / Claude Sonnet 4.5 vision) for clinician-uploaded images |
+
+**Key rule**: the clinician never sees this list. The router reads the prompt, picks the department (or departments — Clinical Pharmacy is auto-invoked alongside any prescribing question), and the response is written in a unified voice. The pharmacy/microbiology/lab/imaging agents are often consulted as *side-channels* to the primary specialist rather than as the primary answerer.
+
+### Two special lanes
+
+- **Emergency toggle ON** → pure if/else → straight to the **Emergency Medicine agent** with strict grounding, low-temperature Qwen3.5-Flash (C) / Haiku 4.5 (A) / Qwen3 Next 80B A3B (B), emergency disclaimer, ≤ 2 s p95 SLA. **Router is bypassed.**
+- **Radiology / Diagnostic Imaging** → if the clinician attaches an image, the router forces the **Radiology agent** on a vision-capable model: Qwen3-VL (C), Claude Sonnet 4.5 (A), or Qwen3 VL 235B A22B (B). Text queries about imaging still go through the router.
+
+### Router implementation
+
+The router is a small Model Studio Workflow Application node running **Qwen3.5-Flash** (C) / Nova Micro (A) / Qwen3 32B (B) with the department list as a structured classifier prompt. Decision is returned as `{"department": "cardiology-internal", "secondary": ["pharmacy"], "confidence": 0.92}`. If confidence < 0.6, the router falls back to the **General Medicine / Triage** agent and appends a banner: "routed via triage; specify the organ system for a more specific answer".
+
+Router latency budget: ~200 ms on all three clouds. Added to the 2 s emergency SLA? No — emergency toggle bypasses the router by design.
+
+### Simpler fallback topology
+
+If 40 agents prove operationally heavy in the first month of production, collapse to the **12-department core**: Emergency · Internal Cardiology · Pulmonology · Gastroenterology · Nephrology · Endocrinology · Neurology · Infectious Disease · Oncology (Chemo) · Obstetrics · Pediatrics (covers Neonatology) · Radiology. All other departments route to a **General Surgery** or **General Medicine** agent. The tenant config per hospital picks which of the 40 are active; small hospitals start with 12, teaching hospitals turn on all 40.
 
 ### Qwen-specific framework for Option B
 
-- **Alibaba Model Studio Agent Application** — multiple agent applications, each with its own system prompt, tools, and KB binding. Route between them through a **Workflow Application** that's driven by the GP/triage agent's output.
+- **Alibaba Model Studio Agent Application** — one agent application per department, each with its own system prompt, tools, and KB namespace binding. A **Workflow Application** drives routing based on the router agent's classification output.
 - **Qwen-Agent** (GitHub, 11.7k⭐) — open-source framework for Qwen ≥ 3.0 with function calling, MCP, RAG, browser tools. Used when we want LangGraph-style orchestration on a self-hosted Qwen (hybrid / on-prem scenarios, Version C-prem).
 
 Sources: [MMedAgent-RL (Qwen2.5-VL)](https://arxiv.org/html/2506.00555v2), [MedRoute RL router](https://arxiv.org/abs/2604.06180), [Qwen-Agent](https://github.com/QwenLM/Qwen-Agent), [AWS Bedrock multi-agents](https://aws.amazon.com/blogs/machine-learning/build-multi-agent-systems-with-langgraph-and-amazon-bedrock/), [AWS Bedrock AgentCore — health care](https://aws.amazon.com/blogs/machine-learning/building-health-care-agents-using-amazon-bedrock-agentcore/).
@@ -353,7 +402,6 @@ All seven toggles are first-class parameters in the tenant config object stored 
 - [Agentic Medical Graph-RAG (AMG-RAG) — arXiv 2502.13010](https://arxiv.org/abs/2502.13010)
 - [MedGraphRAG — Towards Safe Medical LLMs via Graph RAG, arXiv 2408.04187](https://arxiv.org/abs/2408.04187)
 - [Microsoft GraphRAG — reference implementation (self-hosted fallback only)](https://microsoft.github.io/graphrag/)
-- [LazyGraphRAG — Microsoft Research blog (self-hosted fallback)](https://www.microsoft.com/en-us/research/blog/lazygraphrag-setting-a-new-standard-for-quality-and-cost/)
 - [KG-RAG with small LLMs on Japanese medical QA — arXiv 2504.10982](https://arxiv.org/html/2504.10982v5)
 - [MMedAgent-RL — Qwen2.5-VL multi-agent medical reasoning, arXiv 2506.00555](https://arxiv.org/html/2506.00555v2)
 - [MedRoute — RL dynamic specialist routing, arXiv 2604.06180](https://arxiv.org/abs/2604.06180)
