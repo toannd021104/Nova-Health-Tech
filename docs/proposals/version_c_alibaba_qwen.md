@@ -148,9 +148,30 @@ The shorthand "SG Intl" appears in tables where column-width is tight, especiall
 
 ### 2.3 Compliance & regulatory constraints
 
-Full mapping in [`../compliance.md`](../compliance.md). Primary frame is **Singapore PDPA** ([cross-border transfer guidance](https://www.pdpc.gov.sg/organisations/resources/guidance-by-topic/guide-to-cross-border-data-transfers)) plus **HCSA 2020** for telemedicine clinical-decision-support software. **HIPAA** applies only when a hospital client serves US patients — in which case a separate US-region tenant is provisioned with BAA coverage. **FDA SaMD + 21st Century Cures Act CDS carve-out** applies in the US context; the carve-out preserves because the UI labels the assistant as decision support and shows clinicians the basis of every recommendation. **GDPR** applies only when a client serves EU residents. **EU AI Act** treats medical AI as high-risk — risk management and human-oversight requirements apply to any EU deployment.
+Primary frame is Singapore PDPA plus HCSA 2020 for telemedicine clinical-decision-support software. HIPAA applies only when a hospital client serves US patients. GDPR applies only when a client serves EU residents. FDA SaMD with the CDS carve-out applies in US context; the carve-out preserves because the UI labels the assistant as decision support and shows clinicians the basis of every recommendation. EU AI Act classifies medical AI as high-risk.
 
-Industry baseline: [**ISO 27001 / 27017 / 27018 / 27701**](https://www.iso.org/standard/27001), [**SOC 1 / 2 / 3**](https://www.aicpa-cima.com/resources/landing/system-and-organization-controls-soc-suite-of-services). Alibaba Cloud Singapore holds all of these — confirmed on the [Alibaba Cloud Trust Center](https://www.alibabacloud.com/en/trust-center).
+| Regulation | Scope | Alibaba Cloud Singapore support |
+|---|---|---|
+| Singapore PDPA | Primary data-residency frame | Native; SG region keeps data in-country; contract clauses available for cross-border cases |
+| Singapore HCSA 2020 | Telemedicine, clinical decision support | Supported; BAA equivalent on request |
+| HIPAA + HITECH | US-patient deployments only | Supported via International site BAA for applicable services |
+| GDPR | EU-resident deployments only | Supported; Alibaba Frankfurt as alternative region |
+| FDA SaMD, 21st Century Cures Act CDS carve-out | US clinical decision support | Architecture supports the clinician-review-required disclosure needed for the carve-out |
+| EU AI Act (high-risk) | EU healthcare AI | Human-oversight, risk-management, and logging controls available |
+| ISO 27001, 27017, 27018, 27701 | Industry baseline | Certified |
+| SOC 1, 2, 3 | Industry baseline | Certified |
+| MLPS 2.0 | China market readiness | Certified (not in Version C scope) |
+
+Reference:
+1. https://www.pdpc.gov.sg/organisations/resources/guidance-by-topic/guide-to-cross-border-data-transfers
+2. https://www.alibabacloud.com/en/trust-center
+3. https://www.hipaajournal.com/hipaa-retention-requirements/
+4. https://www.law.cornell.edu/cfr/text/45/164.530
+5. https://gdpr.eu/
+6. https://artificialintelligenceact.eu/
+7. https://www.fda.gov/medical-devices/software-medical-device-samd/clinical-decision-support-software
+8. https://www.iso.org/standard/27001
+9. https://www.aicpa-cima.com/resources/landing/system-and-organization-controls-soc-suite-of-services
 
 ### 2.4 Assumptions and constraints
 
@@ -276,32 +297,32 @@ ASCII equivalent (for text-only renderers):
 
 ### 3.3 Technology stack summary
 
-| Layer | Service | Where |
-|---|---|---|
-| Edge | Alibaba CDN + Anti-DDoS + WAF | Global + SG |
-| API entry | API Gateway | SG |
-| Compute (chat) | [Function Compute 3.0](https://www.alibabacloud.com/help/en/functioncompute/product-overview/overview) (`fc-open`) | SG |
-| Compute (background) | [Function Workflow](https://www.alibabacloud.com/help/en/functioncompute/developer-reference/function-workflow) | SG |
-| LLM serving (API) | [Model Studio](https://www.alibabacloud.com/help/en/model-studio/what-is-model-studio) (Bailian / dashscope-intl) | SG Intl |
-| LLM serving (custom) | [PAI-EAS](https://www.alibabacloud.com/help/en/pai) — Qwen3-8B on A10 | SG |
-| LLM training | [PAI DLC + Model Gallery](https://www.alibabacloud.com/help/en/pai/use-cases/quick-start-deploy-fine-tune-and-evaluate-qwen3-models) | SG (Tokyo fallback for GPU) |
-| Vector store | [OpenSearch Vector Search Edition](https://www.alibabacloud.com/help/en/open-search/vector-search-edition/product-overview) HA dual-zone | SG |
-| Graph store | [AnalyticDB for PostgreSQL](https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql) + `adbpg_graphrag` extension | SG (3 zones) |
-| Cache L1 | [Tair (Redis OSS-compatible)](https://www.alibabacloud.com/product/tair) + [TairVector](https://www.alibabacloud.com/help/en/tair/user-guide/tairvector-overview) | SG |
-| Cache L2 | [Qwen Context Cache](https://www.alibabacloud.com/help/en/model-studio/context-cache) | SG Intl |
-| Cache L3 | [Qwen Provisioned Throughput Units](https://www.alibabacloud.com/help/en/model-studio/model-training-and-deployment-billing) | SG Intl |
-| Object storage | [OSS](https://www.alibabacloud.com/product/oss) (raw + WORM audit) | SG |
-| PDF parsing | DocMind + Qwen-VL-Max (ingest-time) | SG Intl |
-| Content safety | [Content Moderation 2.0 for Generative AI](https://www.alibabacloud.com/product/content-moderation) (`green`) | SG |
-| PHI handling | [DataWorks](https://www.alibabacloud.com/product/dataworks) + [SDDP](https://www.alibabacloud.com/product/sddp) | SG |
-| Identity (clinicians) | [IDaaS EIAM 2.0](https://www.alibabacloud.com/help/en/idaas/) Premium+ | SG |
-| Identity (staff) | [Cloud SSO + RAM](https://www.alibabacloud.com/product/ram) | Global |
-| Secrets | [KMS](https://www.alibabacloud.com/product/kms) + [Credentials Manager](https://www.alibabacloud.com/help/en/kms/user-guide/secrets-manager-overview) | SG |
-| Network | [VPC](https://www.alibabacloud.com/product/vpc) + [VPN Gateway (IPsec-VPN, data plane)](https://www.alibabacloud.com/help/en/vpn-gateway) + [PrivateLink](https://www.alibabacloud.com/product/privatelink) | SG |
-| Audit | [ActionTrail](https://www.alibabacloud.com/product/actiontrail) + [SLS](https://www.alibabacloud.com/product/log-service) + OSS WORM | SG |
-| Observability | [ARMS LLM Trace Explorer](https://www.alibabacloud.com/help/en/arms/application-monitoring/user-guide/llm-trace-explorer) | SG |
-| Orchestration framework | [Model Studio Agent + Workflow Applications](https://www.alibabacloud.com/help/en/model-studio/application-introduction) | SG Intl |
-| Client framework | LangChain + LangGraph (semantic cache + memory only) | SG FC runtime |
+| Layer | Service | Purpose | Where |
+|---|---|---|---|
+| Edge | Alibaba CDN + Anti-DDoS + WAF | Public HTTPS edge protection | Global + SG |
+| API entry | API Gateway | Request routing, authZ | SG |
+| Compute (chat) | [Function Compute 3.0](https://www.alibabacloud.com/help/en/functioncompute/product-overview/overview) | Stateless chat handler | SG |
+| Compute (background) | [Function Workflow](https://www.alibabacloud.com/help/en/functioncompute/developer-reference/function-workflow) | Ingestion orchestration | SG |
+| LLM serving (API) | [Model Studio](https://www.alibabacloud.com/help/en/model-studio/what-is-model-studio) | Qwen chat and embedding API | SG Intl |
+| LLM serving (custom) | [PAI-EAS](https://www.alibabacloud.com/help/en/pai) | Fine-tuned Qwen3-8B student inference | SG |
+| LLM training | [PAI DLC + Model Gallery](https://www.alibabacloud.com/help/en/pai/use-cases/quick-start-deploy-fine-tune-and-evaluate-qwen3-models) | SFT, LoRA, DPO, GRPO runs | SG (Tokyo fallback) |
+| Vector store | [OpenSearch Vector Search Edition](https://www.alibabacloud.com/help/en/open-search/vector-search-edition/product-overview) | Hybrid BM25 plus kNN | SG |
+| Graph store | [AnalyticDB for PostgreSQL](https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql) + `adbpg_graphrag` | Multi-hop graph queries | SG (3 zones) |
+| Cache L1 | [Tair](https://www.alibabacloud.com/product/tair) + [TairVector](https://www.alibabacloud.com/help/en/tair/user-guide/tairvector-overview) | Semantic response cache | SG |
+| Cache L2 | [Qwen Context Cache](https://www.alibabacloud.com/help/en/model-studio/context-cache) | Prefix KV cache | SG Intl |
+| Cache L3 | [Qwen PTU](https://www.alibabacloud.com/help/en/model-studio/model-training-and-deployment-billing) | Reserved peak capacity | SG Intl |
+| Object storage | [OSS](https://www.alibabacloud.com/product/oss) | Raw corpus plus WORM audit | SG |
+| PDF parsing | DocMind + Qwen-VL-Max | Legacy PDF extraction | SG Intl |
+| Content safety | [Content Moderation 2.0](https://www.alibabacloud.com/product/content-moderation) | LLM input and output filter | SG |
+| PHI handling | [DataWorks](https://www.alibabacloud.com/product/dataworks) + [SDDP](https://www.alibabacloud.com/product/sddp) | Detection and tokenization | SG |
+| Identity (clinicians) | [IDaaS EIAM 2.0](https://www.alibabacloud.com/help/en/idaas/) Premium+ | Hospital IdP federation | SG |
+| Identity (staff) | [Cloud SSO + RAM](https://www.alibabacloud.com/product/ram) | Nova EntraID federation | Global |
+| Secrets | [KMS](https://www.alibabacloud.com/product/kms) + [Credentials Manager](https://www.alibabacloud.com/help/en/kms/user-guide/secrets-manager-overview) | Keys and rotating secrets | SG |
+| Network | [VPC](https://www.alibabacloud.com/product/vpc) + [VPN Gateway IPsec](https://www.alibabacloud.com/help/en/vpn-gateway) + [PrivateLink](https://www.alibabacloud.com/product/privatelink) | Data-plane tunnel, service isolation | SG |
+| Audit | [ActionTrail](https://www.alibabacloud.com/product/actiontrail) + [SLS](https://www.alibabacloud.com/product/log-service) + OSS WORM | 6-year immutable audit | SG |
+| Observability | [ARMS LLM Trace Explorer](https://www.alibabacloud.com/help/en/arms/application-monitoring/user-guide/llm-trace-explorer) | OpenTelemetry traces, SLO alerts | SG |
+| Orchestration framework | [Model Studio Agent + Workflow Applications](https://www.alibabacloud.com/help/en/model-studio/application-introduction) | Department agents, emergency DAG | SG Intl |
+| Client framework | LangChain + LangGraph | Semantic cache, session memory | SG FC runtime |
 
 ---
 
