@@ -368,13 +368,13 @@ ASCII equivalent (for text-only renderers):
 
 ### 4.3 OCR and document parsing strategy (legacy PDFs)
 
-Three strategies were evaluated for the mix of body text, horizontal and vertical tables, text-based flowcharts, and figures that characterize the WHO + internal trial corpus:
+Three strategies evaluated for the mix of body text, horizontal and vertical tables, text-based flowcharts, and figures:
 
-| Strategy | Description | Verdict |
+| Strategy | Description | Status |
 |---|---|---|
-| **A. Managed parse + managed RAG** | [DocMind](https://www.alibabacloud.com/help/en/model-studio) + [Qwen-VL-Max](https://www.alibabacloud.com/help/en/model-studio/model-pricing) for complex pages; Model Studio KB for the retrieval pipeline | **Chosen as primary**: zero custom parsing, strong table recognition, IAM-bounded compliance |
-| B. Open-source parser ([Unstructured](https://unstructured.io) / [LlamaParse](https://docs.llamaindex.ai/en/stable/module_guides/loading/connector/llama_parse/) / [Docling](https://github.com/DS4SD/docling)) + self-managed vector DB | Max control; cheapest per page | Not chosen: ops burden; compliance covers your parser stack too |
-| C. Multimodal page-image embeddings (treat every page as an image, retrieve by image similarity) | Preserves figures/tables exactly; page-level citations | **Fallback only**: used in addition to A for figure-heavy queries via `tongyi-embedding-vision-plus` |
+| A. Managed parse plus managed RAG | DocMind for body text and simple tables, Qwen-VL-Max for complex pages, Model Studio KB for retrieval | Chosen, primary |
+| B. Open-source parser ([Unstructured](https://unstructured.io) / [LlamaParse](https://docs.llamaindex.ai/en/stable/module_guides/loading/connector/llama_parse/) / [Docling](https://github.com/DS4SD/docling)) plus self-managed vector DB | Max control, cheapest per page | Not used |
+| C. Multimodal page-image embeddings | Preserves figures and tables exactly, page-level citations | Fallback, used with A for figure-heavy queries via `tongyi-embedding-vision-plus` |
 
 **Parsing rules:**
 - Default parser: DocMind (handles body text + simple tables across hundreds of pages)
@@ -472,14 +472,14 @@ ingest_run_id   : Function Workflow execution id (traceable in ActionTrail)
 
 ### 5.1 RAG vs. fine-tuning decision rationale
 
-Both are used, but for different purposes. RAG is the primary mechanism for factual grounding; fine-tuning is used for tone and latency, never as a substitute for grounding.
+Both are used for different purposes: RAG for factual grounding, fine-tuning for tone and latency.
 
-| Need | Mechanism | Why not the other |
-|---|---|---|
-| Answer factual medical questions | **RAG** | Fine-tuning can't keep up with monthly WHO updates; training on PHI is a compliance dead-end |
-| 2-second emergency SLA | **Qwen3.5-Flash on fast lane + [3-layer cache](#102-caching-strategy)** | Flash is already fast enough; caching brings cached-hit p95 to ~150 ms. The Qwen3-8B student is a *complex-lane* asset, and a DR fallback for emergency if Model Studio has an outage. |
-| Consistent tone | **Fine-tuning** (SFT on approved answers) + fixed system prompt + `temperature=0.1` | Tone drifts with prompt engineering alone |
-| Tool-calling reliability (emergency template calls, ICD-11 lookup) | **GRPO** on open-weight Qwen (optional, post-launch) | Pure SFT doesn't optimize for tool-selection correctness |
+| Need | Mechanism |
+|---|---|
+| Answer factual medical questions | RAG |
+| 2-second emergency SLA | Qwen3.5-Flash on fast lane plus 3-layer cache |
+| Consistent tone | SFT on Nova-approved answers, fixed system prompt, `temperature=0.1` |
+| Tool-calling reliability | GRPO on open-weight Qwen, ad-hoc |
 
 **Never train on PHI.** Training data is de-identified via DataWorks SDDP before any fine-tuning pipeline can read it.
 
@@ -514,7 +514,7 @@ Complex lane (≤ 6 s target):
   Agent synthesizes with full tool trace for citation
 ```
 
-**Why GraphRAG for complex questions**: [Microsoft Research](https://www.microsoft.com/en-us/research/blog/graphrag-unlocking-llm-discovery-on-narrative-private-data/) shows knowledge-graph retrieval beats vector-only retrieval on multi-hop and global-synthesis queries by 3–8% on narrative-private-data benchmarks. Clinical questions like "what diseases can drug X cause in patients with condition Y, and how would I adjust dosing" benefit most.
+Multi-hop graph retrieval complements vector retrieval on queries like "what diseases can drug X cause in patients with condition Y, and how would I adjust dosing".
 
 ### 5.3 Hybrid search (semantic + keyword)
 
@@ -598,9 +598,9 @@ Framework decision, model lineup, and routing. Diagram: [`../architecture/diagra
 | **Router** | Qwen3.5-Flash with `response_format=json_object` | Cheap structured-output; 150–200 ms p95 |
 | **Emergency DR fallback** | Qwen3-8B student on PAI-EAS (circuit-breaker path) | When Model Studio endpoint has an outage, the same PAI-EAS student that serves complex-lane traffic can keep the emergency lane running until Model Studio is back |
 
-Qwen3.6-27B (22 Apr 2026 release) is **not chosen**. It's a coding-specialist model with SWE-bench leadership but lower general-knowledge scores than Qwen3.5-Plus; not on Model Studio API as of verification date. Re-evaluate if Alibaba publishes an API endpoint with medical benchmarks.
+Qwen3.6-27B (22 April 2026 release) is not chosen. Coding-specialist model; lower general-knowledge scores; not on Model Studio API as of verification date.
 
-### 6.2 Fine-tuning strategy (tone, phrasing consistency, clinical vocabulary)
+### 6.2 Fine-tuning strategy
 
 **Techniques supported on PAI**:
 
@@ -657,7 +657,7 @@ GPU: single A10 on PAI DLC in Singapore. Runtime: 2–4 GPU-hours per run.
    post-launch: 5% canary for 72 hours before full promotion
 ```
 
-**Why tone, not facts**: fine-tuning gives us Nova-voice clinical phrasing, citation-consistent formatting, emergency-brevity discipline. **Facts always come from RAG**, never from weights: this keeps us on the right side of "monthly WHO updates" without any retraining.
+Facts always come from RAG. Fine-tuning gives Nova-voice clinical phrasing, citation-consistent formatting, and emergency-brevity discipline.
 
 ### 6.3 Prompt engineering and system prompt design
 
@@ -702,11 +702,6 @@ Decision: **[Model Studio Applications](https://www.alibabacloud.com/help/en/mod
 **LangChain used only for**:
 - Layer-1 semantic response cache (`RedisSemanticCache` against Tair + TairVector)
 - Per-session chat memory (`ConversationBufferWindowMemory`, 6-turn window)
-
-**Rejected alternatives**:
-- LangGraph for full orchestration: too much audit-trail plumbing to write by hand
-- LlamaIndex retrievers: Model Studio KB already provides production-grade retrieval
-- [Qwen-Agent](https://github.com/QwenLM/Qwen-Agent): reserved for hybrid/on-prem scenarios on Apsara Stack where Model Studio isn't available
 
 ### 6.5 Response validation and hallucination mitigation
 
@@ -933,43 +928,31 @@ Backend system-to-system flows that carry **raw PHI in bulk** (patient names, MR
 6. Smoke test: Upload Portal reachable from hospital test workstation
 ```
 
-**Ballpark cost**: VPN Gateway 100 Mbps ≈ $110–150/mo per tenant (Alibaba list).
+**Ballpark cost**: VPN Gateway 100 Mbps ≈ $110–150/mo per tenant.
 
-#### 7.6.3 Why not only public HTTPS for data plane too?
+#### 7.6.3 Optional turnkey alternative: [Smart Access Gateway (SAG)](https://www.alibabacloud.com/product/smart-access-gateway)
 
-A reasonable question. Three reasons we keep the IPsec tunnel for bulk PHI:
-
-1. **Defense in depth.** Clinical trial reports and FHIR bundles contain raw PHI that hasn't yet passed through SDDP. Even if TLS is strong, the encrypted tunnel removes the "someone on the path sees the TLS handshake SNI / timing" class of concerns. Auditors for HIPAA / HITRUST expect to see a VPN on bulk-PHI paths.
-2. **Hospital IT expectations.** Hospital compliance teams are trained to look for "VPN to vendor" as a control. Shipping bulk PHI over plain-Internet SaaS APIs, even with TLS, is a harder sell in procurement than the two-plane model where clinician traffic is SaaS-style and bulk-transfer is VPN-style.
-3. **Bidirectional flow.** The data plane includes on-prem to cloud (trial reports) *and* cloud to on-prem (EHR FHIR callback when the hospital FHIR is private). The VPN makes this symmetric without any hospital-side public-API exposure of internal systems.
-
-#### 7.6.4 Optional turnkey alternative: [Smart Access Gateway (SAG)](https://www.alibabacloud.com/product/smart-access-gateway)
-
-For small / mid-size clinics that don't want to configure their own firewall for IPsec:
+For clinics that don't want to configure their own firewall for IPsec:
 
 - Alibaba ships a SAG-100WM / SAG-1000 hardware appliance
 - Hospital plugs it into their LAN; it auto-establishes an encrypted tunnel to the Alibaba backbone
-- Same encryption + VPC termination as a DIY IPsec config on the data plane
-- Trade-off: faster setup (no firewall work on hospital side), hardware rental ~$50–150/mo
+- Same encryption and VPC termination as a DIY IPsec config
+- Hardware rental ~$50–150/mo
 
-#### 7.6.5 Multi-region future: [Cloud Enterprise Network (CEN)](https://www.alibabacloud.com/product/cen)
+#### 7.6.4 Multi-region future: [Cloud Enterprise Network (CEN)](https://www.alibabacloud.com/product/cen)
 
-Not required for baseline (single-region SG) but the path is prepared:
+Not required for baseline. Path prepared: all Nova VPCs attach to a single CEN instance from day one. Adding a DR region becomes a CEN attachment plus route-policy change.
 
-- All Nova VPCs attached to a single CEN instance from day one, even with one VPC
-- Adding a DR region or a second tenant-specific region is a CEN attachment + route-policy change, not a re-architecture
-- Alibaba's equivalent of AWS Transit Gateway
+#### 7.6.5 Not used
 
-#### 7.6.6 What we deliberately do NOT use
-
-| Service | Why not |
+| Service | Note |
 |---|---|
-| **[Apsara Stack](https://www.alibabacloud.com/product/apsara-stack)** (on-prem Alibaba) | 6+ months of onboarding; adds ops burden for a SaaS model. Only on explicit contract request. |
-| **[Express Connect](https://www.alibabacloud.com/product/express-connect)** (dedicated line) | Hospital Internet latency to SG is ~5–15 ms; dedicated line saves single-digit ms at $1,500–5,000+/mo vs ~$110 VPN cost |
-| **SSL-VPN (client-level)** | Clinician access goes through IDaaS federation, not a personal VPN tunnel |
-| **VPN for clinician chat traffic** | Chat prompts are small and SDDP-masked; public HTTPS + IDaaS + WAF is the right control: forcing VPN here would delay onboarding by weeks for no security gain |
+| [Apsara Stack](https://www.alibabacloud.com/product/apsara-stack) (on-prem Alibaba) | 6+ months of onboarding; only on explicit contract request |
+| [Express Connect](https://www.alibabacloud.com/product/express-connect) (dedicated line) | $1,500–5,000+/mo vs ~$110 for VPN; no material latency gain |
+| SSL-VPN (client-level) | Clinician access uses IDaaS federation, not personal VPN |
+| VPN for clinician chat | Chat prompts SDDP-masked; public HTTPS plus IDaaS plus WAF is the control |
 
-#### 7.6.7 Connectivity comparison: Version C vs Version A/B
+#### 7.6.6 Connectivity comparison against Version A/B
 
 | Need | Version C (Alibaba) | Version A/B (AWS) |
 |---|---|---|
