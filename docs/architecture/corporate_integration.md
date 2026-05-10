@@ -110,9 +110,9 @@ Each hospital's EHR integration lives in a tenant config stored in DynamoDB (AWS
 
 The assistant degrades gracefully: it falls back to generic clinical knowledge and shows a banner ("No patient context loaded"). A hard timeout of 2 seconds on the FHIR call — we never block the 2-second emergency SLA on EHR latency. Patient context becomes a **soft** input; the answer still runs, it just doesn't personalize.
 
-### CDS Hooks (roadmap, not phase 1)
+### CDS Hooks (out of scope for first release)
 
-Epic and Cerner both support CDS Hooks (clinical-decision-support cards injected inline). A later phase can register a `patient-view` hook that proactively surfaces Nova's recommendations when the clinician opens a chart. Out of scope for the first release.
+Epic and Cerner both support CDS Hooks (clinical-decision-support cards injected inline). A later release can register a `patient-view` hook that proactively surfaces Nova's recommendations when the clinician opens a chart. Not part of the launch build — would be added via a separate feature launch after the core assistant is in production.
 
 ## 2. SharePoint / OneDrive — keep internal docs in sync automatically
 

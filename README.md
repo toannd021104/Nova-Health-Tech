@@ -90,7 +90,7 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 | **Cross-border transfer** | None by default; stays in Singapore | None by default; stays in Singapore |
 | **Hospital integration** | Site-to-Site VPN (IPsec IKEv2). No Outposts, no Direct Connect | Site-to-Site VPN on VPN Gateway. No Apsara Stack unless requested |
 | **AI framework** | Bedrock Agents + Knowledge Bases (primary); LangChain only for semantic cache + memory | Model Studio **Agent application** for chat, **Workflow application** for emergency lane; LangChain only for cache + memory |
-| **Fast-lane model (emergency, ≤ 2 s)** | Claude Haiku 4.5 (+ Nova Lite fine-tuned student from phase 3) — or Nova Micro for the cheapest SG-native variant | Qwen3.5-Flash (+ Qwen3-8B PAI-EAS student from phase 3) |
+| **Fast-lane model (emergency, ≤ 2 s)** | Claude Haiku 4.5 (custom fine-tuned Nova Lite student active from launch) — or Nova Micro for the cheapest SG-native variant | Qwen3.5-Flash (custom fine-tuned Qwen3-8B student on PAI-EAS active from launch) |
 | **Complex-lane / teacher model** | Claude Sonnet 4.5 — or Nova Pro for the Nova-only variant | Qwen3.5-Plus (Feb 2026 release; replaces Qwen-Max) |
 | **Claude Opus** | Not used (overkill, price hard to justify) | N/A |
 | **Text embeddings** | Cohere Embed v4 on Bedrock (running demo) | text-embedding-v4 ($0.07/1M) |

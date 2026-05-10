@@ -46,7 +46,7 @@ def _route_next(state):
 - `global.anthropic.claude-haiku-4-5-20251001-v1:0` via the **Bedrock Converse streaming API**.
 - Hyperparameters: `temperature=0.1`, `max_tokens=700`. (Claude rejects sending both `temperature` and `top_p`; temperature alone is enough for tone consistency.)
 - Prompt structure (from `graph.py`): the Nova system prompt + retrieved context with `[1], [2]` source tokens + the user's question. The first ~2-3 KB of the prompt is static and cached via **Bedrock Prompt Caching** (90% off on cached input tokens).
-- Phase-3: swap to the fine-tuned Nova Lite student distilled from Sonnet outputs — same API surface, lower latency and cost.
+- **Production serving**: the fast lane calls the **fine-tuned Nova Lite student distilled from Sonnet 4.5** via Bedrock's custom-model endpoint. Same streaming Converse API surface as base Haiku. Base Haiku 4.5 stays registered as the same-API fallback when the custom endpoint is unavailable.
 
 ### Step 5b — Complex lane → **Claude Sonnet 4.5** (target 3–6 s)
 

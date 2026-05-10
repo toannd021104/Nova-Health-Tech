@@ -62,9 +62,9 @@ Kept as an optional path when you want a smaller, self-served student:
 
 | Choose... | ...if |
 |---|---|
-| **No fine-tuning** (Qwen3 Next 80B A3B fast + Qwen3 VL 235B complex) | Phase 1–2. Hosted Bedrock models are likely good enough on RAG alone. |
-| **Path B-1 (Bedrock RFT on Qwen3 32B)** | You want a clinical-domain-tuned model without managing GPU infrastructure, and are willing to serve from us-west-2. |
-| **Path B-2 (SageMaker GRPO on Qwen3-4B)** | You need the student physically in Singapore for data-residency, or want to iterate faster than Bedrock RFT cycles. |
+| **No fine-tuning** (Qwen3 Next 80B A3B fast + Qwen3 VL 235B complex) | Launch without customization when RAG + prompt engineering + caching alone clear the clinical-quality rubric. Keeps operational surface small. |
+| **Path B-1 (Bedrock RFT on Qwen3 32B)** | You want a clinical-domain-tuned model without managing GPU infrastructure, and are willing to serve from us-west-2. Training runs before cut-over; the custom model ID replaces the base Qwen in the router config on launch day. |
+| **Path B-2 (SageMaker GRPO on Qwen3-4B)** | You need the student physically in Singapore for data residency, or want the cheaper quarterly retrain cadence. Same: training runs before launch, endpoint is hot on day one. |
 
 ## 4. Component diagram
 
@@ -171,7 +171,7 @@ Keep Path B-2 for clients who need the emergency-lane model **physically in SG**
 
 ## 8. Why this is attractive now vs. before
 
-- **No self-hosted Qwen endpoint needed in phase 1–2** — Bedrock's managed `qwen.qwen3-next-80b-a3b` serves the fast lane; `qwen.qwen3-vl-235b-a22b` serves the complex lane. Both are pay-per-token, no always-on GPU.
+- **Bedrock serves both lanes with no self-hosted GPU** — managed `qwen.qwen3-next-80b-a3b` for the fast lane and `qwen.qwen3-vl-235b-a22b` for the complex lane. Pay-per-token, no always-on GPU unless we pick Path B-2.
 - **The MoE models are genuinely fast** — Qwen3 Next 80B activates only 3B per token, similar efficiency profile to Qwen3.5-Flash on Model Studio.
 - **One IAM, one BAA, one service** — everything under Bedrock. No dual SageMaker-plus-Bedrock ops complexity unless we opt in for Path B-2.
 - **Fine-tuning is cheap** — Bedrock RFT $80/hr × ~8 hr = $640 per run, vs the $2,000 custom-model distillation for Claude-family.

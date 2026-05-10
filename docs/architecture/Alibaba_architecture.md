@@ -63,8 +63,9 @@ Parallel production design using Qwen and Alibaba Cloud managed services in the 
  Tair    │    Qwen      │  (Model Studio / PAI-EAS):       │                          │
  +Tair   │    Context   │    Qwen3.5-Flash (fast lane)     │ + Security Center scan   │
  Vector  │    Cache     │    Qwen3.5-Plus (complex +       │ + SDDP PHI scan          │
- semantic│  (implicit   │     teacher, Feb 2026 release)   │                          │
- cache   │   from day1) │    Qwen3-8B student (phase 3)    │                          │
+ semantic│  (implicit + │     teacher, Feb 2026 release)   │                          │
+ cache   │   explicit,  │    Qwen3-8B student (custom,     │                          │
+         │   from day1) │     serving production)          │                          │
          │              │  + Content Moderation            │                          │
          │              │                                  └──────────┬───────────────┘
          │              │                                             ▼
@@ -155,14 +156,37 @@ All tools are read-only.
 - Hospital integration over Site-to-Site IPsec VPN — no dedicated line unless a customer specifically requests one.
 - DR via cross-AZ within Singapore; a warm-standby region is a roadmap item with PDPA review.
 
-### 7.2 Phased rollout
+### 7.2 Launch scope — one production release, all features on
 
-| Phase | Weeks | Deliverable | Typical cost |
-|---|---|---|---|
-| 1 | 1–6 | Scheduled WHO + ICD-11 ingestion live, upload portal live, RAG with Qwen3.5-Flash (fast) + **Qwen3.5-Plus** (complex); Qwen Context Cache implicit mode active from day 1 (zero config) | Low hundreds of USD/mo |
-| 2 | 7–10 | Distill Qwen3-8B student from Qwen3.5-Plus outputs; LoRA on PAI Model Gallery; enable explicit Context Cache for the system-prompt prefix | ~$30–100 per retrain |
-| 3 | 11–14 | Student at 100% via PAI-EAS; PTU on emergency lane | Marginal; PTU only when sustained TPM high |
-| 4 | quarterly | Retrain with new WHO + clinician data | < $100 per retrain |
+There is **no pilot / PoC / staged rollout**. When Version C goes live, every capability in this document is active on day one: ingestion, retrieval, the 2-second emergency lane, fine-tuned student, multi-agent orchestration, caching, content moderation, audit trail. Anything that involves training a model is trained **before cut-over**, not after.
+
+| Capability | State at launch |
+|---|---|
+| Scheduled ingestion (WHO, ICD-11, SharePoint) + Upload Portal over IPsec VPN | ✅ on |
+| Hybrid retrieval (BM25 + kNN on OpenSearch Vector Search Edition + `qwen3-rerank`) | ✅ on |
+| Emergency toggle + if/else router | ✅ on |
+| Qwen3.5-Flash on the emergency lane + Qwen3.5-Plus on the complex lane | ✅ on |
+| **Fine-tuned Qwen3-8B student on PAI-EAS** (SFT + LoRA distilled from Qwen3.5-Plus) | ✅ **trained before launch, serving the emergency lane in production** |
+| Multi-agent specialist topology (GP / triage + Emergency + ID + Oncology + Cardiology + Pediatrics + Pharmacology) on complex lane (Model Studio Agent + Workflow Application) | ✅ on (toggleable per hospital client) |
+| Optional LazyGraphRAG over the WHO + protocol corpus | ✅ on |
+| Layer-1 Tair semantic cache + Layer-2 Qwen Context Cache (implicit + explicit on the system-prompt prefix) | ✅ on |
+| Qwen Provisioned Throughput Units on the emergency lane | ✅ on (sized to peak TPM) |
+| Content Moderation 2.0 + DataWorks SDDP PHI mask + grounding + citation validator | ✅ on |
+| ActionTrail → SLS → OSS WORM 6-year audit | ✅ on |
+| EHR SMART-on-FHIR launch for Epic / Cerner / Allscripts | ✅ on per configured tenant |
+
+### 7.3 Continuous operations (post-launch, not a "phase")
+
+After launch the team runs:
+
+| Cadence | Action |
+|---|---|
+| Daily 02:00 SGT | WHO ICD-11 delta ingest; Tair semantic-cache invalidation for affected `source:*` tags |
+| Monthly day 1 02:30 SGT | WHO guideline PDF refresh + LazyGraphRAG re-index |
+| Weekly Sun | SharePoint / trial-report reconciliation pass (safety net for missed webhooks) |
+| Monthly | DPO micro-run on the past month's clinician preference pairs on PAI (~$15–40 per run). Same canary evaluation as launch. |
+| Quarterly | Full student retrain (Qwen3-8B SFT + LoRA) on accumulated new clinician data + latest WHO releases; re-qualify with eval harness; promote after it matches or beats current student on the holdout. GRPO round available ad-hoc for tool-calling regressions. |
+| Event-driven | Red-team re-run after any Content Moderation incident; retrain on new adversarial examples. |
 
 ### 7.3 Corporate integration
 

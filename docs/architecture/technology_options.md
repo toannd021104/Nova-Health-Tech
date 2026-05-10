@@ -9,18 +9,21 @@ Scenario anchors from the brief:
 
 The seven domains below map directly to the brief's five bullets (Data pipeline, Model orchestration, Security, Deployment, Performance optimization) plus two that the brief implies (Retrieval is a sub-choice of data pipeline; Observability is a sub-choice of compliance).
 
-## Phase legend (used throughout this doc)
+## Launch model — one product, everything on
 
-The rollout plan in `docs/architecture/AWS_architecture.md` §7.2 and `docs/architecture/Alibaba_architecture.md` §7.2 runs in four phases:
+There is **no pilot, PoC, or staged rollout**. When we cut over, every capability in this doc is active on day one — including the distilled/fine-tuned student on the fast lane, the multi-agent specialist topology on the complex lane, LazyGraphRAG over the WHO corpus, all three cache layers, guardrails, audit, and the EHR launch. Anything that involves training a model is trained during a **pre-launch build window** (roughly 6–10 weeks of engineering), not after.
 
-| Phase | Weeks | Goal | What actually ships |
-|---|---|---|---|
-| **Phase 1 — Ship the pilot** | 1–6 | Get it running with real data, meet the 2 s SLA without fine-tuning | Scheduled ingestion (WHO + ICD-11 + SharePoint), upload portal over VPN, hybrid retrieval + rerank, base LLM on both lanes, emergency toggle, Layer-1 + Layer-2 caching where supported, eval harness baseline. **No fine-tuning.** |
-| **Phase 2 — Customize on real data** | 7–10 | Close the tone and specialty gaps using usage logs from Phase 1 | Teacher-data generation + clinician review → SFT / LoRA / distillation student at 5 % canary. Optional: specialist multi-agent on complex lane; LazyGraphRAG over WHO corpus. Explicit Qwen Context Cache on system-prompt prefix (C). |
-| **Phase 3 — Make it cheap and fast at scale** | 11–14 | Promote student to 100 %, add preference / RL tuning, reserve capacity | Student 100 % on fast lane; DPO / GRPO round; Bedrock Reserved Tier or Qwen PTU on the emergency lane if sustained-TPM justifies it. Feature-flag the specialist agents and KG-RAG on per-hospital. |
-| **Phase 4 — Keep it fresh** | quarterly | Prevent drift | Retrain student on new clinician data + new WHO / ICD-11 releases; re-qualify with eval harness before promoting; WHO-refresh invalidates cached answers. |
+What runs after launch is **continuous operations**, not a "phase":
 
-"Phase 1 default" in the tables below means **ships in weeks 1–6**. "Phase 2 option" means **ships only if Phase 1 measurements show we need it**. Deferring to Phase 2/3 is not a "maybe later" — it's an explicit decision to let real usage data pick the extension point.
+| Cadence | Action | Why |
+|---|---|---|
+| Daily | WHO ICD-11 delta ingest; cache invalidation | Keeps index current with the API |
+| Weekly | SharePoint / trial-report reconciliation | Safety net for missed Graph webhooks |
+| Monthly | WHO guideline refresh + LazyGraphRAG re-index; DPO micro-run on the month's clinician preference pairs | Matches WHO's monthly cadence; tone drift correction |
+| Quarterly | Full student retrain (SFT + optional GRPO); re-qualify on eval harness; promote via 5% canary | Prevent drift; incorporate accumulated new data |
+| Event-driven | Red-team re-run + retrain after any guardrail incident | Close adversarial gaps fast |
+
+In the option tables below, "**launch default**" means shipping as part of the production build. "**toggleable per hospital**" means the capability is fully built and tested but can be turned off in a tenant config when a client doesn't want it (e.g. a hospital that doesn't consent to multi-agent routing). Nothing in this doc is a "maybe later" roadmap item — either it's in the launch build or it's explicitly called out as research / out-of-scope (see "Not chosen" rows in each table).
 
 ---
 
@@ -62,7 +65,7 @@ This is the big question: plain vector RAG, hybrid RAG, agentic RAG, or knowledg
 | **B. Hybrid RAG (BM25 + kNN + rerank)** | Adds keyword exact match and rerank precision | Best general-purpose; covers drug names, codes, and semantics; 5–15 % recall lift over plain vector | Slightly slower (~100 ms); rerank adds cost | Baseline + `qwen3-rerank` $0.10/1M | Low | **Default for emergency lane + citation / literature lane** |
 | **C. Agentic RAG (iterative retrieve → reason → retrieve)** | Multi-hop: "what does treatment X do for patient with condition Y and allergy Z?" | Higher answer quality on multi-hop; the agent can call PubMed / ICD-11 / SharePoint as separate tools and compose | 3–10× more tokens, 2–5× latency vs one-pass (per the 2026 production guide) | ~$0.006–0.015 per complex call vs $0.0026 one-pass | Medium | **Default for complex differential lane (non-emergency)** |
 | **D. Knowledge-Graph RAG (GraphRAG / LightRAG / LazyGraphRAG)** | "Global" questions that span the whole corpus: "what are the main themes across all WHO sepsis guidelines?" | Answers global queries vector RAG cannot; disambiguates entities (sepsis vs septic shock vs severe sepsis) | KG construction cost is real; Microsoft GraphRAG indexing ~$20–80 per 100 MB of text; LazyGraphRAG drops this 700×; small-LLM KG-RAG shows mixed gains per Apr 2026 paper | LazyGraphRAG ~0.1 % of full GraphRAG query cost, same quality on global queries | **High** for GraphRAG; **Medium** for LazyGraphRAG / LightRAG | **Optional** layer for complex lane; use LazyGraphRAG on the WHO + guideline corpus, not on PubMed |
-| **E. Agentic Medical Graph-RAG (AMG-RAG, MedGraphRAG)** | Automates continuous MKG updates + integrates reasoning + PubMed live | Research-leading on MedQA benchmarks; designed for clinical use | Most complex of the lot; more research than production | Research-tier cost; no managed offering yet | **Very High** | Future roadmap — not phase 1 |
+| **E. Agentic Medical Graph-RAG (AMG-RAG, MedGraphRAG)** | Automates continuous MKG updates + integrates reasoning + PubMed live | Research-leading on MedQA benchmarks; designed for clinical use | Most complex of the lot; more research than production | Research-tier cost; no managed offering yet | **Very High** | Research-tier — not included in the launch build |
 
 ### Our stack
 
@@ -73,7 +76,7 @@ This is the big question: plain vector RAG, hybrid RAG, agentic RAG, or knowledg
   - `pubmed_search(query, max_results)` — runtime E-utilities (free tier key)
   - `graph_query(subject, relation, object)` — optional, only if D is deployed
 - **Optional D**: **LazyGraphRAG over the WHO + internal guideline corpus** (not PubMed). Indexed monthly during the ingestion job. Turn on if the eval harness shows the agent struggles on "summarize across all the living WHO hepatitis guidelines" style questions.
-- **Not E** for phase 1. Roadmap item once we have a stable evaluation harness.
+- **Not E** — research-tier only; revisit once AMG-RAG has a managed offering and a stable eval harness.
 
 ### Why agentic RAG is worth the cost on the complex lane
 
@@ -109,8 +112,8 @@ This is where your "multi-agent like different specialty doctors" question fits.
 |---|---|---|---|---|---|---|
 | **A. Single agent with broad system prompt** | Simple, one model per lane | Lowest latency; lowest cost; one prompt to maintain | General-purpose answers on deeply specialized questions (rare genetics, pediatric dosing, oncology protocols) | Baseline | Low | Emergency lane + most complex-lane queries |
 | **B. Router + specialist agents (general practitioner → specialist pattern)** | Mirrors real clinical triage; a GP agent decides if the case needs cardiology / oncology / pediatrics / emergency; a specialist agent answers | Better domain accuracy; separate system prompts + tool sets per specialty; auditable division of labor | More agents = more orchestration; latency overhead for specialist call; prompt-engineering burden per specialty | 1.5–3× cost on the complex lane when specialist is invoked | Medium | **Optional on the complex lane** — toggleable per hospital |
-| **C. Multi-specialist parallel (MoA pattern, all specialists run simultaneously, moderator agent aggregates)** | Maximum reasoning depth; mirrors tumor-board style discussion | Highest clinical quality on hard cases; research shows it beats single-agent on MedQA by 3–8 % | 3–5× cost; 2–3× latency; much harder to audit who said what | Premium tier only | High | Phase-3 research path; not phase 1 |
-| **D. Multi-agent with RL-trained router (MedRoute, MMedAgent-RL pattern)** | The router itself is RL-trained to pick specialists dynamically | Higher routing accuracy than rule-based | Requires a training pipeline, labeled routing data, evaluation harness | Training + inference | High | Phase-3 once we have clinical-feedback data |
+| **C. Multi-specialist parallel (MoA pattern, all specialists run simultaneously, moderator agent aggregates)** | Maximum reasoning depth; mirrors tumor-board style discussion | Highest clinical quality on hard cases; research shows it beats single-agent on MedQA by 3–8 % | 3–5× cost; 2–3× latency; much harder to audit who said what | Premium tier only | High | Research-tier — not included in the launch build |
+| **D. Multi-agent with RL-trained router (MedRoute, MMedAgent-RL pattern)** | The router itself is RL-trained to pick specialists dynamically | Higher routing accuracy than rule-based | Requires a training pipeline, labeled routing data, evaluation harness | Training + inference | High | Continuous-ops upgrade path — swap in once we have ≥ 10k routing-labeled production interactions |
 
 ### Proposed specialty topology (Option B) on Version C
 
@@ -144,20 +147,20 @@ What adaptation has to do: close the gap between a general model and Nova's clin
 
 | Option | What it solves | Pros | Cons | Cost per run | Complexity | Best for |
 |---|---|---|---|---|---|---|
-| **A. No fine-tune (prompt engineering + RAG + caching only)** | Gets 80 % of the tone and grounding benefit at zero training cost | Fastest to ship; no retraining ops | Tone consistency hits a ceiling; latency is what the base model gives you | $0 | Low | **Phase 1 default on every version** |
-| **B. SFT on teacher-generated data (distillation)** | Teacher-generated dataset + small student = fast + on-brand | Proven recipe; works on any cloud | Needs 5k+ seed prompts + a review process | AWS Model Distillation ~$1.5–2.5k; PAI SFT+LoRA ~$15–40; SageMaker TRL ~$70–100 | Medium | Phase 2–3 on Versions A, B, C |
-| **C. DPO (preference tuning)** | Uses `(chosen, rejected)` pairs to nudge tone and phrasing | Cheap once the data exists; pairs well with SFT | Needs clinician-labeled preferences | Similar to SFT | Medium | Phase 3 |
+| **A. No fine-tune (prompt engineering + RAG + caching only)** | Gets 80 % of the tone and grounding benefit at zero training cost | Fastest to ship; no retraining ops | Tone consistency hits a ceiling; latency is what the base model gives you | $0 | Low | **Same-API fallback only** — a trained student is the launch default on every version |
+| **B. SFT on teacher-generated data (distillation)** | Teacher-generated dataset + small student = fast + on-brand | Proven recipe; works on any cloud | Needs 5k+ seed prompts + a review process | AWS Model Distillation ~$1.5–2.5k; PAI SFT+LoRA ~$15–40; SageMaker TRL ~$70–100 | Medium | **Launch default on all three versions** — trained before cut-over |
+| **C. DPO (preference tuning)** | Uses `(chosen, rejected)` pairs to nudge tone and phrasing | Cheap once the data exists; pairs well with SFT | Needs clinician-labeled preferences | Similar to SFT | Medium | **Launch default if we have ≥ 2k clinician pairs pre-launch; otherwise activates on first monthly retrain** |
 | **D. GRPO (RL with verifiable reward)** | "Did the answer cite a real chunk? Did it match the ICD-11 code?" — rewarded | Cheap, no labels needed, great for tool-calling; AWS builder article used GRPO on Qwen3-4B at ~$80/run | Rewards must be computable automatically | AWS Bedrock RFT on Qwen3 32B = $80/hr (~$640/run); SageMaker GRPO on Qwen3-4B ~$70–100; PAI GRPO ~$15–50 | Medium–High | **Most attractive path on Versions B and C** |
 | **E. RLHF (reward model + PPO)** | The classical RL path | Strong results if you have labeling budget | Heavier and slower than DPO/GRPO; rarely beats them on clinical QA | 10–100× DPO | High | Not chosen |
 | **F. Continued pre-training (CPT) on medical corpus** | Inject broad domain knowledge | Good for base-model weak spots | Huge dataset and compute; marginal over RAG | 10–100× SFT | Very High | Not chosen — RAG already handles knowledge freshness |
 
-### Per-version adaptation path (matches `fine_tuning_and_distillation.md`)
+### Per-version adaptation path at launch (matches `fine_tuning_and_distillation.md`)
 
-| Version | Phase 1 | Phase 2–3 |
+| Version | Launch-day student | Post-launch retrain cadence |
 |---|---|---|
-| A — AWS + Claude | No fine-tune | Bedrock Model Distillation Sonnet 4.5 → Nova Lite; optional Claude 3 Haiku SFT on us-west-2 (with trade-offs) |
-| B — AWS + Qwen (Bedrock Sydney) | No fine-tune | Bedrock Reinforcement Fine-Tuning on Qwen3-32B (us-west-2, $80/hr) — RFT preferred for tool-calling reliability; SageMaker GRPO on Qwen3-4B if SG residency required |
-| C — Alibaba + Qwen (Singapore) | No fine-tune | PAI SFT+LoRA on Qwen3-8B (~$15–40/run), optional DPO, optional GRPO per Alibaba PAI docs |
+| A — AWS + Claude | **Nova Lite** distilled from Sonnet 4.5 via Bedrock Model Distillation | Quarterly SFT refresh; monthly DPO if clinician pairs available |
+| B — AWS + Qwen (Bedrock Sydney) | **Qwen3-32B custom** via Bedrock Reinforcement Fine-Tuning (us-west-2, training $80/hr). SageMaker GRPO on Qwen3-4B is the alternative when SG student residency is required. | Quarterly SFT+GRPO refresh; monthly DPO |
+| C — Alibaba + Qwen (Singapore) | **Qwen3-8B** on PAI Model Gallery with SFT+LoRA distilled from Qwen3.5-Plus | Quarterly SFT+LoRA refresh; monthly DPO; GRPO round on tool-calling regressions |
 
 Source: [AWS Builder GRPO article](https://builder.aws.com/content/35x6VR6kZYSn3JgNQmcNmIVK32Y/fine-tune-small-language-models-for-production-grade-tool-calling-with-grpo-using-hugging-face-trl-on-amazon-sagemaker-ai), [Qwen fine-tuning on PAI](https://www.alibabacloud.com/help/en/pai/use-cases/quick-start-deploy-fine-tune-and-evaluate-qwen3-models), [AgenticQwen — training small agentic LMs with dual data flywheels](https://arxiv.org/abs/2604.21590).
 
@@ -304,24 +307,31 @@ Sources: [ARMS LLM Trace Explorer](https://www.alibabacloud.com/help/en/arms/app
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## 9. Summary decision table (per domain)
+## 9. Summary decision table (per domain) — all features active at launch
 
-| Domain | Version C default (recommended) | Version A default | Version B default |
+| Domain | Version C (recommended default) | Version A | Version B |
 |---|---|---|---|
 | Data pipeline | Managed DocMind + multimodal fallback (option 1-D) | BDA + Nova Multimodal fallback (1-D) | BDA + Nova Multimodal fallback (1-D) |
-| Retrieval | Hybrid (B) for emergency + **Agentic (C)** for complex; optional LazyGraphRAG (D) on WHO corpus | Same pattern | Same pattern |
-| Orchestration | Model Studio Agent + Workflow Application; **multi-agent specialist on complex lane (§3b option B, start with 3 specialties)** | Bedrock Agents; single-agent phase 1 | Bedrock Agents; single-agent phase 1 |
-| Training | Phase 1: RAG-only. Phase 2: PAI SFT+LoRA on Qwen3-8B. Phase 3: GRPO option. | Phase 2: Bedrock Model Distillation Sonnet → Nova Lite | Phase 2: Bedrock RFT on Qwen3-32B (us-west-2) |
+| Retrieval | Hybrid (B) on emergency + **Agentic (C)** on complex + **LazyGraphRAG (D)** over WHO corpus | Same pattern | Same pattern |
+| Orchestration | Model Studio Agent + Workflow Application; **multi-agent specialist topology on complex lane (§3b option B, 7 specialties toggleable per hospital)** | Bedrock Agents + same multi-agent topology | Bedrock Agents + same multi-agent topology |
+| Training (at launch) | PAI SFT+LoRA on Qwen3-8B distilled from Qwen3.5-Plus + GRPO round for tool calling | Bedrock Model Distillation Sonnet 4.5 → Nova Lite | Bedrock RFT on Qwen3-32B (us-west-2) or SageMaker GRPO on Qwen3-4B (SG residency path) |
 | Corporate integration | SMART on FHIR + Graph subscriptions + Upload Portal + IPsec VPN | Same | Same |
-| Performance optimization | Layers 1 + 2 (Qwen Context Cache implicit from day 1) + streaming + metadata pre-filter | Layers 1 + 2 (Bedrock Prompt Caching from day 1) + streaming | Layer 1 only on Bedrock default (Qwen3 no prompt cache); vLLM APC on self-hosted path |
+| Performance optimization | Layers 1 + 2 (Qwen Context Cache implicit + explicit from day 1) + streaming + metadata pre-filter + PTU on emergency lane | Layers 1 + 2 (Bedrock Prompt Caching from day 1) + streaming + Reserved Tier | Layer 1 only on Bedrock default (Qwen3 no prompt cache); vLLM APC on self-hosted path |
 | Observability | ARMS LLM Trace + ActionTrail → OSS WORM 6 yr | CloudWatch + Bedrock logs + CloudTrail → S3 Object Lock 6 yr | Same as A |
 
-## 10. Questions we still need to answer for the rollout
+## 10. Toggles — what the tenant config controls per hospital
 
-1. Do we ship the **multi-agent specialist topology** (3b option B) in phase 1 or defer to phase 2? Recommend phase 2 — start with single-agent on the complex lane, add GP + ID + Emergency specialists once we see the volume per specialty in production.
-2. Do we deploy **LazyGraphRAG** in phase 1 or wait for the eval harness to show the agent struggles on global queries? Recommend phase 2 — it's cheap to layer in later (Microsoft publishes the reference implementation).
-3. **PubMed as a runtime tool call** — yes, with the free E-utilities API key (10 rps). Tool name `pubmed_search(query, max_results=5)` returns PMID + title + abstract snippet.
-4. **Multi-agent evaluation** — do we plan a tumor-board-style MoA phase? Defer to phase 3, only if single-agent + specialist routing misses quality targets on MedQA-style internal evals.
+Nothing below is "phase 2" — it's all built. The tenant config simply turns it on or off per client.
+
+| Toggle | Default | When to turn OFF |
+|---|---|---|
+| `multi_agent_specialists_enabled` | ON | A small hospital without enough specialty volume wants a simpler single-agent path |
+| `lazygraphrag_enabled` | ON | A hospital's workload is entirely single-hop retrieval ("what's the ICD code for X?") |
+| `pubmed_tool_enabled` | ON | The hospital prefers internal-only sourcing and an offline corpus |
+| `ehr_launch_smart_v2` | ON per configured tenant | Hospital doesn't have FHIR yet (rare in APAC 2026) — falls back to manual patient context entry |
+| `student_model_override` | student | A hospital wants to pin to the base teacher model for clinical-review reasons; pricier but available |
+
+All seven toggles are first-class parameters in the tenant config object stored in DynamoDB (AWS) / TableStore (Alibaba).
 
 ## 11. References
 

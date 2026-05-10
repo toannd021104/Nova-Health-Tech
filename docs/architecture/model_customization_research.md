@@ -97,9 +97,9 @@ Plus Model Studio's HTTP API offers token-billed fine-tuning for Qwen-Plus / Qwe
 - **Fine-tuning of Haiku 4.5 is NOT possible.** Anthropic does not expose 4.5 weights for SFT on Bedrock.
 - Two realistic customization paths:
   1. **Fine-tune Claude 3 Haiku (the 2024-03-07 snapshot)** via Bedrock custom models on `us-west-2`. This is SFT-only. The trade-off: we give up Haiku 4.5's quality gains to unlock custom training. Not worth it unless the quality loss from 3 → 4.5 is smaller than the gain from fine-tuning for tone.
-  2. **Keep Claude 4.5 base + use Bedrock Model Distillation** from Sonnet → **Nova Lite / Nova Micro** as the "student". You lose Claude branding in the fast lane but gain a genuinely smaller, tunable model. This is the plan I'd recommend for the Claude version.
-- For the production 2-second SLA, Bedrock Prompt Caching + semantic cache + the right region keep Haiku 4.5 under 2s **without fine-tuning at all**. Fine-tuning is a phase-3 quality-and-tone lever, not a latency lever.
-- **Written plan, not executed**: the existing running demo is plain RAG. No training has been run. If we commit to the Nova-Lite distillation path, the training job is the next delivery.
+  2. **Keep Claude 4.5 base + use Bedrock Model Distillation** from Sonnet → **Nova Lite / Nova Micro** as the "student". You lose Claude branding in the fast lane but gain a genuinely smaller, tunable model. **This is the launch default for Version A** — the student is trained before cut-over and serves 100% of the fast lane on day one.
+- For the 2-second SLA, Bedrock Prompt Caching + semantic cache + the right region keep even base Haiku 4.5 under 2s **without** fine-tuning. Fine-tuning layers on tone consistency and cost reduction, not raw latency.
+- **Status**: the running demo is plain RAG (no training yet). The production launch builds a trained student before cut-over; the demo stays as a baseline comparator.
 
 ### Version B — AWS with Qwen (new, simplified)
 
@@ -132,7 +132,7 @@ Plus Model Studio's HTTP API offers token-billed fine-tuning for Qwen-Plus / Qwe
 
 1. **Measure** the RAG response time on the running demo across 30–50 clinical questions, warm and cold cache. If p95 is already under 2s on the emergency lane with just Haiku 4.5 + RAG + caching, fine-tuning is quality-only, not latency. (User explicitly asked for this in a new isolated AWS-with-Claude environment — see §7.)
 2. **Pick the Claude-version customization path** once we have the latency numbers:
-   - If the 2s budget is comfortable → distill Sonnet → **Nova Lite** for phase-3 quality, keeping Haiku 4.5 as the unmodified production model.
+   - If the 2s budget is comfortable → distill Sonnet → **Nova Lite** as the launch-day student, keeping Haiku 4.5 as the unmodified same-API fallback.
    - If we need more control over Haiku specifically → fall back to Claude 3 Haiku SFT on us-west-2, accepting the older model trade-off.
 3. **Compare against the Qwen paths** on the same benchmark (same questions, same corpus): cost-per-call, p95 latency, and answer quality as judged by an LLM-as-judge harness. Pick the winner per client segment (US-client default = Version A; international = Version A or C; cost-sensitive = C).
 4. Only then **commit to a fine-tuning run** and implement the teacher-dataset pipeline.

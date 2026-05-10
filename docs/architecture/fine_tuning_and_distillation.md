@@ -1,17 +1,17 @@
 # Fine-tuning & Distillation — Per-Version Plan
 
-Replaces the earlier hand-wavy version. See `docs/architecture/model_customization_research.md` for the full fact-check against AWS / Alibaba docs; this file records the **decision per cloud version**.
+See `docs/architecture/model_customization_research.md` for the full fact-check against AWS / Alibaba docs. **Every technique described here is part of the launch build** — the student model, tone fine-tune, and guardrail-adversarial retrain all complete before cut-over and serve 100% of their respective lanes on day one. What runs after launch is **continuous retraining** (monthly DPO, quarterly SFT refresh), not a "phase 2" where new capabilities appear.
 
 ## 1. Techniques we will and will not use
 
 | Technique | Used? | Where |
 |---|---|---|
-| **SFT** (supervised fine-tuning) | Yes | All three versions. Primary training step. |
-| **Knowledge distillation** | Yes | Produces the SFT dataset. Teacher in each version listed below. |
-| **DPO** (preference tuning) | Optional phase-3 | All three versions, once clinician-labeled preference pairs exist. |
-| **GRPO** (reinforcement w/ verifiable reward) | Optional, later | Only on open-weight Qwen (Versions B and C). Good for "did the answer cite a real chunk?" style rewards. |
+| **SFT** (supervised fine-tuning) | Yes, **at launch** | All three versions. Primary training step. |
+| **Knowledge distillation** | Yes, **at launch** | Produces the SFT dataset. Teacher in each version listed below. |
+| **DPO** (preference tuning) | Yes, as part of launch if we have clinician pairs; otherwise kicks in on the first monthly retrain | All three versions, once clinician-labeled preference pairs exist (we seed ~2k pairs in the pre-launch build). |
+| **GRPO** (reinforcement w/ verifiable reward) | Yes, at launch on Versions B and C | On open-weight Qwen only. Good for "did the answer cite a real chunk?" style rewards. Version A has no GRPO path (Bedrock Reinforcement Fine-Tuning is Qwen3-32B / gpt-oss-20B only). |
 | **Classical RLHF** (reward-model + PPO) | No | Heavier than DPO / GRPO with no clinical-accuracy upside. |
-| **No-op (RAG only)** | Yes, for now | What the running demo actually does today. |
+| **No-op (RAG only)** | No. | Not used in production. All versions ship with a trained student. |
 
 ## 2. Per-version teacher → student plan
 
@@ -20,11 +20,11 @@ Replaces the earlier hand-wavy version. See `docs/architecture/model_customizati
 | Role | Model | Customization |
 |---|---|---|
 | Complex-lane / teacher | Claude Sonnet 4.5 on Bedrock | — (used as-is) |
-| Emergency-lane base | Claude Haiku 4.5 on Bedrock | — (cannot be fine-tuned on Bedrock) |
-| Distillation student (phase 3) | **Amazon Nova Lite** on Bedrock | **Bedrock Model Distillation** — Sonnet 4.5 as teacher → Nova Lite as student. Managed end-to-end: Bedrock generates the SFT dataset via the teacher, trains Nova Lite, exposes a custom-model endpoint. |
-| Backup path (if we need Claude-family student) | Claude 3 Haiku (2024-03-07) | Bedrock custom fine-tuning (SFT only). Trade-off: we lose Haiku 4.5 quality gains, only pick this if the 4.5 → 3 regression is acceptable. |
+| Emergency-lane base fallback | Claude Haiku 4.5 on Bedrock | — (cannot be fine-tuned on Bedrock) |
+| **Fast-lane student, serves production on day one** | **Amazon Nova Lite** on Bedrock | **Bedrock Model Distillation** — Sonnet 4.5 as teacher → Nova Lite as student. Managed end-to-end: Bedrock generates the SFT dataset via the teacher, trains Nova Lite, exposes a custom-model endpoint. Training completes during the pre-launch build. |
+| Backup path (if a client needs a Claude-family student) | Claude 3 Haiku (2024-03-07) | Bedrock custom fine-tuning (SFT only). Trade-off: lose Haiku 4.5 quality gains, only pick this if the 4.5 → 3 regression is acceptable. |
 
-Key constraint: **fine-tuning Claude Haiku 4.5 itself is not possible on Bedrock.** The SVG and docs now reflect that Nova Lite is the student, not "fine-tuned Haiku".
+Key constraint: **fine-tuning Claude Haiku 4.5 itself is not possible on Bedrock.** The SVG and docs reflect that Nova Lite is the student, not "fine-tuned Haiku".
 
 ### Version B — AWS with Qwen
 
@@ -74,7 +74,11 @@ Step 5 — Evaluation harness
   PHI leakage, tone, emergency-appropriateness.
   If student >= 95% of teacher on the holdout, promote. Else iterate.
 
-Step 6 — Deploy behind a feature flag (5% canary → 100%)
+Step 6 — Promote to production
+  Gate: student ≥ 95% of teacher on the holdout eval harness AND no regression
+  on the safety suite (PHI leak, ungrounded answer, prompt injection).
+  Launch-day promotion is 100% on the fast lane. Post-launch retrains go
+  through a 5% canary for 72 hours before full promotion.
 ```
 
 Never put raw PHI in any training data. De-identify via Comprehend Medical (AWS) / DataWorks SDDP (Alibaba) before step 2.
@@ -96,20 +100,21 @@ For Qwen3-8B LoRA on SageMaker TRL, starting points:
 - `learning_rate 2e-4`, 3 epochs, warmup ratio 0.03, `bf16` precision.
 - Batch size per device 4 with gradient accumulation 4 on a `ml.g5.2xlarge`.
 
-## 5. Tone consistency (doesn't need fine-tuning to start)
+## 5. Tone consistency starts from sampling, not only from training
 
-Before any training: `temperature=0.1`, narrow `max_tokens`, stop sequences, and a fixed system prompt (see `aws-demo/ec2/app/graph.py`). These are the *cheap* levers; they already deliver 80% of "consistent tone" for clinicians.
+Before we even train: `temperature=0.1`, narrow `max_tokens`, stop sequences, and a fixed system prompt (see `aws-demo/ec2/app/graph.py`) already deliver ~80% of "consistent tone" for clinicians. Fine-tuning is the cream on top, not the base.
 
-Fine-tuning makes sense only when:
-- We have 5k+ Nova-approved answers to imitate.
-- The system prompt alone can't encode the stylistic rules we want.
-- Evaluation shows tone inconsistency is still flagged after step 2.
+What fine-tuning actually adds on launch day:
+- A clinical-citation rubric the model follows without re-prompting.
+- Tone mimicking Nova's approved-answer corpus (vs. generic Claude / Qwen phrasing).
+- Lower cost and latency on the fast lane (smaller student).
+- Tool-calling reliability boost from GRPO (Versions B and C only).
 
-## 6. Current status
+## 6. Launch readiness
 
-- The **running demo** uses **no fine-tuning**. It routes to plain Haiku 4.5 or Sonnet 4.5 + RAG + an if/else emergency toggle.
-- Next step (user-requested): spin up an **isolated AWS-with-Claude RAG benchmark environment**, run a latency + quality test suite, and only *then* decide whether to commit to distillation.
-- After that benchmark, compare against Versions B and C using the same suite; pick the winner per client segment.
+- Pre-launch build phase produces **one trained student per version** plus the supporting DPO pairs and adversarial set.
+- Launch-day config loads the custom model ID and flips all fast-lane traffic to it. Base Haiku / Qwen3.5-Flash is the same-API fallback at the router layer.
+- Post-launch retraining cadence is documented in the per-version architecture doc §7.3 (AWS) / §7.3 (Alibaba) / §3 (AWS + Qwen).
 
 ## 7. References
 

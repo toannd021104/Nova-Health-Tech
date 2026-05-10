@@ -6,7 +6,7 @@ Production design for the AI assistant service deployed in **AWS Singapore (ap-s
 
 | Requirement | Design response |
 |---|---|
-| Answer complex medical questions in natural language | Two-lane strategy: **Claude Haiku 4.5** (fast lane) + **Claude Sonnet 4.5** (complex lane). **No fine-tuning of Haiku 4.5 is possible** on Bedrock today — see `docs/architecture/model_customization_research.md`. Phase-3 quality lever is **distillation from Sonnet → Amazon Nova Lite** via Bedrock Model Distillation (managed). |
+| Answer complex medical questions in natural language | Two-lane strategy: **Claude Haiku 4.5** (fast lane) + **Claude Sonnet 4.5** (complex lane). **No fine-tuning of Haiku 4.5 is possible** on Bedrock today — see `docs/architecture/model_customization_research.md`. The fast-lane quality lever is **distillation from Sonnet → Amazon Nova Lite** via Bedrock Model Distillation (managed), trained **before launch** and active from day one. |
 | Rely on internal trial reports + treatment protocols + WHO + ICD-11 | Multi-KB RAG (Bedrock Knowledge Bases on OpenSearch Serverless) fed by **scheduled ingestion** + an **internal upload portal** |
 | Auditable, compliant | Bedrock Guardrails + Comprehend Medical + Macie + CloudTrail → S3 Object Lock (**6-year retention** per HIPAA §164.530(j)) |
 | 2-second emergency response | Fine-tuned Nova Lite student (from Sonnet+RAG distillation) OR plain Haiku 4.5, plus 3-layer caching and streaming |
@@ -131,7 +131,7 @@ Routing is a **pure if/else on the explicit emergency toggle** sent by the chat 
 | Patient-education phrasing | Haiku 4.5 with tone preset | `temperature=0.2` | Standard + tone | 1–2 s |
 
 **Notes on models used:**
-- Demo uses plain Claude Haiku 4.5 + Sonnet 4.5; no fine-tuning. Phase-3 customization goes through **Bedrock Model Distillation from Sonnet → Amazon Nova Lite**. Haiku 4.5 itself cannot be fine-tuned on Bedrock (only Claude 3 Haiku is). See `docs/architecture/model_customization_research.md`.
+- The fast lane serves a **Nova Lite student distilled from Sonnet 4.5** via Bedrock Model Distillation — trained during the pre-launch build and active from day one. Base Haiku 4.5 is the same-API fallback when the custom model endpoint is unavailable. Haiku 4.5 itself cannot be fine-tuned on Bedrock (only Claude 3 Haiku is). See `docs/architecture/model_customization_research.md`.
 - **Claude Opus is not used** — priced out for this volume and Sonnet covers the complex lane.
 - **Nova Micro / Nova Pro** are available in Singapore and are the cost-sensitive alternative (Version A1+); see `docs/pricing/cost_analysis.md`.
 
@@ -172,16 +172,38 @@ Full mapping in `docs/compliance/security_compliance.md`.
 - **Hospital integration**: Site-to-Site VPN only. Outposts and Direct Connect are intentionally out of scope — Singapore latency is acceptable and VPN throughput (1.25 Gbps / tunnel) handles document uploads comfortably.
 - **DR**: cross-AZ within ap-southeast-1 for normal DR; a warm-standby in `ap-southeast-3` (Jakarta) or `ap-northeast-1` (Tokyo) is a roadmap item pending PDPA transfer-limitation review.
 
-### 7.2 Phased rollout
+### 7.2 Launch scope — one production release, all features on
 
-| Phase | Weeks | Deliverable |
-|---|---|---|
-| 1 | 1–6 | Scheduled WHO + ICD-11 ingestion live, upload portal live, RAG with Haiku (fast) + Sonnet (complex); Bedrock Prompt Caching on the static prefix (Claude 4.x supports it out of the box); eval baseline |
-| 2 | 7–10 | Distillation round 1: Sonnet generates Qs+answers from curated seed → clinician review → Nova Lite SFT → ship behind feature flag at 5% canary |
-| 3 | 11–14 | Student at 100%; add DPO preference-tuning; Reserved Tier on the emergency lane if sustained TPM justifies it |
-| 4 | quarterly | Retrain student on accumulated new clinician data + new WHO / ICD-11 |
+There is **no pilot / PoC / staged rollout**. When we go live, every capability in this document is active on day one: ingestion, retrieval, the 2-second emergency lane, fine-tuned student, multi-agent orchestration, caching, guardrails, and audit trail. Anything listed here that involves training a model is trained **before cut-over** during a pre-launch build phase, not after.
 
-### 7.3 Corporate integration
+| Capability | State at launch |
+|---|---|
+| Scheduled ingestion (WHO, ICD-11, SharePoint) + manual Upload Portal over VPN | ✅ on |
+| Hybrid retrieval (BM25 + kNN + Cohere Rerank 3.5) on both lanes | ✅ on |
+| Emergency toggle + if/else router | ✅ on |
+| **Fine-tuned Nova Lite student** distilled from Sonnet 4.5 via Bedrock Model Distillation | ✅ **trained before launch, serving 100% of fast-lane traffic** |
+| Multi-agent specialist topology (GP / triage + Emergency + ID + Oncology + Cardio + Pediatrics + Pharmacology) on complex lane | ✅ on (toggleable per hospital client) |
+| Optional LazyGraphRAG over the WHO + protocol corpus | ✅ on |
+| Layer-1 semantic cache + Layer-2 Bedrock Prompt Caching | ✅ on |
+| Bedrock Reserved Tier on the emergency lane | ✅ on (sized to peak TPM) |
+| Guardrails + Comprehend Medical PHI mask + grounding + citation validator | ✅ on |
+| CloudTrail → S3 Object Lock 6-year audit | ✅ on |
+| EHR SMART-on-FHIR launch for Epic / Cerner / Allscripts | ✅ on per configured tenant |
+
+### 7.3 Continuous operations (post-launch, not a "phase")
+
+After launch the team runs:
+
+| Cadence | Action |
+|---|---|
+| Daily 02:00 SGT | WHO ICD-11 delta ingest; semantic-cache invalidation for affected `source:*` tags |
+| Monthly day 1 02:30 SGT | WHO guideline PDF refresh + LazyGraphRAG re-index |
+| Weekly Sun | SharePoint / trial-report reconciliation pass (safety net for missed webhooks) |
+| Monthly | DPO micro-run on the past month's clinician preference pairs (Bedrock Model Distillation has no DPO path; on Version A we use Claude 3 Haiku SFT+DPO fallback or skip DPO for Nova Lite). Short training, same canary evaluation as launch. |
+| Quarterly | Full student retrain on accumulated new clinician data + latest WHO releases; re-qualify with eval harness; promote after it matches or beats current student on the holdout. |
+| Event-driven | Red-team re-run after any guardrail incident; retrain on new adversarial examples. |
+
+### 7.4 Corporate integration
 
 See `docs/architecture/corporate_integration.md` for the full EHR/FHIR + SharePoint design.
 
@@ -206,7 +228,7 @@ See `docs/architecture/caching_strategy.md` for detail. Representative p95 emerg
    ≤ 1,900 ms  p95
 ```
 
-Fine-tuned Nova Lite student (phase 3) shaves ~300–400 ms off that.
+Fine-tuned Nova Lite student (live from launch) is already included in this budget; Sonnet falls back on it for about 40% of complex traffic that matches the student's competency rubric, shaving ~300–400 ms and reducing complex-lane cost accordingly.
 
 ## 9. References
 

@@ -27,7 +27,7 @@ This changes the verdict: **Version A with Nova Micro on the fast lane is the ch
 **Headline (re-ranked)**:
 1. **Version C (~$1,920/mo)** — cheapest SG-native, Qwen3.5-Plus replaced Qwen-Max for 3× savings on complex lane. Embeddings use `text-embedding-v4` + `tongyi-embedding-vision-plus` (SG International); reranker is `qwen3-rerank`.
 2. **Version A1+ (~$2,755/mo)** — cheapest fully AWS-BAA-covered SG-native, pending Nova Micro/Pro clinical quality benchmark.
-3. **Version B (~$2,767/mo)** — now simpler: pure Bedrock, no SageMaker needed in phase 1. Qwen3 Next 80B A3B + Qwen3 VL 235B. Sydney residency.
+3. **Version B (~$2,767/mo)** — pure Bedrock, no SageMaker required. Qwen3 Next 80B A3B + Qwen3 VL 235B. Sydney residency.
 4. **Version A2 (~$7,095/mo)** — running demo today (Haiku 4.5 + Sonnet 4.5). Quality-first baseline.
 
 **About Qwen3.6-27B** (released 22 Apr 2026): coding-agent specialist. Nova should not use it — lower general-knowledge scores than Qwen3.5-Plus/Qwen3.5-397B, not on Model Studio API, not on Bedrock. Re-evaluate when it gets hosted with medical benchmarks.
@@ -41,7 +41,7 @@ This changes the verdict: **Version A with Nova Micro on the fast lane is the ch
 - Prompt / context-cache (Layer 2) hit rate 70 % on non-cached calls → effective 50 % off on input tokens.
 - Vector store ~20 GB indexed.
 - Site-to-Site VPN up for corporate integration (dual tunnel).
-- Nothing fine-tuned in phase 1–2; customization is a phase 3+ add-on.
+- Nothing below is "phase 2" or "phase 3" — everything is live at launch. Customization costs are amortized per retrain cadence (monthly DPO, quarterly SFT). Optional toggles (multi-agent specialist, LazyGraphRAG, PubMed tool) add usage to the numbers below; see line items.
 
 ## 3. Three cost levers available on all three clouds
 
@@ -76,7 +76,7 @@ Batch at 50 % off. Prompt-cache read at ~10 % of standard input; cache write at 
 
 ### Version B — AWS Bedrock (Sydney `ap-southeast-2`) — all Qwen served via Bedrock
 
-Qwen is **not in Singapore Bedrock**; nearest APAC region is Sydney. Bedrock hosts four Qwen3 models managed-serverless, so Version B no longer needs SageMaker for phase 1–2 serving. SageMaker is an optional path for smaller-model fine-tuning only.
+Qwen is **not in Singapore Bedrock**; nearest APAC region is Sydney. Bedrock hosts four Qwen3 models managed-serverless, so Version B needs no SageMaker for its base inference. SageMaker is an optional path only when data residency forces an SG-hosted custom student.
 
 **Bedrock inference (Sydney pricing from the AWS Bedrock pricing page, verified 10 May 2026):**
 
@@ -212,13 +212,13 @@ Nova Pro can't match Sonnet 4.5 on complex clinical reasoning depth, but if it c
 | Complex lane — Sonnet 4.5 | 420 k × $0.013 | ~$5,460 |
 | All other items same as A1 | | ~$1,285 |
 | **A2 subtotal** | | **~$7,095** |
-| Phase-3 distillation (Sonnet → Nova Lite) amortized | $2,000 / 3 | ~$670 |
+| Distillation (Sonnet → Nova Lite) amortized, trained once pre-launch + re-qualified quarterly | $2,000 per run / 3 months | ~$670 |
 | Post-distill Nova Lite replaces Sonnet on ~40 % of complex traffic | savings | −$2,200 |
-| **A2 post-customization** | | **~$5,565** |
+| **A2 with trained Nova Lite student (baseline at launch)** | | **~$5,565** |
 
 ### Version B — AWS + Qwen (Sydney Bedrock only, no SageMaker)
 
-Now that Bedrock hosts four Qwen3 models in Sydney, Version B is fully Bedrock-hosted in phase 1–2. SageMaker is only needed if a client requires the student physically in Singapore.
+Bedrock hosts four Qwen3 models in Sydney, so Version B is fully Bedrock-hosted for base inference. SageMaker is only needed if a client requires the custom student physically in Singapore.
 
 | Item | Calc | Cost |
 |---|---|---|
@@ -233,11 +233,11 @@ Now that Bedrock hosts four Qwen3 models in Sydney, Version B is fully Bedrock-h
 | S3 + CloudTrail Object Lock + Macie | | ~$120 |
 | ElastiCache Valkey | | ~$80 |
 | Site-to-Site VPN | dual tunnel | ~$80 |
-| **B base (Bedrock-only, no fine-tuning)** | | **~$2,767** |
-| Phase-3 Bedrock RFT training (Qwen3-32B, ~8 hr × $80) | ~$640 per run, quarterly | +~$215 |
+| **B base (Bedrock-only, no custom model — same-API fallback)** | | **~$2,767** |
+| Bedrock RFT training (Qwen3-32B, ~8 hr × $80/hr), trained pre-launch, amortized quarterly | ~$640 per run | +~$215 |
 | Fast lane switches to custom Qwen3-32B (us-west-2) with cheaper output | | ~neutral or saves ~$20 |
 | Model storage | | +~$2 |
-| **B with Bedrock-RFT'd custom model (path B-1)** | | **~$2,985–$3,040** |
+| **B at launch with trained Qwen3-32B custom model (path B-1)** | | **~$2,985–$3,040** |
 
 **Splitting the complex lane:** Most RAG retrievals don't involve figures. If we route only figure-bearing queries to Qwen3 VL and the rest to Qwen3 235B A22B 2507 (text-only at $0.2266/$0.9064), the complex lane cost drops:
 
@@ -250,11 +250,11 @@ Now that Bedrock hosts four Qwen3 models in Sydney, Version B is fully Bedrock-h
 
 ### Optional SG-residency variant (path B-2, SageMaker)
 
-Same phase-3 custom student, but hosted in Singapore on SageMaker:
+Same launch-day custom student, but hosted in Singapore on SageMaker:
 
 | Item | Cost |
 |---|---|
-| GRPO training on `ml.g6e.8xlarge` (quarterly ~$100) | amortized +$35 |
+| GRPO training on `ml.g6e.8xlarge` (quarterly retrain ~$100) | amortized +$35 |
 | SageMaker SG endpoint `ml.g5.2xlarge` always-on (`720 hr × $1.52`) | +$1,095 |
 | Savings on fast lane (replaces Bedrock Qwen3 Next calls) | −$95 |
 | **B path B-2 total** | **~$3,800** |
@@ -279,15 +279,15 @@ Post-Qwen3.5 update: complex lane now uses **Qwen3.5-Plus** (Feb 2026 release) i
 | OSS + ActionTrail + SLS WORM | | ~$70 |
 | Tair (Redis-compatible) | | ~$60 |
 | IPsec VPN Gateway | | ~$60 |
-| **Base monthly (Qwen3.5-Plus)** | | **~$1,920** |
-| Phase-3 SFT+LoRA training (Qwen3-8B) | 2–4 GPU-hr × $1–2 on PAI | ~$15–40 per run |
+| **Base monthly (Qwen3.5-Plus, no student)** | | **~$1,920** |
+| SFT+LoRA training run (Qwen3-8B), trained once pre-launch + quarterly retrain | 2–4 GPU-hr × $1–2 on PAI | ~$15–40 per run |
 | PAI-EAS hosting fine-tuned Qwen3-8B (A10 GPU, always-on) | | ~$720–1,500 |
-| Replace Qwen3.5-Plus with student on 60 % of complex lane | | **−$660** |
-| **With custom student always-on** | | **~$1,980–2,760** |
+| Student replaces Qwen3.5-Plus on ~60 % of complex-lane traffic | | **−$660** |
+| **C at launch with Qwen3-8B student active** | | **~$1,980–2,760** |
 
 Alibaba's advantage is now even stronger: Qwen3-8B on PAI-EAS fits on a single A10 **and** Qwen3.5-Plus complex-lane pricing is cheaper than the Bedrock Qwen3-235B in Sydney.
 
-## 7. Customization cost per run (phase-3 retrain, quarterly)
+## 7. Customization cost per run (pre-launch training + post-launch retrain cadence)
 
 | | AWS + Claude (A) | AWS + Qwen (B) | Alibaba + Qwen (C) |
 |---|---|---|---|

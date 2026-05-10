@@ -61,9 +61,9 @@ Cache is process-local; scale-out across replicas loses some hit rate unless we 
 ### Ver C — Alibaba Qwen Context Cache
 
 - **Two modes**:
-  - **Implicit cache** — automatic, zero config, active from Phase 1 (no code change needed). The system detects repeated prefixes; cache hits bill **20% of standard input price**.
-  - **Explicit cache** — create a named cache ID for a prompt prefix and reference it per call; guaranteed discount on that prefix.
-- **How it fits** — put the system prompt, tone template, and hot RAG chunks in the prefix; call with the per-query chunks + the user's question as the suffix. Implicit mode is free upside from day 1 — do not defer to Phase 3.
+  - **Implicit cache** — automatic, zero config, active from launch day (no code change needed). The system detects repeated prefixes; cache hits bill **20% of standard input price**.
+  - **Explicit cache** — create a named cache ID for the stable system-prompt + tone-template prefix and reference it per call; guaranteed discount. **Active at launch** on Version C alongside implicit cache.
+- **How it fits** — put the system prompt, tone template, and hot RAG chunks in the prefix; call with the per-query chunks + the user's question as the suffix. Both modes run from day one; there is no deferred cache rollout.
 
 ### Batch inference — for training data generation and eval
 
