@@ -4,6 +4,21 @@ const formEl = $("#chat-form");
 const inputEl = $("#chat-input");
 const btnEl = $("#send-btn");
 const userBox = $("#user-box");
+const emergencyToggle = $("#emergency-toggle");
+const emergencyBar = $("#emergency-bar");
+const emergencyHint = $("#emergency-hint");
+
+function updateEmergencyUI() {
+  if (emergencyToggle.checked) {
+    emergencyBar.classList.add("on");
+    emergencyHint.textContent = "on → Haiku 4.5 (fast, ≤ 2 s)";
+  } else {
+    emergencyBar.classList.remove("on");
+    emergencyHint.textContent = "off → Sonnet 4.5 (deep reasoning)";
+  }
+}
+emergencyToggle.addEventListener("change", updateEmergencyUI);
+updateEmergencyUI();
 
 async function loadMe() {
   try {
@@ -33,12 +48,13 @@ async function send(message) {
   appendMsg("user", message);
   const pending = appendMsg("assistant", "…");
   btnEl.disabled = true;
+  const emergency = emergencyToggle.checked;
   const started = performance.now();
   try {
     const resp = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, emergency }),
     });
     const data = await resp.json();
     const elapsed = Math.round(performance.now() - started);
@@ -64,7 +80,10 @@ async function send(message) {
 
     const footer = document.createElement("div");
     footer.className = "footer-meta";
-    footer.textContent = `${elapsed} ms · route: ${data.route || "?"} · ${data.model || ""}`;
+    const routeBadge = data.route
+      ? `<span class="route ${data.route}">${data.route.toUpperCase()}</span>`
+      : "";
+    footer.innerHTML = `${elapsed} ms ${routeBadge} · ${data.model || ""}`;
     pending.appendChild(footer);
   } catch (e) {
     pending.className = "msg error-msg";

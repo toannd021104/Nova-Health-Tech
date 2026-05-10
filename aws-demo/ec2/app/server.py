@@ -119,6 +119,7 @@ def logout(request: Request):
 
 class ChatReq(BaseModel):
     message: str
+    emergency: bool = False
 
 
 @app.post("/api/chat")
@@ -128,7 +129,10 @@ def chat(req: ChatReq, request: Request):
         raise HTTPException(status_code=400, detail="message required")
 
     t0 = time.time()
-    result = graph().invoke({"question": req.message.strip()})
+    result = graph().invoke({
+        "question": req.message.strip(),
+        "emergency": bool(req.emergency),
+    })
     dur_ms = int((time.time() - t0) * 1000)
 
     return {
@@ -136,11 +140,7 @@ def chat(req: ChatReq, request: Request):
         "route": result.get("route"),
         "citations": result.get("citations") or [],
         "latency_ms": dur_ms,
-        "model": (
-            os.environ.get("BEDROCK_MODEL_ID")
-            if result.get("route") == "emergency"
-            else os.environ.get("BEDROCK_TEACHER_MODEL_ID")
-        ),
+        "model": result.get("model_id"),
     }
 
 

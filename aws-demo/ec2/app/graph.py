@@ -1,12 +1,13 @@
 """LangGraph workflow for the Nova clinical assistant.
 
-Two-lane design as described in docs/architecture/fine_tuning_and_distillation.md:
-  - classifier decides emergency vs complex
-  - emergency → Claude Haiku 4.5 (fast path)
-  - complex   → Claude Sonnet 4.5 (teacher)
+Two-lane design, selected by the explicit `emergency` flag from the client
+(no classifier call — saves ~300 ms):
 
-RAG retrieval runs on both lanes. LangChain/LangGraph end-to-end — boto3 is used
-only by the rag module for S3 object listing.
+  emergency=True  → Claude Haiku 4.5   (fast, low variance, ≤ 2 s target)
+  emergency=False → Claude Sonnet 4.5  (deeper reasoning, complex questions)
+
+RAG retrieval runs on both lanes. End-to-end LangChain / LangGraph; boto3 is
+used only by rag.py for S3 object listing.
 """
 from __future__ import annotations
 
@@ -15,7 +16,7 @@ import os
 from typing import TypedDict, Literal
 
 from langchain_aws import ChatBedrockConverse
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 from langgraph.graph import StateGraph, START, END
 
 from rag import retriever
@@ -32,8 +33,7 @@ TEACHER_MODEL_ID = os.environ.get(
 )
 
 # Low-variance hyperparameters per docs/architecture/fine_tuning_and_distillation.md.
-# Claude (via Bedrock Converse) rejects specifying both temperature AND top_p, so
-# we set temperature only. Temperature near 0 already gives consistent tone.
+# Claude on Bedrock Converse rejects both temperature AND top_p — pick temperature.
 _fast = ChatBedrockConverse(
     model=FAST_MODEL_ID,
     region_name=REGION,
@@ -45,12 +45,6 @@ _teacher = ChatBedrockConverse(
     region_name=REGION,
     temperature=0.2,
     max_tokens=1500,
-)
-_classifier = ChatBedrockConverse(
-    model=FAST_MODEL_ID,
-    region_name=REGION,
-    temperature=0.0,
-    max_tokens=8,
 )
 
 SYSTEM_PROMPT = (
@@ -69,34 +63,12 @@ SYSTEM_PROMPT = (
 
 class AssistantState(TypedDict, total=False):
     question: str
+    emergency: bool
     route: Literal["emergency", "complex"]
     context: str
     citations: list[dict]
     answer: str
-
-
-def classify(state: AssistantState) -> AssistantState:
-    """Tiny classifier: returns 'emergency' or 'complex'."""
-    q = state["question"]
-    reply = _classifier.invoke(
-        [
-            SystemMessage(
-                content=(
-                    "Classify the clinical query as one word: "
-                    "'emergency' for acute/time-critical (sepsis, STEMI, stroke, "
-                    "airway, shock, anaphylaxis, trauma) else 'complex'. "
-                    "Output ONLY one word."
-                )
-            ),
-            HumanMessage(content=q),
-        ]
-    )
-    label = (reply.content or "").strip().lower()
-    route: Literal["emergency", "complex"] = (
-        "emergency" if "emerg" in label else "complex"
-    )
-    log.info("classifier %r -> %s", q[:60], route)
-    return {"route": route}
+    model_id: str
 
 
 def retrieve(state: AssistantState) -> AssistantState:
@@ -109,7 +81,10 @@ def retrieve(state: AssistantState) -> AssistantState:
         label = f"{src}" + (f" p.{page}" if page else "")
         lines.append(f"[{i}] ({label})\n{d.page_content}")
         citations.append({"id": i, "source": src, "page": page})
-    return {"context": "\n\n".join(lines), "citations": citations}
+    # Pass the route through state for downstream branching
+    route: Literal["emergency", "complex"] = "emergency" if state.get("emergency") else "complex"
+    log.info("route=%s for %r", route, state["question"][:80])
+    return {"context": "\n\n".join(lines), "citations": citations, "route": route}
 
 
 def _run(llm: ChatBedrockConverse, question: str, context: str) -> str:
@@ -125,26 +100,31 @@ def _run(llm: ChatBedrockConverse, question: str, context: str) -> str:
 
 
 def answer_fast(state: AssistantState) -> AssistantState:
-    return {"answer": _run(_fast, state["question"], state["context"])}
+    return {
+        "answer": _run(_fast, state["question"], state["context"]),
+        "model_id": FAST_MODEL_ID,
+    }
 
 
 def answer_complex(state: AssistantState) -> AssistantState:
-    return {"answer": _run(_teacher, state["question"], state["context"])}
+    return {
+        "answer": _run(_teacher, state["question"], state["context"]),
+        "model_id": TEACHER_MODEL_ID,
+    }
 
 
 def _route_next(state: AssistantState) -> Literal["answer_fast", "answer_complex"]:
+    # Pure if/else — no LLM classifier call
     return "answer_fast" if state.get("route") == "emergency" else "answer_complex"
 
 
 def build_graph():
     g = StateGraph(AssistantState)
-    g.add_node("classify", classify)
     g.add_node("retrieve", retrieve)
     g.add_node("answer_fast", answer_fast)
     g.add_node("answer_complex", answer_complex)
 
-    g.add_edge(START, "classify")
-    g.add_edge("classify", "retrieve")
+    g.add_edge(START, "retrieve")
     g.add_conditional_edges("retrieve", _route_next, {
         "answer_fast": "answer_fast",
         "answer_complex": "answer_complex",

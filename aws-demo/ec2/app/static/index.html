@@ -48,16 +48,27 @@
     <aside class="assistant">
       <div class="assistant-header">
         <strong>🩺 Nova AI Assistant</strong>
-        <span id="model-label" class="muted">Haiku 4.5 / Sonnet 4.5 routed</span>
+        <span id="model-label" class="muted">Haiku / Sonnet</span>
       </div>
+
+      <div id="emergency-bar" class="emergency-bar">
+        <label for="emergency-toggle">
+          <input type="checkbox" id="emergency-toggle" />
+          <span class="switch"></span>
+          <span>🚨 Emergency mode</span>
+        </label>
+        <span id="emergency-hint" class="emergency-hint">off → Sonnet 4.5 (deep reasoning)</span>
+      </div>
+
       <div id="chat" class="chat">
         <div class="msg assistant-msg">
-          Ask me about the indexed guidelines and protocols. Answers are grounded in real documents from the S3 corpus and cite their source.
+          Ask about indexed guidelines and protocols. Answers cite the source document and page.
+          Toggle <strong>Emergency mode</strong> for time-critical questions — routes to Haiku 4.5 for sub-2-second answers.
           I am decision support, not a diagnosis.
         </div>
       </div>
       <form id="chat-form" class="chat-form">
-        <textarea id="chat-input" placeholder="e.g., What's recommended for severe COVID-19?" rows="2"></textarea>
+        <textarea id="chat-input" placeholder="Ask a clinical question…" rows="2"></textarea>
         <button type="submit" id="send-btn">Send</button>
       </form>
       <div class="suggestions">
