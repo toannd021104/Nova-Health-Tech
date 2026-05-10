@@ -1,7 +1,7 @@
 """FastAPI POC server.
 
 Run locally:
-    uvicorn poc.app.server:app --reload --port 8000
+    uvicorn poc.aws_qwen.app.server:app --reload --port 8000
 
 Deploy as Lambda: wrapped by Mangum in the SAM template.
 """
@@ -18,7 +18,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from poc.app.graph import ChatState, build_graph
+from poc.aws_qwen.app.graph import ChatState, build_graph
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"))
 log = logging.getLogger("poc.server")

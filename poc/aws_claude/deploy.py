@@ -1,28 +1,7 @@
-"""Deploy the Nova Health POC to AWS Singapore — cheapest variant.
+"""Deploy the Nova Health POC to AWS Singapore — Version A (AWS + Claude, non-fine-tuned).
 
-Uses boto3 directly (no CDK / SAM / Terraform) so the deploy stays legible
-for the interview reviewer. Matches the approach of ``aws-demo/ec2/deploy.py``.
-
-Layout after deploy:
-
-    ┌─────────────────────────────────────────────┐
-    │ CloudFront distribution                     │ public URL
-    │   ├─ /ui/*  →  S3 static bucket (light UI)  │
-    │   └─ /api/* →  API Gateway → Lambda /chat   │
-    │              (FastAPI + Mangum + LangGraph) │
-    │                                             │
-    │ S3 corpus bucket                            │
-    │   ├─ faiss/<namespace>/index.faiss          │ preloaded at Lambda cold start
-    │   └─ raw/<dept>/*.pdf                       │
-    └─────────────────────────────────────────────┘
-
-Resource naming follows the HA-<base64> convention from aws-demo/ec2.
-
-Usage:
-    python poc/deploy.py --profile gapv50k --region ap-southeast-1
-
-After deploy, teardown with:
-    python poc/teardown.py --profile gapv50k --region ap-southeast-1
+See poc/aws_qwen/deploy.py for the sibling Qwen POC deploy. Same pattern,
+different models and tags.
 """
 from __future__ import annotations
 
@@ -61,7 +40,7 @@ def build_faiss_indexes(corpus_root: Path, build_dir: Path, departments: list[st
     calls are executed in this driver — Lambda only reads the prebuilt files.
     """
     sys.path.insert(0, str(REPO_ROOT))
-    from poc.app.rag import build_namespace, FAISS_DIR  # noqa: PLC0415
+    from poc.aws_claude.app.rag import build_namespace, FAISS_DIR  # noqa: PLC0415
 
     # Redirect index output into the build_dir so we don't litter /tmp.
     os.environ["FAISS_DIR"] = str(build_dir)
@@ -179,7 +158,7 @@ def main() -> int:
         print(f"Lambda zip:    {lambda_zip}")
         print()
         print("Next steps for the interview demo:")
-        print("  A) Run locally:  poetry run uvicorn poc.app.server:app --reload")
+        print("  A) Run locally:  poetry run uvicorn poc.aws_claude.app.server:app --reload")
         print("  B) Deploy via SAM: sam deploy --guided --template poc/infra/template.yaml")
         print("     (reference the FAISS files from S3 after uploading them)")
         print("  C) Upload FAISS: aws s3 sync {build} s3://<bucket>/faiss/".format(build=build_dir))

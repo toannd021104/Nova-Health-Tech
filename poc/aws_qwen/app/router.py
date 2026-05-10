@@ -16,7 +16,7 @@ from typing import Any
 
 import boto3
 
-from poc.app.agents import DEPARTMENTS, QWEN_ROUTER
+from poc.aws_qwen.app.agents import DEPARTMENTS, QWEN_ROUTER
 
 log = logging.getLogger(__name__)
 

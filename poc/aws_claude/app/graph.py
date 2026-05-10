@@ -1,4 +1,4 @@
-"""LangGraph state machine for the POC (Version B — AWS + Qwen).
+"""LangGraph state machine for the POC (Version A — AWS + Claude, non-fine-tuned).
 
 Flow:
 
@@ -15,13 +15,13 @@ Flow:
     lane = emergency if state["emergency"] else "complex"  (pure if/else)
          │                 │
          │ emergency        │ complex
-         │ Qwen3 Next 80B   │
+         │ Claude Haiku 4.5 │
          │                  ▼
-         │           department router (Qwen3 32B)
+         │           department router (Nova Micro)
          │                  │
          │                  ▼
-         │           department-specific agent (Qwen3 VL 235B A22B;
-         │                                       vision if image attached)
+         │           department-specific agent (Claude Sonnet 4.5;
+         │                                       vision for Radiology)
          │                  │
          ▼                  ▼
           Hybrid RAG retrieve (FAISS top-20 → Amazon Rerank top-5)
@@ -31,6 +31,8 @@ Flow:
                    │
                    ▼
           Generate grounded answer with inline [N] citations
+                   (Bedrock Prompt Caching is enabled by Claude 4.x automatically
+                    on the static prefix — no cachePoint marker needed)
                    │
                    ▼
           Write-back to Redis cache (TTL 10 min emergency, 24 hr complex)
@@ -38,8 +40,8 @@ Flow:
                    ▼
           Streaming SSE back to the browser
 
-All Qwen inference is cross-region to Bedrock Sydney. Rest of the stack is
-Singapore. Redis (ElastiCache Redis OSS) lives in Singapore VPC.
+Everything runs in ap-southeast-1 except the Amazon Rerank call (Tokyo).
+No fine-tuning in this POC — base Claude only.
 """
 from __future__ import annotations
 
@@ -51,10 +53,10 @@ from typing import Any, Optional
 import boto3
 from langgraph.graph import END, StateGraph
 
-from poc.app import cache as redis_cache
-from poc.app import graphrag
-from poc.app.agents import DEPARTMENTS, Department, QWEN_EMERGENCY
-from poc.app.router import BEDROCK_REGION, RouterDecision, route as route_department
+from poc.aws_claude.app import cache as redis_cache
+from poc.aws_claude.app import graphrag
+from poc.aws_claude.app.agents import DEPARTMENTS, CLAUDE_HAIKU, Department
+from poc.aws_claude.app.router import BEDROCK_REGION, RouterDecision, route as route_department
 
 log = logging.getLogger(__name__)
 
@@ -63,7 +65,7 @@ log = logging.getLogger(__name__)
 _PHI_PATTERNS = [
     (re.compile(r"\bMRN[:\s]*\d{4,12}\b", re.I), "[MRN]"),
     (re.compile(r"\bDOB[:\s]*\d{4}[-/]\d{1,2}[-/]\d{1,2}\b", re.I), "[DOB]"),
-    (re.compile(r"\b[A-Z][a-z]+ [A-Z][a-z]+\b"), "[NAME]"),  # crude; flags "John Doe"
+    (re.compile(r"\b[A-Z][a-z]+ [A-Z][a-z]+\b"), "[NAME]"),
     (re.compile(r"\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b"), "[PHONE]"),
 ]
 
@@ -80,9 +82,8 @@ class ChatState:
     question: str
     emergency: bool = False
     attachments: list[dict[str, Any]] = field(default_factory=list)
-    # populated during the graph
     masked_question: str = ""
-    lane: str = ""            # "emergency" | "complex"
+    lane: str = ""
     router_decision: Optional[RouterDecision] = None
     department: Optional[Department] = None
     retrieved: list[dict[str, Any]] = field(default_factory=list)
@@ -105,10 +106,6 @@ def _node_pick_lane(state: ChatState) -> ChatState:
 
 
 def _node_cache_lookup(state: ChatState) -> ChatState:
-    """Layer-1 semantic cache on ElastiCache Redis. Emergency cache has a
-    10-min TTL; complex cache has 24 hr. Cache key includes the department
-    once we know it — so this node only checks emergency hits (we don't have
-    a department yet on complex lane)."""
     if state.lane != "emergency":
         return state
     hit = redis_cache.get(
@@ -128,8 +125,6 @@ def _node_cache_lookup(state: ChatState) -> ChatState:
 
 
 def _node_route_department(state: ChatState) -> ChatState:
-    """Only called on the complex lane."""
-    # If an image is attached, force radiology.
     has_image = any(a.get("type", "").startswith("image/") for a in state.attachments)
     if has_image:
         state.department = DEPARTMENTS["radiology"]
@@ -146,9 +141,7 @@ def _node_route_department(state: ChatState) -> ChatState:
     state.router_decision = decision
     state.department = DEPARTMENTS.get(decision.department)
     if state.department is None:
-        log.warning(
-            "router confidence too low or unknown dept; using pulmonology as fallback"
-        )
+        log.warning("router fallback -> pulmonology")
         state.department = DEPARTMENTS["pulmonology"]
         state.route_badge = (
             f"General (routed via triage, confidence={decision.confidence:.2f})"
@@ -156,8 +149,6 @@ def _node_route_department(state: ChatState) -> ChatState:
     else:
         state.route_badge = state.department.english
 
-    # Now that we know the department, try the cache again with a dept-aware
-    # key. Complex-lane hit rate is lower but non-zero.
     hit = redis_cache.get(
         question=state.masked_question,
         department=state.department.label,
@@ -173,7 +164,6 @@ def _node_route_department(state: ChatState) -> ChatState:
 
 
 def _node_emergency_agent(state: ChatState) -> ChatState:
-    """Emergency lane — bypass router."""
     if state.cache_hit:
         return state
     state.department = DEPARTMENTS["emergency"]
@@ -184,7 +174,7 @@ def _node_emergency_agent(state: ChatState) -> ChatState:
 def _node_retrieve(state: ChatState) -> ChatState:
     if state.cache_hit:
         return state
-    from poc.app.rag import retrieve  # lazy import so tests can stub it
+    from poc.aws_claude.app.rag import retrieve  # lazy import so tests can stub
 
     assert state.department is not None
     state.retrieved = retrieve(
@@ -193,8 +183,6 @@ def _node_retrieve(state: ChatState) -> ChatState:
         top_k=5,
     )
 
-    # On complex-lane multi-hop-looking questions, also ask GraphRAG.
-    # Simple heuristic: the question has 'and' or ',' and is complex lane.
     if (
         state.lane == "complex"
         and (" and " in state.masked_question.lower() or "," in state.masked_question)
@@ -204,7 +192,6 @@ def _node_retrieve(state: ChatState) -> ChatState:
             {"source": h.source, "text": h.text, "score": h.score} for h in graph_hits
         ]
 
-    # Merge citations
     state.citations = [
         {
             "id": i + 1,
@@ -232,10 +219,8 @@ def _node_generate(state: ChatState, *, bedrock=None) -> ChatState:
     if state.cache_hit:
         return state
     assert state.department is not None
-    # Qwen inference lives in Sydney.
     bedrock = bedrock or boto3.client("bedrock-runtime", region_name=BEDROCK_REGION)
 
-    # Build the context block with [N] tags matching citations.
     context_parts = []
     for c in state.citations:
         origin = c.get("origin", "vector")
@@ -252,13 +237,12 @@ def _node_generate(state: ChatState, *, bedrock=None) -> ChatState:
         f"Question:\n{state.masked_question}"
     )
 
-    # Emergency lane forces the fast-lane MoE regardless of department default.
-    model_id = QWEN_EMERGENCY if state.lane == "emergency" else state.department.model
+    # Emergency forces Haiku 4.5 regardless of department default.
+    model_id = CLAUDE_HAIKU if state.lane == "emergency" else state.department.model
     max_tokens = 700 if state.lane == "emergency" else 1500
+    # Claude rejects sending both temperature and top_p; use temperature only.
     temperature = 0.1 if state.lane == "emergency" else 0.2
 
-    # Build the Converse content. For Radiology with an attached image we
-    # pass the image bytes inline.
     user_content: list[dict[str, Any]] = [{"text": user_message}]
     if state.department.label == "radiology":
         for att in state.attachments:
@@ -287,7 +271,6 @@ def _node_generate(state: ChatState, *, bedrock=None) -> ChatState:
 
 
 def _node_cache_write(state: ChatState) -> ChatState:
-    """Write the fresh answer back to Redis so follow-up repeats are a hit."""
     if state.cache_hit or not state.answer or state.department is None:
         return state
     redis_cache.put(
@@ -311,14 +294,11 @@ def _extract_text(response: dict[str, Any]) -> str:
 
 def _branch_on_lane(state: ChatState) -> str:
     if state.cache_hit:
-        # already have the answer, skip everything else except the final
-        # cache-write no-op
         return "cached"
     return "emergency" if state.lane == "emergency" else "complex"
 
 
 def build_graph():
-    """Build and compile the LangGraph state machine."""
     g: StateGraph = StateGraph(ChatState)
     g.add_node("phi_mask", _node_phi_mask)
     g.add_node("pick_lane", _node_pick_lane)
