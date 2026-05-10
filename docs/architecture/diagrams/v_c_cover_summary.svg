@@ -103,10 +103,11 @@
   <g font-size="12" fill="#334155">
     <text x="670" y="525">• Singapore single-region · PDPA-native · zero cross-region query path</text>
     <text x="670" y="545">• Qwen family · open-weights · 3–5× cheaper per token at equivalent benchmarks</text>
-    <text x="670" y="565">• Emergency routing · pure if/else · deterministic · saves ~300 ms</text>
-    <text x="670" y="585">• Fine-tuned student on day one · $15–40 per retrain · cheap iteration</text>
-    <text x="670" y="605">• Managed GraphRAG over self-hosted · no Neo4j ops burden</text>
-    <text x="670" y="625">• Tair (Redis OSS-compatible) · NOT Valkey</text>
+    <text x="670" y="565">• SaaS-default connectivity · public HTTPS + IDaaS + WAF · Site-to-Site VPN opt-in only</text>
+    <text x="670" y="585">• Emergency routing · pure if/else · deterministic · saves ~300 ms</text>
+    <text x="670" y="605">• Fine-tuned student on day one · $15–40 per retrain · cheap iteration</text>
+    <text x="670" y="625">• Managed GraphRAG over self-hosted · no Neo4j ops burden</text>
+    <text x="670" y="645">• Tair (Redis OSS-compatible) · NOT Valkey</text>
     <text x="670" y="645">• 6-year audit retention · harmonizes HIPAA + PDPA in one policy</text>
     <text x="670" y="665">• One product · pre-launch build + continuous operations · no phases</text>
   </g>

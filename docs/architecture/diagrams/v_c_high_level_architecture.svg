@@ -27,7 +27,7 @@
 
   <!-- Title -->
   <text x="680" y="28" text-anchor="middle" font-size="18" class="title">Nova Health Tech · Clinical GenAI · Version C — Alibaba Cloud Singapore International</text>
-  <text x="680" y="48" text-anchor="middle" class="lbl-sm">Emergency toggle (if/else) · 40-department multi-agent · Model Studio + PAI-EAS · Managed GraphRAG · Site-to-Site VPN · PDPA zero cross-region</text>
+  <text x="680" y="48" text-anchor="middle" class="lbl-sm">SaaS-default: public HTTPS + IDaaS · Site-to-Site VPN opt-in only · Emergency toggle (if/else) · 40-department multi-agent · Model Studio + PAI-EAS · Managed GraphRAG · PDPA zero cross-region</text>
 
   <!-- Legend -->
   <g transform="translate(20,70)">
@@ -73,7 +73,7 @@
   <text x="810" y="121" text-anchor="middle">API Gateway + RAM/IDaaS authorizer</text>
 
   <rect x="920" y="100" width="200" height="32" class="box box-ali"/>
-  <text x="1020" y="121" text-anchor="middle">VPN Gateway (IPsec · dual-tunnel)</text>
+  <text x="1020" y="121" text-anchor="middle">VPN Gateway (Mode 2 opt-in)</text>
 
   <rect x="1140" y="100" width="180" height="32" class="box box-ali"/>
   <text x="1230" y="121" text-anchor="middle">IDaaS EIAM 2.0 (SAML/OIDC)</text>

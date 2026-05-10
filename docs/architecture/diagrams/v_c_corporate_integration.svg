@@ -1,9 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1360 820" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1360 860" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
   <defs>
     <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
     <marker id="arr-hc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/></marker>
     <marker id="arr-ext" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker>
     <marker id="arr-vpn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/></marker>
+    <marker id="arr-saas" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker>
     <style>
       .box       { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.2; rx:8; ry:8; }
       .box-hosp  { fill:#eff6ff; stroke:#60a5fa; stroke-width:1.5; }
@@ -11,6 +12,7 @@
       .box-ext   { fill:#f5f3ff; stroke:#7c3aed; stroke-width:1.5; }
       .box-id    { fill:#fefce8; stroke:#facc15; }
       .box-vpn   { fill:#fef2f2; stroke:#dc2626; stroke-width:1.5; stroke-dasharray:4 3; }
+      .box-saas  { fill:#f0fdf4; stroke:#16a34a; stroke-width:1.5; }
       .group     { fill:#f8fafc; stroke:#94a3b8; stroke-dasharray:4 3; stroke-width:1.2; rx:12; ry:12; }
       .title     { font-weight:700; fill:#0f172a; }
       .lbl-sm    { fill:#64748b; font-size:10.5px; }
@@ -18,191 +20,196 @@
       .edge-hc   { stroke:#1d4ed8; stroke-width:1.8; fill:none; }
       .edge-ext  { stroke:#7c3aed; stroke-width:1.6; fill:none; }
       .edge-vpn  { stroke:#dc2626; stroke-width:1.8; fill:none; stroke-dasharray:6 3; }
+      .edge-saas { stroke:#16a34a; stroke-width:1.8; fill:none; }
     </style>
   </defs>
 
-  <text x="680" y="28" text-anchor="middle" font-size="17" class="title">Corporate Integration — EHR · IAM · SharePoint · External APIs (§7)</text>
-  <text x="680" y="48" text-anchor="middle" class="lbl-sm">SMART on FHIR R4 · OIDC/SAML federation · Graph webhooks · WHO ICD-11 + PubMed agent tools · IPsec VPN for internal traffic</text>
+  <text x="680" y="28" text-anchor="middle" font-size="17" class="title">Corporate Integration — SaaS-default · EHR · IAM · SharePoint · External APIs (§7)</text>
+  <text x="680" y="48" text-anchor="middle" class="lbl-sm">Mode 1 (public HTTPS · green) = baseline · Mode 2 (IPsec VPN · dashed red) = opt-in for on-prem-only hospitals · External agent tools (purple)</text>
+
+  <!-- MODE LEGEND -->
+  <g transform="translate(20,70)">
+    <rect width="300" height="14" class="box-saas"/><text x="8" y="11" class="lbl-sm" fill="#16a34a"><tspan font-weight="700">Mode 1 (SaaS default)</tspan> — public HTTPS</text>
+    <rect y="18" width="300" height="14" class="box-vpn"/><text x="8" y="29" class="lbl-sm" fill="#dc2626"><tspan font-weight="700">Mode 2 (opt-in)</tspan> — Site-to-Site IPsec VPN</text>
+    <rect y="36" width="300" height="14" class="box-ext"/><text x="8" y="47" class="lbl-sm" fill="#7c3aed">External API call</text>
+  </g>
 
   <!-- LEFT: Hospital IT systems -->
-  <rect x="20" y="80" width="400" height="680" class="group"/>
-  <text x="40" y="102" class="title">Hospital IT systems</text>
+  <rect x="20" y="120" width="400" height="640" class="group"/>
+  <text x="40" y="142" class="title">Hospital IT systems</text>
 
-  <rect x="40" y="120" width="370" height="90" class="box box-hosp"/>
-  <text x="225" y="142" text-anchor="middle" class="title">EHR (Epic / Cerner / Allscripts)</text>
-  <text x="225" y="162" text-anchor="middle" class="lbl-sm">FHIR R4 endpoint · SMART App Launch v2</text>
-  <text x="225" y="178" text-anchor="middle" class="lbl-sm">Iframe launch with ?iss=&lt;fhir&gt;&amp;launch=&lt;ctx&gt;</text>
-  <text x="225" y="196" text-anchor="middle" class="lbl-sm">Read-only scopes · never writes to EHR</text>
+  <rect x="40" y="160" width="370" height="90" class="box box-hosp"/>
+  <text x="225" y="182" text-anchor="middle" class="title">EHR (Epic / Cerner / Allscripts)</text>
+  <text x="225" y="202" text-anchor="middle" class="lbl-sm">FHIR R4 endpoint · SMART App Launch v2</text>
+  <text x="225" y="218" text-anchor="middle" class="lbl-sm">Internet-reachable (modern) → Mode 1</text>
+  <text x="225" y="236" text-anchor="middle" class="lbl-sm">On-prem only (legacy) → Mode 2 VPN</text>
 
-  <rect x="40" y="220" width="370" height="80" class="box box-id"/>
-  <text x="225" y="242" text-anchor="middle" class="title">Hospital IdP</text>
-  <text x="225" y="260" text-anchor="middle" class="lbl-sm">Microsoft EntraID · Okta · ADFS · Keycloak</text>
-  <text x="225" y="276" text-anchor="middle" class="lbl-sm">SAML 2.0 or OIDC</text>
-  <text x="225" y="292" text-anchor="middle" class="lbl-sm">MFA enforced at IdP</text>
+  <rect x="40" y="260" width="370" height="80" class="box box-id"/>
+  <text x="225" y="282" text-anchor="middle" class="title">Hospital IdP</text>
+  <text x="225" y="300" text-anchor="middle" class="lbl-sm">Microsoft EntraID · Okta · ADFS · Keycloak</text>
+  <text x="225" y="316" text-anchor="middle" class="lbl-sm">SAML 2.0 or OIDC · Internet-reachable</text>
+  <text x="225" y="332" text-anchor="middle" class="lbl-sm">MFA enforced at IdP · both modes</text>
 
-  <rect x="40" y="310" width="370" height="80" class="box box-hosp"/>
-  <text x="225" y="332" text-anchor="middle" class="title">SharePoint / OneDrive</text>
-  <text x="225" y="350" text-anchor="middle" class="lbl-sm">Microsoft Graph · Sites.Selected scope</text>
-  <text x="225" y="366" text-anchor="middle" class="lbl-sm">Change-notification subscriptions (30-day max)</text>
-  <text x="225" y="382" text-anchor="middle" class="lbl-sm">Alt: Event Hubs delivery for high-traffic drives</text>
+  <rect x="40" y="350" width="370" height="80" class="box box-hosp"/>
+  <text x="225" y="372" text-anchor="middle" class="title">SharePoint / OneDrive</text>
+  <text x="225" y="390" text-anchor="middle" class="lbl-sm">Online → Microsoft Graph API (Mode 1)</text>
+  <text x="225" y="406" text-anchor="middle" class="lbl-sm">Server on-prem → VPN pull (Mode 2)</text>
+  <text x="225" y="422" text-anchor="middle" class="lbl-sm">Sites.Selected scope · 30-day subs</text>
 
-  <rect x="40" y="400" width="370" height="70" class="box box-hosp"/>
-  <text x="225" y="422" text-anchor="middle" class="title">Other document systems</text>
-  <text x="225" y="440" text-anchor="middle" class="lbl-sm">Google Drive (files.watch) · Confluence (webhooks)</text>
-  <text x="225" y="456" text-anchor="middle" class="lbl-sm">On-prem NFS/SMB (scheduled puller over VPN)</text>
+  <rect x="40" y="440" width="370" height="70" class="box box-hosp"/>
+  <text x="225" y="462" text-anchor="middle" class="title">Other document systems</text>
+  <text x="225" y="480" text-anchor="middle" class="lbl-sm">Google Drive (files.watch) · Confluence</text>
+  <text x="225" y="496" text-anchor="middle" class="lbl-sm">On-prem NFS/SMB → Mode 2 scheduled puller</text>
 
-  <rect x="40" y="480" width="370" height="80" class="box box-hosp"/>
-  <text x="225" y="502" text-anchor="middle" class="title">Clinician workstations</text>
-  <text x="225" y="520" text-anchor="middle" class="lbl-sm">Browser (Chrome 120+ / Edge 120+ / Safari 17+)</text>
-  <text x="225" y="536" text-anchor="middle" class="lbl-sm">Nova chat UI embedded in EHR iframe OR</text>
-  <text x="225" y="552" text-anchor="middle" class="lbl-sm">standalone Nova web app</text>
+  <rect x="40" y="520" width="370" height="80" class="box box-hosp"/>
+  <text x="225" y="542" text-anchor="middle" class="title">Clinician workstations</text>
+  <text x="225" y="560" text-anchor="middle" class="lbl-sm">Chrome 120+ / Edge 120+ / Safari 17+</text>
+  <text x="225" y="576" text-anchor="middle" class="lbl-sm">Chat UI: always public HTTPS (both modes)</text>
+  <text x="225" y="592" text-anchor="middle" class="lbl-sm">EHR iframe or standalone web app</text>
 
-  <rect x="40" y="570" width="370" height="70" class="box box-hosp"/>
-  <text x="225" y="592" text-anchor="middle" class="title">MS Teams (post-launch enhancement)</text>
-  <text x="225" y="610" text-anchor="middle" class="lbl-sm">Teams Messaging Extension (search-based)</text>
-  <text x="225" y="626" text-anchor="middle" class="lbl-sm">same auth + FHIR context pattern</text>
+  <rect x="40" y="610" width="370" height="70" class="box box-hosp"/>
+  <text x="225" y="632" text-anchor="middle" class="title">MS Teams (post-launch enhancement)</text>
+  <text x="225" y="650" text-anchor="middle" class="lbl-sm">Teams Messaging Extension (search-based)</text>
+  <text x="225" y="666" text-anchor="middle" class="lbl-sm">same auth + FHIR context pattern</text>
 
-  <rect x="40" y="650" width="370" height="90" class="box box-vpn"/>
-  <text x="225" y="672" text-anchor="middle" class="title">Customer Gateway (IPsec endpoint)</text>
-  <text x="225" y="692" text-anchor="middle" class="lbl-sm">Existing hospital firewall/router</text>
-  <text x="225" y="708" text-anchor="middle" class="lbl-sm">IKEv2 · AES-256-GCM · SHA-2 · dual-tunnel HA</text>
-  <text x="225" y="724" text-anchor="middle" class="lbl-sm">1.25 Gbps per tunnel</text>
+  <rect x="40" y="690" width="370" height="60" class="box box-vpn"/>
+  <text x="225" y="712" text-anchor="middle" class="title">Customer Gateway (Mode 2 ONLY)</text>
+  <text x="225" y="730" text-anchor="middle" class="lbl-sm">Existing firewall — IKEv2 AES-256-GCM</text>
+  <text x="225" y="744" text-anchor="middle" class="lbl-sm">Skipped entirely in Mode 1</text>
 
   <!-- MIDDLE: Nova platform -->
-  <rect x="440" y="80" width="520" height="680" class="group"/>
-  <text x="460" y="102" class="title">Nova platform on Alibaba Cloud Singapore</text>
+  <rect x="440" y="120" width="520" height="640" class="group"/>
+  <text x="460" y="142" class="title">Nova platform on Alibaba Cloud Singapore</text>
 
-  <rect x="460" y="120" width="480" height="90" class="box box-nova"/>
-  <text x="700" y="142" text-anchor="middle" class="title">API Gateway + IDaaS EIAM 2.0 Premium+</text>
-  <text x="700" y="162" text-anchor="middle" class="lbl-sm">IDaaS federates via SAML/OIDC to each hospital's IdP</text>
-  <text x="700" y="178" text-anchor="middle" class="lbl-sm">Cognito-style user pool · per-tenant configuration</text>
-  <text x="700" y="196" text-anchor="middle" class="lbl-sm">Session timeout: 60 min clinician · 15 min admin</text>
+  <rect x="460" y="160" width="480" height="90" class="box box-saas"/>
+  <text x="700" y="182" text-anchor="middle" class="title">CDN + WAF + API Gateway + IDaaS EIAM 2.0 Premium+</text>
+  <text x="700" y="202" text-anchor="middle" class="lbl-sm">Public HTTPS + TLS 1.3 · IDaaS federates via SAML/OIDC to hospital IdP</text>
+  <text x="700" y="218" text-anchor="middle" class="lbl-sm">WAF rules + Anti-DDoS + per-tenant IP allow-list (optional)</text>
+  <text x="700" y="236" text-anchor="middle" class="lbl-sm">Session: 60 min clinician · 15 min admin · step-up MFA on admin:*</text>
 
-  <rect x="460" y="220" width="480" height="80" class="box box-nova"/>
-  <text x="700" y="242" text-anchor="middle" class="title">FC /chat — SMART on FHIR launch handler</text>
-  <text x="700" y="260" text-anchor="middle" class="lbl-sm">5a. Exchange launch ctx → FHIR patient bundle</text>
-  <text x="700" y="276" text-anchor="middle" class="lbl-sm">5b. Extract minimum slice (Patient, Condition, MedicationStatement, AllergyIntolerance, Observation, Encounter)</text>
-  <text x="700" y="292" text-anchor="middle" class="lbl-sm">5c. DataWorks SDDP mask before LLM call</text>
+  <rect x="460" y="260" width="480" height="80" class="box box-nova"/>
+  <text x="700" y="282" text-anchor="middle" class="title">FC /chat — SMART on FHIR launch handler</text>
+  <text x="700" y="300" text-anchor="middle" class="lbl-sm">Exchange launch ctx → FHIR patient bundle (Mode 1 calls EHR over public Internet)</text>
+  <text x="700" y="316" text-anchor="middle" class="lbl-sm">Extract minimum slice · DataWorks SDDP mask before LLM call</text>
+  <text x="700" y="332" text-anchor="middle" class="lbl-sm">(Mode 2 calls EHR FHIR over IPsec VPN)</text>
 
-  <rect x="460" y="310" width="230" height="100" class="box box-nova"/>
-  <text x="575" y="332" text-anchor="middle" class="title">Scopes requested</text>
-  <text x="575" y="350" text-anchor="middle" class="lbl-sm">launch openid fhirUser</text>
-  <text x="575" y="366" text-anchor="middle" class="lbl-sm">patient/Patient.rs</text>
-  <text x="575" y="380" text-anchor="middle" class="lbl-sm">patient/Condition.rs</text>
-  <text x="575" y="394" text-anchor="middle" class="lbl-sm">patient/MedicationStatement.rs</text>
+  <rect x="460" y="350" width="230" height="100" class="box box-nova"/>
+  <text x="575" y="372" text-anchor="middle" class="title">Scopes requested</text>
+  <text x="575" y="390" text-anchor="middle" class="lbl-sm">launch openid fhirUser</text>
+  <text x="575" y="406" text-anchor="middle" class="lbl-sm">patient/Patient.rs</text>
+  <text x="575" y="420" text-anchor="middle" class="lbl-sm">patient/Condition.rs</text>
+  <text x="575" y="434" text-anchor="middle" class="lbl-sm">patient/MedicationStatement.rs</text>
 
-  <rect x="705" y="310" width="235" height="100" class="box box-nova"/>
-  <text x="820" y="332" text-anchor="middle" class="title">RBAC (enforced at API GW + FC)</text>
-  <text x="820" y="350" text-anchor="middle" class="lbl-sm">chat:clinical (clinician)</text>
-  <text x="820" y="366" text-anchor="middle" class="lbl-sm">curator:upload (data curator)</text>
-  <text x="820" y="380" text-anchor="middle" class="lbl-sm">kb:read (admin, audit-logged)</text>
-  <text x="820" y="394" text-anchor="middle" class="lbl-sm">admin:* (break-glass 2-person)</text>
+  <rect x="705" y="350" width="235" height="100" class="box box-nova"/>
+  <text x="820" y="372" text-anchor="middle" class="title">RBAC (at API GW + FC)</text>
+  <text x="820" y="390" text-anchor="middle" class="lbl-sm">chat:clinical (clinician)</text>
+  <text x="820" y="406" text-anchor="middle" class="lbl-sm">curator:upload (data curator)</text>
+  <text x="820" y="420" text-anchor="middle" class="lbl-sm">kb:read (admin, audit-logged)</text>
+  <text x="820" y="434" text-anchor="middle" class="lbl-sm">admin:* (break-glass 2-person)</text>
 
-  <rect x="460" y="420" width="480" height="90" class="box box-nova"/>
-  <text x="700" y="442" text-anchor="middle" class="title">FC webhook receiver — Microsoft Graph subscriptions</text>
-  <text x="700" y="462" text-anchor="middle" class="lbl-sm">POST /webhooks/graph · validates clientState secret</text>
-  <text x="700" y="478" text-anchor="middle" class="lbl-sm">POST /webhooks/graph-lifecycle · auto-renews 30-day subscription</text>
-  <text x="700" y="494" text-anchor="middle" class="lbl-sm">Event → OSS /raw/sharepoint/&lt;tenant&gt;/ → ingestion Workflow</text>
+  <rect x="460" y="460" width="480" height="80" class="box box-saas"/>
+  <text x="700" y="482" text-anchor="middle" class="title">FC webhook — Microsoft Graph subscriptions (Mode 1)</text>
+  <text x="700" y="502" text-anchor="middle" class="lbl-sm">POST /webhooks/graph · validates clientState secret</text>
+  <text x="700" y="518" text-anchor="middle" class="lbl-sm">Event → OSS /raw/sharepoint/&lt;tenant&gt;/ → ingestion Workflow</text>
+  <text x="700" y="534" text-anchor="middle" class="lbl-sm">All via public Internet; no VPN</text>
 
-  <rect x="460" y="520" width="480" height="70" class="box box-nova"/>
-  <text x="700" y="540" text-anchor="middle" class="title">SAE container — Upload Portal</text>
-  <text x="700" y="558" text-anchor="middle" class="lbl-sm">Internal curator UI · OIDC to hospital IdP</text>
-  <text x="700" y="574" text-anchor="middle" class="lbl-sm">Presigned OSS PUT (10-min TTL) · role-gated</text>
+  <rect x="460" y="550" width="480" height="70" class="box box-saas"/>
+  <text x="700" y="572" text-anchor="middle" class="title">SAE container — Upload Portal</text>
+  <text x="700" y="590" text-anchor="middle" class="lbl-sm">Curator UI · OIDC to hospital IdP · presigned OSS PUT</text>
+  <text x="700" y="606" text-anchor="middle" class="lbl-sm">Mode 1: public HTTPS + IP allow-list · Mode 2: over VPN</text>
 
-  <rect x="460" y="600" width="480" height="80" class="box box-nova"/>
-  <text x="700" y="622" text-anchor="middle" class="title">VPN Gateway (SG) — IPsec</text>
-  <text x="700" y="640" text-anchor="middle" class="lbl-sm">Terminates hospital Customer Gateway tunnel</text>
-  <text x="700" y="656" text-anchor="middle" class="lbl-sm">Only egress path: SharePoint + EHR FHIR + Upload Portal</text>
-  <text x="700" y="672" text-anchor="middle" class="lbl-sm">No other hospital → cloud flows by default</text>
+  <rect x="460" y="630" width="480" height="80" class="box box-vpn"/>
+  <text x="700" y="652" text-anchor="middle" class="title">VPN Gateway (Mode 2 only)</text>
+  <text x="700" y="670" text-anchor="middle" class="lbl-sm">IPsec-VPN · terminates hospital tunnel · 100 Mbps tier</text>
+  <text x="700" y="686" text-anchor="middle" class="lbl-sm">Carries on-prem EHR FHIR / SharePoint Server / SMB pull</text>
+  <text x="700" y="702" text-anchor="middle" class="lbl-sm">Clinician chat NEVER traverses VPN — always public HTTPS</text>
 
-  <rect x="460" y="690" width="480" height="60" class="box"/>
-  <text x="700" y="712" text-anchor="middle" class="title">Staff identity — Cloud SSO + RAM</text>
-  <text x="700" y="730" text-anchor="middle" class="lbl-sm">Federated to Nova EntraID · no long-lived access keys</text>
+  <rect x="460" y="720" width="480" height="35" class="box"/>
+  <text x="700" y="742" text-anchor="middle" class="title">Staff identity — Cloud SSO + RAM federated to Nova EntraID</text>
 
   <!-- RIGHT: External APIs + staff -->
-  <rect x="980" y="80" width="370" height="680" class="group"/>
-  <text x="1000" y="102" class="title">External APIs &amp; Nova staff</text>
+  <rect x="980" y="120" width="370" height="640" class="group"/>
+  <text x="1000" y="142" class="title">External APIs &amp; Nova staff</text>
 
-  <rect x="1000" y="120" width="340" height="110" class="box box-ext"/>
-  <text x="1170" y="142" text-anchor="middle" class="title">WHO ICD-11 API</text>
-  <text x="1170" y="162" text-anchor="middle" class="lbl-sm">Registered OAuth2 client</text>
-  <text x="1170" y="178" text-anchor="middle" class="lbl-sm">icd.who.int/icdapi</text>
-  <text x="1170" y="196" text-anchor="middle" class="lbl-sm">Used 3 ways:</text>
-  <text x="1170" y="212" text-anchor="middle" class="lbl-sm">(1) daily delta ingest</text>
-  <text x="1170" y="226" text-anchor="middle" class="lbl-sm">(2) runtime tool (3) query expansion</text>
+  <rect x="1000" y="160" width="340" height="110" class="box box-ext"/>
+  <text x="1170" y="182" text-anchor="middle" class="title">WHO ICD-11 API</text>
+  <text x="1170" y="202" text-anchor="middle" class="lbl-sm">Registered OAuth2 client</text>
+  <text x="1170" y="218" text-anchor="middle" class="lbl-sm">icd.who.int/icdapi · public Internet</text>
+  <text x="1170" y="234" text-anchor="middle" class="lbl-sm">(1) daily delta ingest</text>
+  <text x="1170" y="250" text-anchor="middle" class="lbl-sm">(2) runtime tool (3) query expansion</text>
 
-  <rect x="1000" y="240" width="340" height="100" class="box box-ext"/>
-  <text x="1170" y="262" text-anchor="middle" class="title">NCBI PubMed E-utilities</text>
-  <text x="1170" y="282" text-anchor="middle" class="lbl-sm">eutils.ncbi.nlm.nih.gov</text>
-  <text x="1170" y="300" text-anchor="middle" class="lbl-sm">Agent tool — runtime only</text>
-  <text x="1170" y="316" text-anchor="middle" class="lbl-sm">Free: 3 req/s · API key: 10 req/s</text>
-  <text x="1170" y="332" text-anchor="middle" class="lbl-sm">No preemptive ingest</text>
+  <rect x="1000" y="280" width="340" height="90" class="box box-ext"/>
+  <text x="1170" y="302" text-anchor="middle" class="title">NCBI PubMed E-utilities</text>
+  <text x="1170" y="322" text-anchor="middle" class="lbl-sm">eutils.ncbi.nlm.nih.gov · public</text>
+  <text x="1170" y="338" text-anchor="middle" class="lbl-sm">Free: 3 req/s · API key: 10 req/s</text>
+  <text x="1170" y="354" text-anchor="middle" class="lbl-sm">No preemptive ingest</text>
 
-  <rect x="1000" y="350" width="340" height="90" class="box box-ext"/>
-  <text x="1170" y="372" text-anchor="middle" class="title">Microsoft Graph API</text>
-  <text x="1170" y="392" text-anchor="middle" class="lbl-sm">graph.microsoft.com/v1.0/subscriptions</text>
-  <text x="1170" y="408" text-anchor="middle" class="lbl-sm">Sites.Selected app permission</text>
-  <text x="1170" y="424" text-anchor="middle" class="lbl-sm">30-day subscription + auto-renew</text>
+  <rect x="1000" y="380" width="340" height="90" class="box box-ext"/>
+  <text x="1170" y="402" text-anchor="middle" class="title">Microsoft Graph API</text>
+  <text x="1170" y="422" text-anchor="middle" class="lbl-sm">graph.microsoft.com · public HTTPS</text>
+  <text x="1170" y="438" text-anchor="middle" class="lbl-sm">Sites.Selected scope · 30-day subs</text>
+  <text x="1170" y="454" text-anchor="middle" class="lbl-sm">Used for SharePoint Online (Mode 1)</text>
 
-  <rect x="1000" y="450" width="340" height="100" class="box box-ext"/>
-  <text x="1170" y="472" text-anchor="middle" class="title">Credentials Manager-held secrets</text>
-  <text x="1170" y="492" text-anchor="middle" class="lbl-sm">WHO OAuth client (90-day rotation)</text>
-  <text x="1170" y="508" text-anchor="middle" class="lbl-sm">Graph app secret (90-day)</text>
-  <text x="1170" y="524" text-anchor="middle" class="lbl-sm">Model Studio API keys (60-day)</text>
-  <text x="1170" y="540" text-anchor="middle" class="lbl-sm">Webhook clientState (90-day)</text>
+  <rect x="1000" y="480" width="340" height="100" class="box box-ext"/>
+  <text x="1170" y="502" text-anchor="middle" class="title">Credentials Manager secrets</text>
+  <text x="1170" y="522" text-anchor="middle" class="lbl-sm">WHO OAuth (90-day rotation)</text>
+  <text x="1170" y="538" text-anchor="middle" class="lbl-sm">Graph app secret (90-day)</text>
+  <text x="1170" y="554" text-anchor="middle" class="lbl-sm">Model Studio API keys (60-day)</text>
+  <text x="1170" y="570" text-anchor="middle" class="lbl-sm">VPN PSK (Mode 2 tenants only)</text>
 
-  <rect x="1000" y="560" width="340" height="90" class="box"/>
-  <text x="1170" y="582" text-anchor="middle" class="title">Nova staff</text>
-  <text x="1170" y="602" text-anchor="middle" class="lbl-sm">Nova EntraID tenant</text>
-  <text x="1170" y="618" text-anchor="middle" class="lbl-sm">SRE · Compliance · Architects</text>
-  <text x="1170" y="634" text-anchor="middle" class="lbl-sm">Federated via Cloud SSO + RAM</text>
+  <rect x="1000" y="590" width="340" height="80" class="box"/>
+  <text x="1170" y="612" text-anchor="middle" class="title">Nova staff</text>
+  <text x="1170" y="630" text-anchor="middle" class="lbl-sm">Nova EntraID tenant</text>
+  <text x="1170" y="648" text-anchor="middle" class="lbl-sm">SRE · Compliance · Architects</text>
+  <text x="1170" y="664" text-anchor="middle" class="lbl-sm">Federated via Cloud SSO + RAM</text>
 
-  <rect x="1000" y="660" width="340" height="90" class="box box-ext"/>
-  <text x="1170" y="682" text-anchor="middle" class="title">NAT Gateway (egress allow-list)</text>
-  <text x="1170" y="702" text-anchor="middle" class="lbl-sm">Only destinations WHO + NCBI + Graph</text>
-  <text x="1170" y="718" text-anchor="middle" class="lbl-sm">Everything else denied at VPC level</text>
+  <rect x="1000" y="680" width="340" height="70" class="box box-ext"/>
+  <text x="1170" y="702" text-anchor="middle" class="title">NAT Gateway (egress allow-list)</text>
+  <text x="1170" y="720" text-anchor="middle" class="lbl-sm">WHO + NCBI + Graph only</text>
+  <text x="1170" y="736" text-anchor="middle" class="lbl-sm">Everything else denied at VPC</text>
 
-  <!-- ARROWS -->
-  <!-- Clinician EHR iframe → IDaaS → FC -->
-  <path d="M410 165 L460 165" class="edge-hc" marker-end="url(#arr-hc)"/>
-  <text x="430" y="155" text-anchor="middle" class="lbl-sm" fill="#1d4ed8">SMART on FHIR</text>
+  <!-- ARROWS - MODE 1 (public HTTPS, green) -->
+  <!-- Clinician/EHR iframe → Nova edge -->
+  <path d="M410 205 L460 200" class="edge-saas" marker-end="url(#arr-saas)"/>
+  <text x="435" y="195" text-anchor="middle" class="lbl-sm" fill="#16a34a">SMART on FHIR (public)</text>
 
-  <!-- IdP → IDaaS -->
-  <path d="M410 265 L460 170" class="edge-hc" marker-end="url(#arr-hc)"/>
-  <text x="435" y="260" class="lbl-sm" fill="#1d4ed8">SAML/OIDC federation</text>
+  <!-- Hospital IdP ↔ IDaaS federation -->
+  <path d="M410 300 L460 210" class="edge-saas" marker-end="url(#arr-saas)"/>
+  <text x="435" y="295" class="lbl-sm" fill="#16a34a">SAML/OIDC fed.</text>
 
-  <!-- SharePoint → Graph webhook → FC -->
-  <path d="M410 350 L460 465" class="edge-hc" marker-end="url(#arr-hc)"/>
-  <text x="435" y="405" class="lbl-sm" fill="#1d4ed8">Graph subscription POST</text>
+  <!-- SharePoint Online → Graph webhook (Mode 1) -->
+  <path d="M410 390 L460 490" class="edge-saas" marker-end="url(#arr-saas)"/>
+  <text x="420" y="470" class="lbl-sm" fill="#16a34a">Graph subscription</text>
 
-  <!-- FC → EHR FHIR (over VPN back to hospital) -->
-  <path d="M460 260 L430 250 Q380 250 380 540 L380 690 L410 690" class="edge-vpn" marker-end="url(#arr-vpn)"/>
-  <text x="385" y="500" class="lbl-sm" fill="#dc2626">FHIR R4 over IPsec VPN</text>
+  <!-- Clinician browser → Nova web app -->
+  <path d="M410 560 Q430 560 460 250" class="edge-saas" marker-end="url(#arr-saas)"/>
 
-  <!-- Customer GW → VPN GW -->
-  <path d="M410 640 L460 640" class="edge-vpn" marker-end="url(#arr-vpn)"/>
+  <!-- MODE 2 VPN (dashed red) -->
+  <path d="M410 720 L460 680" class="edge-vpn" marker-end="url(#arr-vpn)"/>
+  <text x="412" y="710" class="lbl-sm" fill="#dc2626">IPsec tunnel</text>
 
-  <!-- Clinician browser → Nova web app / iframe -->
-  <path d="M410 520 Q430 520 460 220" class="edge-hc" marker-end="url(#arr-hc)"/>
+  <!-- FC → on-prem EHR FHIR (Mode 2 callback path via VPN) -->
+  <path d="M460 300 Q380 310 380 680 L410 700" class="edge-vpn" marker-end="url(#arr-vpn)"/>
+  <text x="355" y="500" class="lbl-sm" fill="#dc2626">Mode 2 only:</text>
+  <text x="355" y="515" class="lbl-sm" fill="#dc2626">FHIR over VPN</text>
 
-  <!-- FC → External APIs -->
-  <path d="M940 245 Q970 200 1000 175" class="edge-ext" marker-end="url(#arr-ext)"/>
-  <text x="975" y="193" class="lbl-sm" fill="#7c3aed">runtime tool + ingest</text>
-  <path d="M940 270 L1000 290" class="edge-ext" marker-end="url(#arr-ext)"/>
-  <text x="970" y="285" class="lbl-sm" fill="#7c3aed">agent tool</text>
-  <path d="M940 460 L1000 395" class="edge-ext" marker-end="url(#arr-ext)"/>
-  <text x="970" y="425" class="lbl-sm" fill="#7c3aed">webhook subscribe</text>
+  <!-- External APIs purple arrows -->
+  <path d="M940 215 Q970 190 1000 210" class="edge-ext" marker-end="url(#arr-ext)"/>
+  <text x="975" y="170" class="lbl-sm" fill="#7c3aed">ingest + runtime tool</text>
+  <path d="M940 310 L1000 325" class="edge-ext" marker-end="url(#arr-ext)"/>
+  <text x="970" y="308" class="lbl-sm" fill="#7c3aed">agent tool</text>
+  <path d="M940 500 L1000 425" class="edge-ext" marker-end="url(#arr-ext)"/>
+  <text x="970" y="475" class="lbl-sm" fill="#7c3aed">webhook subscribe</text>
 
-  <!-- NAT Gateway gates external egress -->
-  <path d="M1000 175 Q970 400 970 680" class="edge" marker-end="url(#arr)"/>
-  <path d="M1000 290 Q970 500 970 680" class="edge" marker-end="url(#arr)"/>
-  <path d="M1000 395 Q970 550 970 680" class="edge" marker-end="url(#arr)"/>
-  <text x="965" y="760" text-anchor="middle" class="lbl-sm">all external calls pass through allow-listed NAT</text>
+  <!-- NAT Gateway gate -->
+  <path d="M1000 210 Q970 440 970 700" class="edge" marker-end="url(#arr)"/>
+  <path d="M1000 325 Q970 500 970 700" class="edge" marker-end="url(#arr)"/>
+  <path d="M1000 425 Q970 550 970 700" class="edge" marker-end="url(#arr)"/>
 
   <!-- Credentials Manager → FC -->
-  <path d="M1000 500 L940 320" class="edge" marker-end="url(#arr)"/>
-  <text x="975" y="385" class="lbl-sm">retrieve at cold start</text>
+  <path d="M1000 530 L940 340" class="edge" marker-end="url(#arr)"/>
+  <text x="975" y="415" class="lbl-sm">retrieve at cold start</text>
 
   <!-- Nova staff → Cloud SSO -->
-  <path d="M1000 605 L940 720" class="edge" marker-end="url(#arr)"/>
+  <path d="M1000 635 L940 740" class="edge" marker-end="url(#arr)"/>
 </svg>

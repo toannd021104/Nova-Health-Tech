@@ -87,11 +87,13 @@ Bedrock, S3, Lambda, API Gateway, CloudFront, Cognito, OpenSearch Serverless, El
 
 ISO 27001 / 27017 / 27018 / 27701 / 22301, SOC 1 / 2 / 3, PCI DSS, PDPA alignment, GDPR-ready, HIPAA-ready (BAA coverage is region-specific — confirm with account team before processing US PHI). See [Alibaba Cloud Trust Center](https://www.alibabacloud.com/en/trust-center).
 
-## 6. Site-to-Site VPN as the ingestion trust boundary
+## 6. Hospital connectivity — SaaS-default with optional VPN
 
-Hospital never exposes SharePoint / file shares to the public Internet. Weekly trial-report pull runs over Site-to-Site IPsec VPN ([AWS Site-to-Site VPN](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) or [Alibaba VPN Gateway](https://www.alibabacloud.com/help/en/vpn/)), AES-256-GCM, IKEv2, dual-tunnel HA. Manual uploads traverse the same VPN.
+**Mode 1 (default)**: hospital accesses Nova over public HTTPS with TLS 1.3 + IdP federation + WAF + Anti-DDoS + optional per-tenant IP allow-list. PDPA regulates where data lands (Singapore, ≤ our Nova VPC); HIPAA §164.312(e) requires TLS-strength transmission security, which TLS 1.3 satisfies. No VPN required for modern hospitals whose FHIR + SharePoint are Internet-reachable.
 
-Full design in [`rag_and_pipelines.md` §Site-to-Site VPN](rag_and_pipelines.md#site-to-site-vpn-hospital--cloud).
+**Mode 2 (opt-in)**: Site-to-Site IPsec VPN for hospitals with on-prem-only EHR or file shares. [AWS Site-to-Site VPN](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) or [Alibaba VPN Gateway](https://www.alibabacloud.com/help/en/vpn-gateway) — AES-256-GCM, IKEv2, dual-tunnel HA. Carries only backend system-to-system flows (SharePoint pull, on-prem FHIR callback, Upload Portal if required). Clinician chat uses public HTTPS in both modes.
+
+Full design in [`rag_and_pipelines.md` §Hospital connectivity](rag_and_pipelines.md#7-hospital-connectivity) (shared) and [`proposals/version_c_alibaba_qwen.md` §7.6](proposals/version_c_alibaba_qwen.md#76-hospital-connectivity--saas-default-with-optional-vpn) (Version C specifics).
 
 ## 7. AI-specific medical compliance
 

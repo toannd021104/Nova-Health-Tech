@@ -134,7 +134,7 @@ In International mode, endpoint + static data stay in Singapore; model inference
 | Cache | **[Tair (Redis OSS-compatible)](https://www.alibabacloud.com/product/tair)** | ✅ 4 zones + 3 MAZ | ✅ 4 zones | ✅ | ✅ | ✅ | ✅ |
 | | [TairVector](https://www.alibabacloud.com/help/en/tair/user-guide/tairvector-overview) (combined Redis + vector) | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
 | Identity | [IDaaS EIAM 2.0](https://www.alibabacloud.com/help/en/idaas/) | ✅ | — (via Intl master) | ✅ | ✅ | ✅ | ✅ |
-| Network | [VPC + VPN Gateway (IPsec)](https://www.alibabacloud.com/help/en/vpn/) + SLB | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Network | [VPC + VPN Gateway (IPsec)](https://www.alibabacloud.com/help/en/vpn-gateway) + SLB | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Content Moderation | [Content Moderation 2.0 for Gen AI](https://www.alibabacloud.com/product/content-moderation) (`green`) | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ |
 | Data governance | [DataWorks](https://www.alibabacloud.com/product/dataworks) + [SDDP](https://www.alibabacloud.com/product/sddp) | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ |
 | Audit | [ActionTrail](https://www.alibabacloud.com/product/actiontrail) + [SLS](https://www.alibabacloud.com/product/log-service) + OSS WORM | ✅ | partial (no SLS in Tokyo) | ✅ | ✅ | ✅ | ✅ |

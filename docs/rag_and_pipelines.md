@@ -352,16 +352,18 @@ Sessions: 60 min clinicians, 15 min admins. Step-up MFA required for `admin:*` a
 
 ---
 
-## 7. Site-to-Site VPN (hospital ↔ cloud)
+## 7. Hospital connectivity
 
-Same ciphers on both clouds:
+**SaaS default (Mode 1, baseline)** — public HTTPS over TLS 1.3 with hospital-IdP federation (Cognito/IDaaS + SAML/OIDC) + WAF + Anti-DDoS + optional per-tenant IP allow-list. Most modern hospitals with Internet-reachable FHIR + SharePoint Online onboard this way.
+
+**Site-to-Site VPN (Mode 2, optional)** — for hospitals with on-prem-only EHR, SharePoint Server, or legacy SMB/NFS shares:
 
 - **AWS**: [AWS Site-to-Site VPN](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) to Virtual Private Gateway. IKEv2 + AES-256-GCM + SHA-2, dual-tunnel HA, BGP for failover.
-- **Alibaba**: [IPsec-VPN on VPN Gateway](https://www.alibabacloud.com/help/en/vpn/). Same cipher profile + dual tunnel. [Smart Access Gateway (SAG)](https://www.alibabacloud.com/product/smart-access-gateway) is an alternative turnkey appliance if the hospital wants it.
+- **Alibaba**: [IPsec-VPN on VPN Gateway](https://www.alibabacloud.com/help/en/vpn-gateway). Same cipher profile + dual tunnel. [Smart Access Gateway (SAG)](https://www.alibabacloud.com/product/smart-access-gateway) is a turnkey appliance alternative. [Express Connect](https://www.alibabacloud.com/product/express-connect) (Alibaba equivalent of AWS Direct Connect) is the dedicated-line option, only used on explicit client request — not baseline.
 
-**No Outposts, Direct Connect, or Apsara Stack.** Singapore region is close enough and VPN throughput (1.25 Gbps per tunnel) is ample for document uploads + weekly pulls.
+**No Outposts, Direct Connect, or Apsara Stack in baseline.** Dedicated-line options exist for specific regulatory requirements but add 6–12 weeks of onboarding and $1,500+/mo vs single-digit-millisecond latency gains.
 
-Only two things reachable from the hospital: the internal upload portal (private ALB/SLB) and the scheduled-puller endpoint for SharePoint/SMB over VPN. Nothing from the cloud initiates traffic *into* the hospital unless the hospital whitelists the puller's NAT egress IP.
+In Mode 2, the VPN carries only the backend system-to-system flows (SharePoint / SMB pull, on-prem EHR FHIR callback, Upload Portal if required). Clinician chat always uses public HTTPS — the VPN never sits on the 2-second critical path.
 
 ---
 
