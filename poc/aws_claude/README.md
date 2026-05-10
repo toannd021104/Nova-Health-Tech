@@ -12,19 +12,29 @@ Single-user, single-tenant, **AWS Version A (Claude on Bedrock Singapore)**. Thi
 
 Demo parameters: **1 user × 10 questions / day × 10 days = 100 questions**, availability 24/7 for the 10 days.
 
-## 1. Region layout
+## 1. Region layout — honest version
 
-Everything Singapore-native except Amazon Rerank:
+**Not everything runs in Singapore.** AWS's Singapore Bedrock region does NOT host Titan Embed Text v2, Nova Multimodal Embeddings, Amazon Rerank, or Bedrock Data Automation. Only the chat models (Claude Haiku/Sonnet 4.5, Nova Micro/Lite/Pro, Cohere Embed v3/v4) are in SG. To stay Amazon-only and avoid Cohere, embeddings + rerank + parse cross regions:
 
-| Service | Region | Reason |
+| Service | Region | Why |
 |---|---|---|
-| Lambda, API Gateway, CloudFront, S3, OpenSearch Serverless, Neptune Analytics, ElastiCache Redis | `ap-southeast-1` Singapore | main tenant region |
-| Claude Haiku 4.5 / Sonnet 4.5 | `ap-southeast-1` via `global.anthropic.*` inference profiles | PDPA-native |
-| Amazon Rerank 1.0 | `ap-northeast-1` Tokyo | Rerank is Tokyo or Oregon only |
-| Titan Embed Text v2 | Singapore | available in-region |
-| Bedrock Data Automation | Singapore | available in-region |
+| Claude Haiku 4.5 / Sonnet 4.5 | `ap-southeast-1` Singapore via `global.anthropic.*` inference profiles | Cross-region inference keeps the call PDPA-safe |
+| Nova Micro (router) | `ap-southeast-1` Singapore | Available in SG |
+| **Titan Embed Text v2** | `ap-southeast-2` Sydney (nearest APAC) or `ap-northeast-1` Tokyo | **Not in Singapore.** Sydney is ~90 ms RTT; Tokyo ~70 ms. Pick Tokyo so embeddings + rerank share a region. |
+| **Amazon Rerank 1.0** | `ap-northeast-1` Tokyo | Single-region model; Tokyo or Oregon only |
+| **Bedrock Data Automation** (PDF parsing) | `ap-southeast-2` Sydney (or Mumbai / Tokyo) | **Not in Singapore.** Nearest APAC is Sydney. |
+| **Nova Multimodal Embeddings** (if we choose it) | `us-east-1` N. Virginia — **the only region** | PDPA: cross-border to US. Requires contract-clause mitigation. |
+| OpenSearch Serverless, Neptune Analytics, ElastiCache Redis, Lambda, API Gateway, CloudFront, S3 | `ap-southeast-1` Singapore | Native |
 
-**No Sydney, no us-west-2.** Only the Rerank call crosses a region boundary (~70 ms RTT to Tokyo).
+**Multimodal embedding decision for the Claude POC:**
+
+| Option | Trade-off |
+|---|---|
+| **Titan Embed Text v2 only (text-only corpus)** | Simplest; radiology image handling stays with the vision-capable chat model (Claude Sonnet 4.5) at query time; no multimodal embedding at ingest. ✅ **Chosen for the POC.** |
+| Titan Embed Image v1 (Sydney) for figures + Titan Embed Text v2 (Tokyo) for text | Two vector fields; figures get a dedicated embedding. Adds ~$0.06 to ingest. Consider for production. |
+| Nova Multimodal Embeddings (us-east-1) | Best multimodal quality, but us-east-1 only → cross-border transfer from SG hospital. **Not PDPA-native.** Rejected for the Claude POC. Production Version A with US clients would pick this. |
+
+For figure-bearing chunks we rely on **Sonnet 4.5's native vision at query time** — when the Radiology agent receives an image attachment, it feeds the image directly via Converse API without a precomputed multimodal embedding. This is a real trade-off: we can't retrieve "pages with chest-X-ray figures similar to this uploaded image" on the Claude POC. Production Version A adds Nova Multimodal (us-east-1) when the client accepts the cross-border transfer.
 
 ```
   Reviewer's browser
@@ -33,17 +43,17 @@ Everything Singapore-native except Amazon Rerank:
         ▼
   API Gateway → Lambda (Singapore)
         │
-        ├─ ElastiCache Redis OSS (SG)              Layer-1 semantic cache
-        │
-        ├─ OpenSearch Serverless (SG)              vector KB per department
-        │
-        ├─ Neptune Analytics (SG) via Bedrock KB   managed GraphRAG
-        │
-        ├─ Bedrock Singapore                        Claude Haiku 4.5 (emergency, router)
-        │                                            Claude Sonnet 4.5 (complex + vision)
-        │
-        └─ cross-region → Tokyo Bedrock            Amazon Rerank 1.0
+        ├─ ElastiCache Redis OSS (SG)                  Layer-1 semantic cache
+        ├─ OpenSearch Serverless (SG)                  vector KB (Titan-embedded)
+        ├─ Neptune Analytics (SG) via Bedrock KB       managed GraphRAG
+        ├─ Bedrock Singapore                           Claude Haiku 4.5 (emergency, router)
+        │                                                Claude Sonnet 4.5 (complex + vision)
+        ├─ cross-region → Tokyo Bedrock                Titan Embed Text v2
+        │                                                Amazon Rerank 1.0
+        └─ cross-region → Sydney Bedrock               Bedrock Data Automation (ingest only)
 ```
+
+**Ingestion happens once at pre-deploy time** (BDA parse + Titan embed) — from the reviewer's perspective the only cross-region calls at query time are embed (Tokyo) + rerank (Tokyo). No Sydney hop during live inference.
 
 ## 2. Feature → technology mapping
 
@@ -54,10 +64,12 @@ Everything Singapore-native except Amazon Rerank:
 | Emergency lane | Pure if/else bypasses router → **Claude Haiku 4.5** (`global.anthropic.claude-haiku-4-5-20251001-v1:0`) |
 | Complex-lane specialist | **Claude Sonnet 4.5** (`global.anthropic.claude-sonnet-4-5-20250929-v1:0`) — handles Radiology image attachments natively via the Converse API |
 | **Fine-tuning** | **NONE.** No SFT, no distillation, no RFT. Production Version A ships with Nova Lite distilled from Sonnet, but this POC is the "no-training baseline" so judges can compare against the fine-tuned Qwen POC. |
-| RAG embeddings | **Amazon Titan Embed Text v2** ($0.02 / 1M tokens, 1024-dim, Singapore) |
-| Reranker | **Amazon Rerank 1.0** on Bedrock Tokyo (`amazon.rerank-v1:0`) |
-| Vector store | **OpenSearch Serverless** vector collection (hybrid kNN + BM25) — minimum 2 OCU |
-| GraphRAG | **Amazon Bedrock Knowledge Bases GraphRAG on Amazon Neptune Analytics** — managed. Graph entity extraction runs on Claude Haiku 4.5 at ingest time (cheap + handles the clinical vocabulary). |
+| RAG embeddings | **Amazon Titan Embed Text v2** on Bedrock **Tokyo** (`ap-northeast-1`) — cross-region call from SG. $0.02 / 1M tokens, 1024-dim. Not available in SG. |
+| Reranker | **Amazon Rerank 1.0** on Bedrock Tokyo (`amazon.rerank-v1:0`) — same region as embeddings, single round-trip |
+| Vector store | **OpenSearch Serverless** vector collection (hybrid kNN + BM25) — minimum 2 OCU, in-region SG |
+| GraphRAG | **Amazon Bedrock Knowledge Bases GraphRAG on Amazon Neptune Analytics** — managed. Graph entity extraction runs on Claude Haiku 4.5 at ingest time. |
+| PDF parsing | **Amazon Bedrock Data Automation** on **Sydney** (`ap-southeast-2`) — one-time at pre-deploy, cross-region upload of corpus. **Not available in SG.** |
+| Multimodal embedding at ingest | **None in the POC** — text-only corpus via Titan Text v2. Radiology image attachments are handled at query time by Claude Sonnet 4.5's native vision. Nova Multimodal Embeddings is us-east-1 only (breaks PDPA) and deferred to production Version A when a client accepts cross-border. |
 | Layer-1 semantic cache | **Amazon ElastiCache for Redis OSS** — `cache.t4g.micro` single node. Exact-match key in the POC; production uses RediSearch vector index. |
 | **Layer-2 prompt cache** | **Bedrock Prompt Caching** — free for Claude 4.x, enabled from day one. Up to 90 % off on cached input tokens and ~85 % latency cut for the cached prefix. Qwen POC doesn't get this (Bedrock doesn't support prompt caching for Qwen3). |
 | Guardrails | Bedrock Guardrails (PHI filter, grounding ≥ 0.7, prompt-injection) |
@@ -70,15 +82,16 @@ All prices are list prices (verified 10 May 2026).
 
 ### 3.1 One-time ingestion (pre-launch, runs once)
 
-Corpus is 36 PDFs / 413 pages / ~500 k tokens — same corpus as the Qwen POC.
+Corpus is 36 PDFs / 413 pages / ~500 k tokens (measured — see `data/clinical-trials/departments/README.md`).
 
 | Item | Calc | Cost |
 |---|---|---|
-| Bedrock Data Automation (standard tier, PDF parse) | 413 pages × $0.010 / page | **$4.13** |
-| Amazon Titan Embed Text v2 | ~500 k tokens × $0.02 / 1M | **$0.01** |
+| **Bedrock Data Automation — Sydney** (standard tier, PDF parse; BDA not in Singapore) | 413 pages × $0.010 / page | **$4.13** |
+| S3 cross-region transfer SG → Sydney for BDA input (~36 MB) | $0.02 / GB | **< $0.01** |
+| **Amazon Titan Embed Text v2 — Tokyo** (not in Singapore) | ~500 k tokens × $0.02 / 1M | **$0.01** |
 | Bedrock KB GraphRAG entity extraction — Claude Haiku 4.5 | ~500 k in × $1.00 / 1M + ~200 k out × $5.00 / 1M | **$1.50** |
 | Graph import into Neptune Analytics | free with Bedrock KB GraphRAG integration | **$0** |
-| **Ingestion subtotal (one-time)** | | **~$5.64** |
+| **Ingestion subtotal (one-time)** | | **~$5.65** |
 
 Haiku-based entity extraction is ~5× pricier than Qwen3 235B A22B 2507 for the same job, but we're staying in-region and keeping the model family consistent with the runtime choice.
 

@@ -19,8 +19,8 @@ Demo parameters: **1 user × 10 questions / day × 10 days = 100 questions**, av
 | Qwen inference (Qwen3 Next 80B A3B, Qwen3 VL 235B A22B, Qwen3 32B, Qwen3 235B A22B 2507) | `ap-southeast-2` Sydney | nearest APAC Qwen region |
 | Amazon Rerank 1.0 | `ap-northeast-1` Tokyo | only two Rerank regions exist (Tokyo + Oregon); Tokyo is closer |
 | Bedrock RFT training (if Path β chosen) | `us-west-2` Oregon | only RFT region for Qwen3-32B |
-| Titan Embed Text v2 | Singapore | available in-region |
-| Bedrock Data Automation | Singapore | available in-region |
+| Titan Embed Text v2 | `ap-northeast-1` Tokyo (cross-region from SG Lambda) | **NOT in Singapore.** Nearest with Titan Text v2 + Rerank co-located is Tokyo. |
+| Bedrock Data Automation (one-time ingest) | `ap-southeast-2` Sydney (cross-region) | **NOT in Singapore.** Nearest APAC is Sydney or Mumbai. |
 
 Cross-region latency: SG→Sydney ~90 ms, SG→Tokyo ~70 ms. Both are comfortable for the 2-s emergency SLA (still under 1.8 s p95).
 
@@ -53,10 +53,11 @@ Cross-region latency: SG→Sydney ~90 ms, SG→Tokyo ~70 ms. Both are comfortabl
 | Emergency lane | Pure if/else bypasses router → **Qwen3 Next 80B A3B** (MoE, 3B active, fastest Qwen on Bedrock) |
 | Complex-lane specialist | **Qwen3 VL 235B A22B** for all specialists (handles Radiology image attachments natively — no separate vision model needed) |
 | SFT / RLHF | Two supported paths, pick one at deploy time — see §4 |
-| RAG embeddings | **Amazon Titan Embed Text v2** on Bedrock Singapore ($0.02 / 1M tokens, 1024-dim) |
-| Reranker | **Amazon Rerank 1.0** on Bedrock Tokyo (`amazon.rerank-v1:0`; cross-region call from SG Lambda; single-region model) |
-| Vector store | **OpenSearch Serverless** vector collection (hybrid kNN + BM25) — minimum 2 OCU (1 index + 1 search) |
+| RAG embeddings | **Amazon Titan Embed Text v2** on Bedrock **Tokyo** (`ap-northeast-1`) — cross-region call from SG Lambda. $0.02 / 1M tokens, 1024-dim. **Not available in Singapore** (verified via `aws bedrock list-foundation-models`). |
+| Reranker | **Amazon Rerank 1.0** on Bedrock Tokyo (`amazon.rerank-v1:0`) — same Tokyo region as embeddings |
+| Vector store | **OpenSearch Serverless** vector collection (hybrid kNN + BM25) — minimum 2 OCU (1 index + 1 search), Singapore |
 | GraphRAG | **Amazon Bedrock Knowledge Bases GraphRAG on Amazon Neptune Analytics** — managed, GA March 2025. Graph entity extraction runs on Qwen3 235B A22B 2507 (text-only, cheap) at ingest time. |
+| PDF parsing | **Amazon Bedrock Data Automation** on **Sydney** (`ap-southeast-2`) — one-time at pre-deploy. **Not available in Singapore.** |
 | Layer-1 semantic cache | **Amazon ElastiCache for Redis OSS** — `cache.t4g.micro` single node (explicitly Redis, not Valkey). Exact-match lookup in the POC; production uses RediSearch vector index for fuzzy semantic matching. |
 | Guardrails | Bedrock Guardrails (PHI filter, grounding ≥ 0.7, prompt-injection) |
 | Audit | CloudWatch Logs, 1-day retention (POC only; production = CloudTrail → S3 Object Lock 6 yr) |
@@ -72,11 +73,12 @@ Corpus is 36 PDFs / 413 pages / ~500 k tokens (measured — see `data/clinical-t
 
 | Item | Calc | Cost |
 |---|---|---|
-| Bedrock Data Automation (standard tier, PDF parse) | 413 pages × $0.010 / page | **$4.13** |
-| **Amazon Titan Embed Text v2** (text chunks) | ~500 k tokens × $0.02 / 1M | **$0.01** |
+| **Bedrock Data Automation — Sydney** (not in Singapore; cross-region PDF parse) | 413 pages × $0.010 / page | **$4.13** |
+| S3 cross-region transfer SG → Sydney (~36 MB corpus) | $0.02 / GB | **< $0.01** |
+| **Amazon Titan Embed Text v2 — Tokyo** (not in Singapore) | ~500 k tokens × $0.02 / 1M | **$0.01** |
 | Bedrock KB GraphRAG entity extraction — Qwen3 235B A22B 2507 (text-only, cheapest 235B tier) | ~500 k in × $0.2266 / 1M + ~200 k out × $0.9064 / 1M | **$0.29** |
 | Graph import into Neptune Analytics | free with Bedrock KB GraphRAG integration | **$0** |
-| **Ingestion subtotal (one-time)** | | **~$4.43** |
+| **Ingestion subtotal (one-time)** | | **~$4.44** |
 
 ### 3.2 SFT / RLHF training (one-time, pre-launch) — pick ONE path
 

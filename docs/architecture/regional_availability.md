@@ -26,7 +26,28 @@ Verified **10 May 2026** against the AWS profile `gapv50k` using `aws bedrock li
 | Profile ID | Model | Verified |
 |---|---|---|
 | `global.cohere.embed-v4:0` | Cohere Embed v4 | ✅ used by the running demo |
-| Cohere Rerank 3.5 | | ✅ on-demand via Bedrock |
+| Cohere Rerank 3.5 | | ❌ **not in Singapore** — Tokyo + Oregon only. Running demo uses it via cross-region fallback. |
+
+### Amazon embeddings, rerank, and parsing — what's actually in SG
+
+Verified via `aws bedrock list-foundation-models --region ap-southeast-1`:
+
+| Model / Service | In Singapore? | Nearest APAC if not in SG |
+|---|---|---|
+| Titan Embed Text v2 (`amazon.titan-embed-text-v2:0`) | ❌ | Sydney, Tokyo, Mumbai — we use **Tokyo** in the POCs so it co-locates with Amazon Rerank |
+| Titan Embed Image v1 (`amazon.titan-embed-image-v1`) | ❌ | Sydney |
+| **Nova Multimodal Embeddings** (`amazon.nova-2-multimodal-embeddings-v1:0`) | ❌ | **us-east-1 ONLY** — single-region model. Using it from a Singapore tenant means cross-border PDPA transfer. |
+| Amazon Rerank 1.0 (`amazon.rerank-v1:0`) | ❌ | Tokyo + Oregon only — single-region model |
+| Cohere Rerank 3.5 | ❌ | Tokyo |
+| **Amazon Bedrock Data Automation** (PDF / image / video parsing) | ❌ | Sydney, Tokyo, Mumbai (per the BDA cross-region inference profiles table) |
+| Bedrock Knowledge Bases + GraphRAG on Neptune Analytics | ✅ (via `us-east-1` backbone with SG endpoints — KB data plane is in SG; control plane varies) | — |
+| OpenSearch Serverless (vector) | ✅ | — |
+
+**Implication for Singapore-first deployments:**
+- Ingestion pipeline does BDA parse → Titan embed via **cross-region to Tokyo or Sydney**. Corpus bytes transit out of SG during the one-time ingest, then stay in SG (vector store is OpenSearch Serverless in SG, graph store is Neptune Analytics in SG).
+- Query-time calls cross-region to Tokyo for **embed-query + rerank** (combined ~120 ms on the complex lane; emergency lane skips both).
+- If the client mandates **zero cross-border transfer, including transient embedding calls**, the only option is **Cohere Embed v4 in SG** — but that breaks the Amazon-only rule. The trade-off has to be surfaced in the commercial conversation.
+- **Nova Multimodal Embeddings** is a US-only service. Production Version A can use it when the client accepts a specific BAA + cross-border clause for the ingest step.
 
 ### Qwen (Alibaba)
 

@@ -1,19 +1,28 @@
 """RAG for the POC — OpenSearch Serverless hybrid retrieval + Amazon Rerank.
 
 Embeddings and reranking are done with **Amazon-native models on Bedrock**
-(no Cohere):
+(no Cohere). Region reality (verified via `aws bedrock list-foundation-models`
+on 10 May 2026):
 
-- **Amazon Titan Embed Text v2** (`amazon.titan-embed-text-v2:0`) for text
-  chunk embeddings. Available in Singapore (`ap-southeast-1`). 1024-dim,
-  $0.02 per 1M tokens — cheaper than Cohere Embed v4.
+- **Amazon Titan Embed Text v2** (`amazon.titan-embed-text-v2:0`) is NOT
+  available in Singapore. Nearest APAC regions: Sydney, Tokyo, Mumbai. We
+  route the Titan Embed call to **Tokyo** (`ap-northeast-1`) so it
+  co-locates with Amazon Rerank. 1024-dim, $0.02 per 1M tokens.
+- **Amazon Rerank 1.0** (`amazon.rerank-v1:0`) is only hosted in Tokyo and
+  Oregon. We use Tokyo.
 
-- **Amazon Rerank 1.0** (`amazon.rerank-v1:0`) for post-retrieval reranking.
-  Only hosted in Tokyo (`ap-northeast-1`) and Oregon (`us-west-2`), so the
-  Lambda makes a cross-region call to Tokyo from Singapore (~70 ms RTT, fine
-  for the complex lane).
+So the Lambda runs in Singapore, the OpenSearch and Neptune indexes are in
+Singapore, but the Titan embed call and the Rerank call both go to Tokyo
+(~70 ms RTT). The call pattern is:
 
-On the complex lane we retrieve the top-20 by vector similarity, then rerank
-down to the top-5 before giving them to the specialist agent.
+    FAISS kNN (top-20, in-region) → Titan embed query (Tokyo) →
+    Amazon Rerank (Tokyo) → specialist agent.
+
+For production Version A with multimodal requirements (Nova Multimodal
+Embeddings) we'd have to cross-region to us-east-1, which breaks PDPA
+residency. That's a trade-off the client has to accept. The POC sticks to
+text-only Titan + relies on Claude Sonnet 4.5's native vision at query time
+for image attachments.
 """
 from __future__ import annotations
 
@@ -37,8 +46,12 @@ TITAN_EMBED = "amazon.titan-embed-text-v2:0"
 AMAZON_RERANK = "amazon.rerank-v1:0"
 
 # Regions
-SG_REGION = os.environ.get("AWS_REGION", "ap-southeast-1")
-RERANK_REGION = os.environ.get("RERANK_REGION", "ap-northeast-1")  # Amazon Rerank is Tokyo or Oregon only
+TENANT_REGION = os.environ.get("AWS_REGION", "ap-southeast-1")
+# Titan Embed Text v2 is NOT in Singapore — route to Tokyo so it co-locates
+# with Amazon Rerank and we only pay one cross-region round-trip.
+EMBED_REGION = os.environ.get("EMBED_REGION", "ap-northeast-1")
+# Amazon Rerank 1.0 is single-region: Tokyo or Oregon only.
+RERANK_REGION = os.environ.get("RERANK_REGION", "ap-northeast-1")
 
 FAISS_DIR = Path(os.environ.get("FAISS_DIR", "/tmp/nova-faiss"))
 
@@ -48,7 +61,7 @@ class TitanBedrockEmbeddings(Embeddings):
 
     def __init__(self, model_id: str = TITAN_EMBED, *, bedrock=None):
         self._model = model_id
-        self._bedrock = bedrock or boto3.client("bedrock-runtime", region_name=SG_REGION)
+        self._bedrock = bedrock or boto3.client("bedrock-runtime", region_name=EMBED_REGION)
 
     def embed_query(self, text: str) -> list[float]:
         return self._embed_one(text)
