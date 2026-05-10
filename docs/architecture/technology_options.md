@@ -9,6 +9,19 @@ Scenario anchors from the brief:
 
 The seven domains below map directly to the brief's five bullets (Data pipeline, Model orchestration, Security, Deployment, Performance optimization) plus two that the brief implies (Retrieval is a sub-choice of data pipeline; Observability is a sub-choice of compliance).
 
+## Phase legend (used throughout this doc)
+
+The rollout plan in `docs/architecture/AWS_architecture.md` §7.2 and `docs/architecture/Alibaba_architecture.md` §7.2 runs in four phases:
+
+| Phase | Weeks | Goal | What actually ships |
+|---|---|---|---|
+| **Phase 1 — Ship the pilot** | 1–6 | Get it running with real data, meet the 2 s SLA without fine-tuning | Scheduled ingestion (WHO + ICD-11 + SharePoint), upload portal over VPN, hybrid retrieval + rerank, base LLM on both lanes, emergency toggle, Layer-1 + Layer-2 caching where supported, eval harness baseline. **No fine-tuning.** |
+| **Phase 2 — Customize on real data** | 7–10 | Close the tone and specialty gaps using usage logs from Phase 1 | Teacher-data generation + clinician review → SFT / LoRA / distillation student at 5 % canary. Optional: specialist multi-agent on complex lane; LazyGraphRAG over WHO corpus. Explicit Qwen Context Cache on system-prompt prefix (C). |
+| **Phase 3 — Make it cheap and fast at scale** | 11–14 | Promote student to 100 %, add preference / RL tuning, reserve capacity | Student 100 % on fast lane; DPO / GRPO round; Bedrock Reserved Tier or Qwen PTU on the emergency lane if sustained-TPM justifies it. Feature-flag the specialist agents and KG-RAG on per-hospital. |
+| **Phase 4 — Keep it fresh** | quarterly | Prevent drift | Retrain student on new clinician data + new WHO / ICD-11 releases; re-qualify with eval harness before promoting; WHO-refresh invalidates cached answers. |
+
+"Phase 1 default" in the tables below means **ships in weeks 1–6**. "Phase 2 option" means **ships only if Phase 1 measurements show we need it**. Deferring to Phase 2/3 is not a "maybe later" — it's an explicit decision to let real usage data pick the extension point.
+
 ---
 
 ## 1. Data pipeline options
