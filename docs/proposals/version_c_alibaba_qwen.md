@@ -16,14 +16,14 @@
 | Primary region | Singapore International (Alibaba Cloud) |
 | Cross-region hops at query time | **0** |
 | Emergency SLA (p95) | **≤ 2 s** |
-| Fast-lane model | [Qwen3.5-Flash](https://www.alibabacloud.com/help/en/model-studio/model-pricing) + fine-tuned [Qwen3-8B student](https://www.alibabacloud.com/help/en/pai/use-cases/quick-start-deploy-fine-tune-and-evaluate-qwen3-models) |
-| Complex-lane model | Qwen3.5-Plus |
+| Fast-lane model | [Qwen3.5-Flash](https://www.alibabacloud.com/help/en/model-studio/model-pricing) |
+| Complex-lane model | Qwen3.5-Plus + fine-tuned [Qwen3-8B student](https://www.alibabacloud.com/help/en/pai/use-cases/quick-start-deploy-fine-tune-and-evaluate-qwen3-models) on PAI-EAS (trained pre-launch, serves ~60% of complex traffic) |
 | Vision specialist | Qwen3-VL-Plus |
 | Managed GraphRAG | [AnalyticDB PG GraphRAG service](https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql/user-guide/use-the-graphrag-service) |
 | Cache | [Tair (Redis OSS-compatible)](https://www.alibabacloud.com/product/tair) + [Qwen Context Cache](https://www.alibabacloud.com/help/en/model-studio/context-cache) |
 | Data residency | PDPA-native; zero default cross-border transfer |
 | Audit retention | 6 years, [HIPAA §164.530(j)](https://www.hipaajournal.com/hipaa-retention-requirements/) |
-| Monthly cost | **~$2,220 base** / ~$2,280–3,060 with student |
+| Monthly cost (launch-day) | **~$2,280–3,060** (student active from day one — committed) |
 
 ---
 
@@ -74,7 +74,7 @@ Operating constraints the board has called out:
 A single-region Singapore deployment on Alibaba Cloud International using:
 
 - [**Model Studio**](https://www.alibabacloud.com/help/en/model-studio/what-is-model-studio) for chat serving — Qwen3.5-Flash on the emergency lane, Qwen3.5-Plus on the complex lane, Qwen3-VL-Plus for Radiology
-- A fine-tuned **Qwen3-8B student** (trained pre-launch on [PAI Model Gallery](https://www.alibabacloud.com/help/en/pai/use-cases/quick-start-deploy-fine-tune-and-evaluate-qwen3-models) with SFT + LoRA, distilled from Qwen3.5-Plus) served on [PAI-EAS](https://www.alibabacloud.com/help/en/pai) — serves ~60% of complex-lane traffic at cheaper cost and faster TTFT
+- A fine-tuned **Qwen3-8B student** (trained pre-launch on [PAI Model Gallery](https://www.alibabacloud.com/help/en/pai/use-cases/quick-start-deploy-fine-tune-and-evaluate-qwen3-models) with SFT + LoRA, distilled from Qwen3.5-Plus) served on [PAI-EAS](https://www.alibabacloud.com/help/en/pai) — **committed, serving ~60% of complex-lane traffic on day one** (Nova-voice tone control, cheapest-in-class retrain cadence at $15–40/run, and locally-controlled weights). Also acts as emergency DR fallback if Model Studio has an outage.
 - **Hybrid RAG** on [OpenSearch Vector Search Edition](https://www.alibabacloud.com/help/en/open-search/vector-search-edition/product-overview) HA, combined with **managed GraphRAG** via the [AnalyticDB for PostgreSQL GraphRAG service](https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql/user-guide/use-the-graphrag-service)
 - A **three-layer cache**: [Tair (Redis OSS-compatible)](https://www.alibabacloud.com/product/tair) semantic cache at Layer 1, [Qwen Context Cache](https://www.alibabacloud.com/help/en/model-studio/context-cache) at Layer 2, [Qwen Provisioned Throughput Units](https://www.alibabacloud.com/help/en/model-studio/model-training-and-deployment-billing) at Layer 3
 - **40-department multi-agent topology** behind a router — Emergency bypasses the router via a pure if/else on the explicit emergency toggle (no classifier LLM call)
@@ -443,7 +443,7 @@ Both are used, but for different purposes. RAG is the primary mechanism for fact
 | Need | Mechanism | Why not the other |
 |---|---|---|
 | Answer factual medical questions | **RAG** | Fine-tuning can't keep up with monthly WHO updates; training on PHI is a compliance dead-end |
-| 2-second emergency SLA | **Fine-tuned Qwen3-8B student** + [3-layer cache](#102-caching-strategy) | RAG alone can be fast (≤ 2 s achievable with smaller LLM); student model reduces per-token latency further |
+| 2-second emergency SLA | **Qwen3.5-Flash on fast lane + [3-layer cache](#102-caching-strategy)** | Flash is already fast enough; caching brings cached-hit p95 to ~150 ms. The Qwen3-8B student is a *complex-lane* asset, and a DR fallback for emergency if Model Studio has an outage. |
 | Consistent tone | **Fine-tuning** (SFT on approved answers) + fixed system prompt + `temperature=0.1` | Tone drifts with prompt engineering alone |
 | Tool-calling reliability (emergency template calls, ICD-11 lookup) | **GRPO** on open-weight Qwen (optional, post-launch) | Pure SFT doesn't optimize for tool-selection correctness |
 
@@ -559,11 +559,12 @@ Framework decision, model lineup, and routing. Diagram: [`../architecture/diagra
 
 | Role | Model | Justification |
 |---|---|---|
-| **Emergency fast lane** | **[Qwen3.5-Flash](https://www.alibabacloud.com/help/en/model-studio/model-pricing)** (1M-context, streaming) + fine-tuned Qwen3-8B student (PAI-EAS) | Cheapest Qwen family member on Model Studio SG Intl at $0.10/1M input, $0.40/1M output (tier 1). First-token ~300 ms under Qwen Context Cache hit. Student handles ~60% of traffic at fraction of cost. |
-| **Complex lane + teacher** | **Qwen3.5-Plus** (Feb 2026 release) | Replaced Qwen-Max (retired as default): same or better benchmarks, ~3× cheaper input / ~2.5× cheaper output. 1M-context, multimodal-capable. $0.40/1M input, $2.40/1M output (tier 1). |
+| **Emergency fast lane** | **[Qwen3.5-Flash](https://www.alibabacloud.com/help/en/model-studio/model-pricing)** (1M-context, streaming) | Cheapest Qwen family member on Model Studio SG Intl at $0.10/1M input, $0.40/1M output (tier 1). First-token ~300 ms under Qwen Context Cache hit. Already fast enough for the 2-s SLA with 3-layer cache; no student needed here. |
+| **Complex lane + teacher** | **Qwen3.5-Plus** (Feb 2026 release) | Replaced Qwen-Max (retired as default): same or better benchmarks, ~3× cheaper input / ~2.5× cheaper output. 1M-context, multimodal-capable. $0.40/1M input, $2.40/1M output (tier 1). Handles the 40% hardest clinical questions. |
+| **Complex-lane student** | **Qwen3-8B** on PAI-EAS (trained via [PAI Model Gallery](https://www.alibabacloud.com/help/en/pai/use-cases/quick-start-deploy-fine-tune-and-evaluate-qwen3-models) SFT + LoRA, distilled from Qwen3.5-Plus) | **Committed, active on day one.** Serves the 60% of complex traffic where distilled quality matches the teacher. 8B fits on a single A10 GPU; ~2× faster than Qwen3.5-Plus; gives Nova-voice tone control + locally-controlled weights + cheapest-in-class retrain cadence ($15–40/run). Not optional — the launch cost numbers (§15) include it. |
 | **Vision specialist (Radiology)** | **Qwen3-VL-Plus** | Native image input; router forces this model on any `has_image=true` request |
 | **Router** | Qwen3.5-Flash with `response_format=json_object` | Cheap structured-output; 150–200 ms p95 |
-| **Fine-tuned student** | **Qwen3-8B** (trained via [PAI Model Gallery](https://www.alibabacloud.com/help/en/pai/use-cases/quick-start-deploy-fine-tune-and-evaluate-qwen3-models) SFT + LoRA, distilled from Qwen3.5-Plus) | 8B is the sweet spot — fits on single A10 GPU; ~2× faster than Qwen3.5-Plus; quality matches teacher on ~60% of questions after SFT |
+| **Emergency DR fallback** | Qwen3-8B student on PAI-EAS (circuit-breaker path) | When Model Studio endpoint has an outage, the same PAI-EAS student that serves complex-lane traffic can keep the emergency lane running until Model Studio is back |
 
 Qwen3.6-27B (22 Apr 2026 release) is **not chosen**. It's a coding-specialist model with SWE-bench leadership but lower general-knowledge scores than Qwen3.5-Plus; not on Model Studio API as of verification date. Re-evaluate if Alibaba publishes an API endpoint with medical benchmarks.
 
@@ -1271,10 +1272,10 @@ The 2-second emergency SLA is a hard business requirement. This section shows ho
 
 **Why this fits in 2 seconds**:
 - Pure if/else emergency routing saves ~300 ms vs a classifier LLM call
-- Qwen3.5-Flash is genuinely fast (~250 tok/s output streaming on Model Studio SG)
+- Qwen3.5-Flash is genuinely fast (~250 tok/s output streaming on Model Studio SG) — the fast lane already fits
 - Qwen Context Cache implicit prefix caching (20% of normal input price on hits) cuts TTFT
-- Fine-tuned Qwen3-8B student serves ~60% of traffic at ~2× faster than Qwen3.5-Plus
 - Zero cross-region hops — everything inside Singapore International
+- The Qwen3-8B student is a *complex-lane* asset (serves ~60% of complex traffic at ~2× faster than Qwen3.5-Plus) and an emergency DR fallback if Model Studio has an outage — it is NOT on the critical path for the 2-s emergency SLA
 
 **Complex-lane budget** is 6,000 ms — more room for multi-tool agent synthesis (graph_retrieve + icd11_lookup + pubmed_search can take 3–5 seconds combined).
 
@@ -1891,12 +1892,17 @@ Every mutable production change has a defined roll-back path:
 
 Assumptions shared with the other versions in [`../overview.md`](../overview.md): 500 physicians × 40 queries/day = **~600k queries/month**. 30/70 emergency/complex split. Average request 3,000 input + 350 output tokens (emergency) or 3,000 + 600 (complex). All list prices, USD, early 2026.
 
-### 15.1 Monthly production cost — base (no fine-tuned student yet)
+### 15.1 Monthly production cost (launch-day — student committed, active from day one)
+
+All capabilities from §14.1 are running. Student is NOT optional — it's part of the launch scope per §3.2 (principle 8: one product, no phases).
 
 | Item | Calc | Cost |
 |---|---|---|
 | Fast lane — Qwen3.5-Flash | 180k × 65% (post-L1-cache) × $0.0004 | ~$47 |
-| Complex lane — Qwen3.5-Plus | 420k × $0.0026 | ~$1,105 |
+| Complex lane — Qwen3.5-Plus (40% of complex traffic, rest goes to student) | 420k × 40% × $0.0026 | ~$440 |
+| Complex lane — Qwen3-8B student on PAI-EAS (60% of complex traffic) | A10 always-on (see below) | baked into infra |
+| PAI-EAS A10 always-on (student serving) | 720 hr × ~$1.00–2.00/hr | +$720–1,500 |
+| SFT + LoRA training, amortized quarterly | $15–40 per run / 3 months | ~$5–15 |
 | `text-embedding-v4` | ~500M tokens × $0.07 / 1M | ~$35 |
 | `tongyi-embedding-vision-plus` (figure chunks) | ~5M text × $0.09 + ~50k images metered | ~$50 |
 | `qwen3-rerank` (top-20, ~10% of complex) | ~500M tokens amortized | ~$50 |
@@ -1907,18 +1913,23 @@ Assumptions shared with the other versions in [`../overview.md`](../overview.md)
 | Function Compute + API Gateway + CDN + WAF | serverless | ~$90 |
 | OSS + ActionTrail + SLS WORM | 6-year retention | ~$70 |
 | Tair (Redis OSS-compatible) | clustered | ~$60 |
-| IPsec VPN Gateway (dual tunnel HA) | | ~$60 |
-| **Base monthly** | | **~$2,220** |
+| IPsec VPN Gateway (Mode-2 tenants only) | per Mode-2 tenant | ~$60 |
+| **Launch-day monthly total** | | **~$2,280–3,060** |
 
-### 15.2 With fine-tuned Qwen3-8B student active (launch-day target)
+**Why a range, not a single number**:
+- PAI-EAS A10 pricing is ~$1.00–$2.00/hr depending on spot vs pay-as-you-go and current Alibaba promotions; we model both ends
+- Qwen PTU (Layer 3 cache) adds $150–300/mo when activated for emergency peak — not enabled on day one, brought up after first-month peak-TPM measurement
 
-| Item | Cost |
-|---|---|
-| Base (§15.1) | $2,220 |
-| SFT+LoRA training, amortized quarterly | +$15–40 |
-| PAI-EAS A10 always-on | +$720–1,500 |
-| Student takes ~60% of complex traffic (displaces Qwen3.5-Plus) | −$660 |
-| **Total at launch** | **~$2,280–3,060** |
+### 15.2 What the student buys us (why it's not optional)
+
+The student handles the 60% of complex-lane traffic where distilled quality matches the teacher. Four things would regress if we dropped it:
+
+1. **Tone control** — SFT on Nova-approved answers gives the assistant a consistent voice across the 40 specialty agents. Prompt engineering alone drifts.
+2. **Locally-controlled weights** — the student is trained on Nova data and hosted on a Nova-controlled endpoint. Compliance officers can attest to exactly what's served; we're not dependent on an upstream model-version bump silently changing clinical output.
+3. **Retrain cadence** — $15–40/run vs ~$1,700–2,700 on AWS Bedrock Model Distillation. Monthly DPO + quarterly SFT are affordable; without the student we lose this iteration speed.
+4. **DR fallback for emergency lane** — if Model Studio has an endpoint outage, the PAI-EAS student keeps the emergency lane running through a circuit-breaker switch. Without the student, a Model Studio outage = full assistant outage.
+
+The $720–1,500/month A10 endpoint is the cost of those four properties. Removing it saves that amount but loses all four.
 
 ### 15.3 Per-call cost
 
@@ -1958,23 +1969,28 @@ Cheapest retrain cadence of the three versions. Monthly DPO + quarterly SFT fit 
 | Change | Impact on monthly |
 |---|---|
 | Toggle shift 30/70 → 60/40 emergency/complex | −$900 |
-| Student off (Qwen3.5-Plus takes 100% complex) | net ~$60 saving (no A10 endpoint, more tokens) |
+| **Remove student (Qwen3.5-Plus takes 100% complex) — NOT recommended, loses tone control + retrain cadence + DR fallback** | **−$60 to −$840** (net; depends on A10 endpoint cost) |
 | OpenSearch HA → single-AZ | −$90 |
 | AnalyticDB PG 4-core → 8-core for larger graph | +$300 |
-| Qwen PTU 1 unit for emergency peak | +$150–300 |
+| Qwen PTU 1 unit for emergency peak (not day-one default) | +$150–300 |
 | Drop `tongyi-embedding-vision-plus`, text-only retrieval | −$50 |
 | Add 2,000 physician tenant (4× volume) | roughly +$2,500–3,500 |
+| Mode-2 tenant (VPN Gateway per tenant) | +$60 per Mode-2 tenant |
+
+"Student off" is shown as a sensitivity only because reviewers ask about it. **The launch configuration includes the student.** A client that contractually removes the student would see roughly $60–840 savings depending on where A10 pricing lands, at the cost of tone inconsistency, upstream model-version dependency, slower retrain cadence, and losing the emergency DR fallback.
 
 ### 15.7 Cost comparison against Versions A and B
 
-| Version | Monthly base | Quarterly training | Residency |
-|---|---|---|---|
-| **C — Alibaba + Qwen (SG)** | **$2,220** | **~$40** | **SG-native (zero cross-region)** |
-| A1+ — AWS Nova (SG) | $2,955 | $1,700–2,700 | SG chat; Tokyo embed+rerank |
-| B — AWS Qwen (Sydney) | $2,967 | $640 Bedrock RFT | Sydney chat |
-| A2 — AWS Claude (SG) | $7,295 | $1,700–2,700 | SG chat; Tokyo embed+rerank |
+All three launch-day numbers include their respective student / custom-model cost, for apples-to-apples comparison.
 
-Version C is the cheapest and the only fully SG-native option.
+| Version | Monthly (launch, all features on) | Quarterly training cost | Residency |
+|---|---|---|---|
+| **C — Alibaba + Qwen (SG)** | **~$2,280–3,060** | **~$15–40/run** | **SG-native (zero cross-region)** |
+| A1+ — AWS Nova (SG) | ~$4,655–5,655 (after Nova Lite distillation) | $1,700–2,700/run | SG chat; Tokyo embed+rerank |
+| B — AWS Qwen (Sydney) | ~$3,240 (with RFT'd Qwen3-32B) | ~$640/run Bedrock RFT | Sydney chat |
+| A2 — AWS Claude (SG) | ~$5,765 (after Nova Lite distillation) | $1,700–2,700/run | SG chat; Tokyo embed+rerank |
+
+Version C is still cheapest, still only fully SG-native.
 
 ### 15.8 Free-tier and trial credits
 

@@ -55,8 +55,8 @@
 
   <rect x="290" y="430" width="190" height="70" class="box box-llm"/>
   <text x="385" y="452" text-anchor="middle" class="title">Qwen3-8B student</text>
-  <text x="385" y="470" text-anchor="middle" class="lbl-sm">PAI-EAS A10</text>
-  <text x="385" y="486" text-anchor="middle" class="lbl-sm">~60% traffic via feature flag</text>
+  <text x="385" y="470" text-anchor="middle" class="lbl-sm">DR fallback only</text>
+  <text x="385" y="486" text-anchor="middle" class="lbl-sm">(Model Studio outage path)</text>
 
   <rect x="90" y="520" width="390" height="50" class="box"/>
   <text x="285" y="540" text-anchor="middle" class="title">Emergency Medicine agent</text>
@@ -87,9 +87,9 @@
   <!-- 40 department agents strip -->
   <rect x="575" y="520" width="640" height="90" class="box box-dept"/>
   <text x="895" y="542" text-anchor="middle" class="title">40 specialty agents (UI never exposes list)</text>
-  <text x="895" y="562" text-anchor="middle" class="lbl-sm">Emergency · ICU · Anesthesia · Infection Control · Cardiology (Int/Interv/Surg)</text>
-  <text x="895" y="578" text-anchor="middle" class="lbl-sm">Pulm · GI · Endoscopy · Neph · Endo · Neuro · Oncology · OB · Neonatology · ENT</text>
-  <text x="895" y="594" text-anchor="middle" class="lbl-sm">Radiology (Qwen3-VL-Plus) · Pharmacy · Derm · Plastic · 21 others · + Triage fallback</text>
+  <text x="895" y="562" text-anchor="middle" class="lbl-sm">Emergency · ICU · Cardio · Pulm · GI · Neph · Endo · Neuro · Oncology · OB · Peds · ENT · ...</text>
+  <text x="895" y="578" text-anchor="middle" class="lbl-sm">Radiology → Qwen3-VL-Plus · Pharmacy side-channel · Triage fallback</text>
+  <text x="895" y="596" text-anchor="middle" class="lbl-sm" fill="#16a34a"><tspan font-weight="700">Serving split:</tspan> Qwen3-8B student (PAI-EAS A10) = 60% · Qwen3.5-Plus teacher = 40%</text>
 
   <!-- Tools -->
   <rect x="575" y="630" width="150" height="90" class="box box-tool"/>

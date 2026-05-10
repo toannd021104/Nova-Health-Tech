@@ -105,14 +105,16 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 | **Emergency routing** | Pure if/else on explicit UI toggle — no classifier LLM call | Same |
 | **Launch scope** | One product, all features on day one; no phases | Same |
 
-## Verdict (ranked by total monthly cost, SG residency)
+## Verdict (ranked by total monthly cost, SG residency — launch-day with all features on)
 
-| Rank | Version | ~$/mo | SG-native for query path |
+| Rank | Version | ~$/mo (launch-day) | SG-native for query path |
 |---|---|---|---|
-| 1 | Version C (Alibaba) | ~$2,220 | ✅ zero cross-region hops |
-| 2 | Version A1+ (Nova Micro + Nova Pro) | ~$2,955 | ✅ chat; Tokyo embed+rerank |
-| 3 | Version B (Qwen Sydney) | ~$2,967 | ⚠️ Sydney chat |
-| 4 | Version A2 (Haiku 4.5 + Sonnet 4.5) | ~$7,295 | ✅ chat; Tokyo embed+rerank |
+| 1 | Version C (Alibaba) | ~$2,280–3,060 | ✅ zero cross-region hops |
+| 2 | Version B (Qwen Sydney, with custom Qwen3-32B) | ~$3,240 | ⚠️ Sydney chat |
+| 3 | Version A1+ (Nova Micro + Nova Pro, with Nova Lite student) | ~$4,655–5,655 | ✅ chat; Tokyo embed+rerank |
+| 4 | Version A2 (Haiku 4.5 + Sonnet 4.5, with Nova Lite student) | ~$5,765 | ✅ chat; Tokyo embed+rerank |
+
+All four numbers include the version's respective fine-tuned student / custom-model cost — apples-to-apples.
 
 ## Running the pieces
 

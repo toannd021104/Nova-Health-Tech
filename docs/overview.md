@@ -14,7 +14,7 @@ Three production architectures for Nova Health Tech's clinical decision-support 
 | Cache (Layer 1 semantic) | ElastiCache Redis OSS | ElastiCache Redis OSS | Tair (Redis-compatible) |
 | Cache (Layer 2 prefix) | [Bedrock Prompt Caching](https://aws.amazon.com/bedrock/prompt-caching/) | ❌ Qwen3 not supported; self-hosted path uses [vLLM APC](https://docs.vllm.ai/en/latest/features/automatic_prefix_caching.html) | [Qwen Context Cache](https://www.alibabacloud.com/help/en/model-studio/context-cache) (implicit + explicit) |
 | Cross-region hops at query time | 2 (Tokyo embed+rerank) | 2–3 (Sydney chat + Tokyo embed+rerank) | **0** |
-| Monthly cost (600 k calls, base) | ~$2,955 A1+ / ~$7,295 A2 | ~$2,967 | **~$2,220** |
+| Monthly cost (600 k calls, launch-day with student) | ~$4,655–5,655 A1+ / ~$5,765 A2 | ~$3,240 | **~$2,280–3,060** |
 | Singapore data residency | ✅ | ⚠️ Sydney; PDPA contract-mitigable | ✅ |
 
 Full cost breakdown lives in each version's proposal doc. Regional-availability truth table lives in [`regional_services.md`](regional_services.md).
