@@ -89,7 +89,7 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 | **Complex-lane model** | Claude Sonnet 4.5 or Amazon Nova Pro (A) · Qwen3 VL 235B A22B (B) | Qwen3.5-Plus |
 | **Claude Opus** | Not used | N/A |
 | **Text embeddings** | Amazon Titan Embed Text v2 (Tokyo) | text-embedding-v4 |
-| **Multimodal embeddings (figures)** | Amazon Nova Multimodal Embeddings (us-east-1) | tongyi-embedding-vision-plus (SG Intl) |
+| **Multimodal embeddings (figures)** | Amazon Nova Multimodal Embeddings (us-east-1) | tongyi-embedding-vision-plus (Singapore, International site) |
 | **Reranker** | Amazon Rerank 1.0 (Tokyo) | qwen3-rerank |
 | **Vector store** | OpenSearch Serverless | OpenSearch Vector Search Edition |
 | **Managed GraphRAG** | Bedrock KB GraphRAG on Neptune Analytics | AnalyticDB PG GraphRAG service |

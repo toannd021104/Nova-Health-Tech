@@ -103,8 +103,20 @@ A single-region Singapore deployment on Alibaba Cloud International using:
 
 - Not a staged rollout. **One product** launches with all capabilities active: ingestion, multi-agent, RAG, GraphRAG, fine-tuned student, 3-layer cache, guardrails, audit.
 - **Not on-prem.** No Apsara Stack, no Nova-specific software installed inside the hospital. The hospital provides two things: a firewall WAF allow-list entry for the clinician chat path, and an IPsec VPN endpoint termination for the backend data-plane flows that carry raw PHI (SharePoint / SMB / on-prem FHIR / Upload Portal).
-- Not dependent on Chinese Mainland data sovereignty — Singapore International is PDPA-compatible.
+- Not dependent on Chinese Mainland data sovereignty — see the "Singapore International" note below.
 - Not a pure Model Studio or pure PAI solution. The design uses **both** — Model Studio for API-driven serving, PAI for training + custom student serving.
+
+### 1.5 A note on "Singapore International" / "SG Intl"
+
+[Alibaba Cloud operates two consoles from one physical cloud](https://www.alibabacloud.com/help/en/general-reference/latest/alibaba-cloud-overview): the **Mainland China site** (`aliyun.com`, RMB billing, primarily serves PRC customers) and the **International site** (`alibabacloud.com`, USD billing, everywhere else). Some services are only exposed through one site or the other, even when both physically could reach the Singapore (`ap-southeast-1`) region.
+
+For Version C, all tenants are registered on the **International site**. When this document says:
+
+- **"Singapore"** or **"SG"** — refers to the `ap-southeast-1` region (same physical region in either site)
+- **"Singapore International"** or **"SG Intl"** — specifically means "the `ap-southeast-1` region accessed through the International site". Used to call out services whose availability differs between sites. [Model Studio](https://www.alibabacloud.com/help/en/model-studio/what-is-model-studio), for example, is International-site only — its runtime endpoint is `https://dashscope-intl.aliyuncs.com/...` (the `-intl` suffix is the manifestation of this split)
+- **"Chinese Mainland"** or **"CN Mainland"** — the China site (Beijing, Shanghai, etc.). Out of scope for all Version C tenants. A few Qwen models (`qwen3-vl-embedding`, `qwen3-vl-rerank`, `gte-rerank-v2`) exist only on this site and are therefore unavailable to us — we work around them with the International-site alternatives
+
+The shorthand "SG Intl" appears in tables where column-width is tight, especially in [`../regional_services.md`](../regional_services.md). Read it as "Singapore region via Alibaba Cloud International site".
 
 ---
 
@@ -2080,6 +2092,9 @@ Full mapping in [`../compliance.md`](../compliance.md).
 | **PTU** | Provisioned Throughput Unit (reserved inference capacity) |
 | **Bailian** | OpenAPI product name for Model Studio |
 | **DashScope** | Runtime API gateway for Model Studio |
+| **SG Intl** | Shorthand for "Singapore region (`ap-southeast-1`) accessed through the Alibaba Cloud International site" (`alibabacloud.com`). Distinguishes from "SG on CN Mainland site" for services that differ by site — e.g. [Model Studio](https://www.alibabacloud.com/help/en/model-studio/what-is-model-studio) is International-only with runtime endpoint `dashscope-intl.aliyuncs.com`. See [§1.5](#15-a-note-on-singapore-international--sg-intl). |
+| **International site** | `alibabacloud.com` — Alibaba's console for customers outside Mainland China. USD billing. All Version C tenants live here. |
+| **CN Mainland site** | `aliyun.com` — Alibaba's console for Mainland China customers. RMB billing. Out of scope for Version C; hosts some Qwen variants (`qwen3-vl-embedding`, `qwen3-vl-rerank`, `gte-rerank-v2`) that are not available via International site. |
 | **Tair** | Alibaba's Redis OSS-compatible managed service |
 | **SAE** | Serverless App Engine (Alibaba's managed container runtime) |
 | **WORM** | Write Once Read Many (immutable object storage) |

@@ -6,7 +6,7 @@ Three production architectures for Nova Health Tech's clinical decision-support 
 
 | | **Version A — AWS + Claude** | **Version B — AWS + Qwen** | **Version C — Alibaba + Qwen** |
 |---|---|---|---|
-| Primary region | Singapore `ap-southeast-1` | Sydney `ap-southeast-2` Bedrock + SG tenant | Singapore Intl endpoint |
+| Primary region | Singapore `ap-southeast-1` | Sydney `ap-southeast-2` Bedrock + SG tenant | Singapore `ap-southeast-1` via Alibaba Cloud International site |
 | Fast-lane model | Claude Haiku 4.5 (or Nova Micro) | Qwen3 Next 80B A3B (MoE, 3B active) | Qwen3.5-Flash |
 | Complex-lane model | Claude Sonnet 4.5 | Qwen3 VL 235B A22B | Qwen3.5-Plus |
 | Student (pre-launch SFT) | Nova Lite via [Bedrock Model Distillation](https://docs.aws.amazon.com/bedrock/latest/userguide/model-distillation.html) | Qwen3-32B via [Bedrock RFT](https://docs.aws.amazon.com/bedrock/latest/userguide/fine-tuning-openai-apis.html) (us-west-2) | Qwen3-8B on PAI SFT+LoRA+GRPO |

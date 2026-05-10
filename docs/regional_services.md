@@ -4,6 +4,8 @@ Verified **10 May 2026** via `aws bedrock list-foundation-models` on profile `ga
 
 Legend: ✅ available · ❌ not in that region · ⚠️ gated by account quota / allowlist · 🌐 single endpoint, no per-region split
 
+**Note on "SG Intl" (Alibaba column):** Alibaba Cloud has two consoles — [International site](https://www.alibabacloud.com/) (`alibabacloud.com`, USD billing) and Mainland China site (`aliyun.com`, RMB billing). "SG Intl" = Singapore region (`ap-southeast-1`) accessed through the International site. Some Qwen variants exist only on CN Mainland. All Version C tenants live on the International site. See [`proposals/version_c_alibaba_qwen.md` §1.5](proposals/version_c_alibaba_qwen.md#15-a-note-on-singapore-international--sg-intl) for the full explanation.
+
 ---
 
 ## 1. AWS — where each service actually lives
