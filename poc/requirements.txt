@@ -1,4 +1,4 @@
-# POC runtime — kept minimal for Lambda deploy size.
+# POC runtime — AWS + Qwen (Version B). Kept minimal for Lambda deploy size.
 boto3>=1.40,<2.0
 fastapi>=0.115,<1.0
 pydantic>=2.9,<3.0
@@ -11,3 +11,5 @@ langgraph>=0.2,<0.4
 faiss-cpu>=1.8,<2.0
 pypdf>=4.0,<6.0
 numpy>=1.26,<3.0
+# ElastiCache Redis OSS client (NOT Valkey) — per POC request.
+redis>=5.0,<6.0

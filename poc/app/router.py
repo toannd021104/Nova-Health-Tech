@@ -1,21 +1,27 @@
 """Router agent — picks the right department from a clinician's prompt.
 
-Runs on Nova Micro for cost (~$0.00015 per call). Returns a structured JSON
-decision so the LangGraph node can route deterministically.
+Runs on **Qwen3 32B dense** on Bedrock Sydney (`qwen.qwen3-32b`). Qwen3-32B
+is cheap ($0.1545 in / $0.6180 out per 1M tokens) and handles structured
+JSON output well. Returns a RouterDecision so the LangGraph node can route
+deterministically.
 """
 from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 from dataclasses import dataclass
 from typing import Any
 
 import boto3
 
-from poc.app.agents import DEPARTMENTS, NOVA_MICRO
+from poc.app.agents import DEPARTMENTS, QWEN_ROUTER
 
 log = logging.getLogger(__name__)
+
+# Qwen on Bedrock lives in Sydney; the rest of the stack is Singapore.
+BEDROCK_REGION = os.environ.get("BEDROCK_QWEN_REGION", "ap-southeast-2")
 
 _ROUTER_SYSTEM = """You are a triage router for a clinical AI assistant. Given a clinician's question plus any short summary of attached artifacts (images, labs, notes), pick the single most appropriate clinical department from this list:
 
@@ -26,7 +32,7 @@ Output exactly this JSON and nothing else:
 
 Rules:
 - `department` is the primary owner. Pick the narrowest correct specialty.
-- `secondary` is a list (possibly empty) of departments that must be consulted as a side-channel — e.g. include "infectious-disease" for any antibiotic question even if the primary is another specialty; include "clinical-pharmacy" for any question with 2+ drugs.
+- `secondary` is a list (possibly empty) of departments that must be consulted as a side-channel — e.g. include "infectious-disease" for any antibiotic question even if the primary is another specialty.
 - Never pick "emergency" here — emergency cases come in with a hard toggle flag and skip this router entirely. If the question looks time-critical, pick the most relevant non-emergency department AND set `reason` to note the urgency.
 - If the question is imaging-centric or the user attached an image, pick "radiology".
 - `confidence` < 0.6 means "I'm guessing" — the caller will fall back to general-medicine.
@@ -42,7 +48,8 @@ class RouterDecision:
 
     @classmethod
     def from_llm_output(cls, raw: str) -> "RouterDecision":
-        # Nova sometimes wraps JSON in code fences; strip them if present.
+        # Qwen occasionally emits trailing whitespace or a fenced block — strip
+        # both and extract the first JSON object.
         raw = raw.strip()
         fence = re.search(r"\{[\s\S]*\}", raw)
         if not fence:
@@ -61,8 +68,8 @@ class RouterDecision:
 
 
 def route(question: str, attachments_summary: str = "", *, bedrock=None) -> RouterDecision:
-    """Classify a question into a department via Nova Micro on Bedrock Converse."""
-    bedrock = bedrock or boto3.client("bedrock-runtime")
+    """Classify a question into a department via Qwen3-32B on Bedrock Converse."""
+    bedrock = bedrock or boto3.client("bedrock-runtime", region_name=BEDROCK_REGION)
 
     dept_list = "\n".join(
         f"- {d.label}: {d.english} ({d.vietnamese})"
@@ -76,7 +83,7 @@ def route(question: str, attachments_summary: str = "", *, bedrock=None) -> Rout
         user_content.append({"text": f"Attachments: {attachments_summary}"})
 
     response = bedrock.converse(
-        modelId=NOVA_MICRO,
+        modelId=QWEN_ROUTER,
         system=[{"text": system_prompt}],
         messages=[{"role": "user", "content": user_content}],
         inferenceConfig={"maxTokens": 200, "temperature": 0.0},

@@ -1,17 +1,23 @@
-"""Per-department agent prompts for the POC.
+"""Per-department agent prompts for the POC (Version B — AWS + Qwen).
 
 The router classifier picks one of these department labels; each label
 corresponds to a system prompt that specializes the answer, a KB namespace
 prefix, and a model choice.
+
+Region note: Qwen on Bedrock lives in Sydney (`ap-southeast-2`). The rest of
+the stack (OpenSearch Serverless, Neptune Analytics, ElastiCache Redis) runs
+in Singapore (`ap-southeast-1`). The Lambda calls cross-region for inference.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-# Model IDs — available in ap-southeast-1 via Bedrock inference profiles.
-HAIKU = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
-SONNET = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
-NOVA_MICRO = "apac.amazon.nova-micro-v1:0"
+# Qwen model IDs on Bedrock Sydney (verified 10 May 2026).
+QWEN_ROUTER = "qwen.qwen3-32b"                    # dense 32B, cheap, structured output
+QWEN_EMERGENCY = "qwen.qwen3-next-80b-a3b"        # MoE, 3B active, fastest Qwen on Bedrock
+QWEN_COMPLEX = "qwen.qwen3-vl-235b-a22b"          # vision-capable, 22B active
+QWEN_COMPLEX_TEXT = "qwen.qwen3-235b-a22b-2507"   # text-only, cheaper for non-image queries
+QWEN_GRAPH_EXTRACT = "qwen.qwen3-235b-a22b-2507"  # ingest-time entity/relation extraction
 
 
 @dataclass(frozen=True)
@@ -20,7 +26,7 @@ class Department:
     vietnamese: str        # original Vietnamese department name
     english: str           # short English label surfaced in the UI badge
     kb_namespace: str      # subfolder under the FAISS corpus
-    model: str             # Bedrock model ID
+    model: str             # Bedrock model ID used by this department
     system_prompt: str
 
 
@@ -36,13 +42,14 @@ Rules that apply to every answer:
 - Always end with a clear "Recommendation:" line and, when relevant, a "Caveat:" line.
 """
 
+
 DEPARTMENTS: dict[str, Department] = {
     "emergency": Department(
         label="emergency",
         vietnamese="Khoa Cấp cứu",
         english="Emergency Medicine",
         kb_namespace="departments/emergency",
-        model=HAIKU,
+        model=QWEN_EMERGENCY,
         system_prompt=_COMMON_STYLE + """
 Scope: acute resuscitation, sepsis bundle, anaphylaxis, stroke activation, trauma triage, ACS protocols.
 
@@ -57,7 +64,7 @@ Emergency-lane rules:
         vietnamese="Khoa Nội Tim mạch",
         english="Internal Cardiology",
         kb_namespace="departments/cardiology-internal",
-        model=SONNET,
+        model=QWEN_COMPLEX,
         system_prompt=_COMMON_STYLE + """
 Scope: acute coronary syndromes, heart failure (HFrEF/HFpEF), arrhythmia, anticoagulation, device patients.
 Defer to Interventional Cardiology or Cardiac Surgery for catheter-lab or OR decisions.
@@ -68,7 +75,7 @@ Defer to Interventional Cardiology or Cardiac Surgery for catheter-lab or OR dec
         vietnamese="Khoa Hô hấp",
         english="Pulmonology",
         kb_namespace="departments/pulmonology",
-        model=SONNET,
+        model=QWEN_COMPLEX,
         system_prompt=_COMMON_STYLE + """
 Scope: COPD (GOLD), asthma, pneumonia, pulmonary embolism workup, lung cancer screening, sleep-disordered breathing.
 """,
@@ -78,7 +85,7 @@ Scope: COPD (GOLD), asthma, pneumonia, pulmonary embolism workup, lung cancer sc
         vietnamese="Khoa Tiêu hoá",
         english="Gastroenterology",
         kb_namespace="departments/gastroenterology",
-        model=SONNET,
+        model=QWEN_COMPLEX,
         system_prompt=_COMMON_STYLE + """
 Scope: IBD, GI bleeding, liver disease (including cirrhosis complications), pancreatitis, H. pylori. Defer complex endoscopy to Endoscopy agent.
 """,
@@ -88,7 +95,7 @@ Scope: IBD, GI bleeding, liver disease (including cirrhosis complications), panc
         vietnamese="Khoa Nội thận - Thận nhân tạo",
         english="Nephrology & Dialysis",
         kb_namespace="departments/nephrology",
-        model=SONNET,
+        model=QWEN_COMPLEX,
         system_prompt=_COMMON_STYLE + """
 Scope: CKD staging, AKI workup, dialysis access, electrolyte disorders, drug dosing by eGFR.
 Always state eGFR assumption when giving renally-cleared drug doses.
@@ -99,7 +106,7 @@ Always state eGFR assumption when giving renally-cleared drug doses.
         vietnamese="Khoa Nội tiết",
         english="Endocrinology",
         kb_namespace="departments/endocrinology",
-        model=SONNET,
+        model=QWEN_COMPLEX,
         system_prompt=_COMMON_STYLE + """
 Scope: T1/T2 diabetes (ADA), thyroid, adrenal, osteoporosis.
 """,
@@ -109,7 +116,7 @@ Scope: T1/T2 diabetes (ADA), thyroid, adrenal, osteoporosis.
         vietnamese="Khoa Thần kinh",
         english="Neurology",
         kb_namespace="departments/neurology",
-        model=SONNET,
+        model=QWEN_COMPLEX,
         system_prompt=_COMMON_STYLE + """
 Scope: acute ischemic stroke pathway, seizure management, headache red flags, neurodegenerative disease.
 Stroke questions: state the time-from-last-known-well assumption.
@@ -120,7 +127,7 @@ Stroke questions: state the time-from-last-known-well assumption.
         vietnamese="Khoa Kiểm soát nhiễm khuẩn",
         english="Infectious Disease",
         kb_namespace="departments/infectious-disease",
-        model=SONNET,
+        model=QWEN_COMPLEX,
         system_prompt=_COMMON_STYLE + """
 Scope: empiric antibiotic choice, antimicrobial stewardship, HAI outbreak management, HIV/TB management.
 State the local antibiogram assumption; default to WHO stewardship principles when unknown.
@@ -131,7 +138,7 @@ State the local antibiogram assumption; default to WHO stewardship principles wh
         vietnamese="Khoa Hoá trị ung thư",
         english="Medical Oncology",
         kb_namespace="departments/oncology-chemo",
-        model=SONNET,
+        model=QWEN_COMPLEX,
         system_prompt=_COMMON_STYLE + """
 Scope: systemic therapy regimens, chemotherapy dose adjustments, immunotherapy side-effect management, supportive care.
 Flag any regimen that would need radiology/pathology confirmation before cycle start.
@@ -142,7 +149,7 @@ Flag any regimen that would need radiology/pathology confirmation before cycle s
         vietnamese="Khoa Phụ sản",
         english="Obstetrics & Gynecology",
         kb_namespace="departments/obstetrics",
-        model=SONNET,
+        model=QWEN_COMPLEX,
         system_prompt=_COMMON_STYLE + """
 Scope: pre-eclampsia, post-partum hemorrhage, gestational diabetes, antenatal care, routine gyn.
 Drug safety: always state pregnancy/lactation category; default to "avoid unless benefit outweighs risk" if unsure.
@@ -153,7 +160,7 @@ Drug safety: always state pregnancy/lactation category; default to "avoid unless
         vietnamese="Khoa Sơ sinh / Nhi",
         english="Pediatrics (incl. Neonatology)",
         kb_namespace="departments/pediatrics",
-        model=SONNET,
+        model=QWEN_COMPLEX,
         system_prompt=_COMMON_STYLE + """
 Scope: pediatric sepsis, NICU care, weight-based dosing, pediatric emergencies.
 Always ask for and state the patient weight (kg) and age for any dose recommendation.
@@ -164,9 +171,8 @@ Always ask for and state the patient weight (kg) and age for any dose recommenda
         vietnamese="Khoa Chẩn đoán hình ảnh",
         english="Diagnostic Radiology",
         kb_namespace="departments/radiology",
-        # Sonnet 4.5 has native vision via the Converse API — used when the
-        # user attaches an image.
-        model=SONNET,
+        # Qwen3 VL 235B A22B handles images natively via the Bedrock Converse API.
+        model=QWEN_COMPLEX,
         system_prompt=_COMMON_STYLE + """
 Scope: imaging-triage interpretation for chest radiograph, CT, MRI, US; figure-heavy retrieval.
 Image-handling rules:

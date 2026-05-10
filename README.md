@@ -14,13 +14,15 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 ├── README.md                                           ← this file
 ├── askAli_AI_Assistant.txt                             ← vendor research (kept for reviewers)
 │
-├── poc/                                                ← 10-day interview POC (cheapest AWS Singapore)
-│   ├── README.md                                        ← scope + $1.50 cost math for 100 questions
-│   ├── app/                                             ← FastAPI + LangGraph + FAISS
-│   │   ├── agents/__init__.py                           ← 12 demo departments (Vietnamese→English)
-│   │   ├── router.py                                    ← Nova Micro department classifier
-│   │   ├── graph.py                                     ← lane → router → retrieve → generate
-│   │   ├── rag.py                                       ← Cohere Embed v4 + FAISS per namespace
+├── poc/                                                ← 10-day interview POC (AWS + Qwen, Version B)
+│   ├── README.md                                        ← scope + ~$197 cost math for 100 questions (multi-agent + SFT + RAG + GraphRAG + Redis)
+│   ├── app/                                             ← FastAPI + LangGraph + FAISS + Redis cache
+│   │   ├── agents/__init__.py                           ← 12 demo departments (Vietnamese→English) bound to Qwen models
+│   │   ├── router.py                                    ← Qwen3 32B department classifier
+│   │   ├── graph.py                                     ← PHI → cache → lane → router → retrieve+rerank+graph → generate → cache-write
+│   │   ├── rag.py                                       ← Titan Embed v2 + FAISS + Amazon Rerank 1.0
+│   │   ├── graphrag.py                                  ← Bedrock KB GraphRAG on Neptune Analytics
+│   │   ├── cache.py                                     ← ElastiCache Redis OSS Layer-1 semantic cache
 │   │   ├── server.py                                    ← FastAPI (Mangum wrapper for Lambda)
 │   │   └── static/                                      ← light-theme chat UI with emergency toggle
 │   ├── deploy.py                                        ← build-only → FAISS + Lambda zip
