@@ -1915,117 +1915,66 @@ Every mutable production change has a defined roll-back path:
 
 ---
 
-## 15. Budget & Cost Model
+## 15. Estimation Cost
 
-Assumptions shared with the other versions in [`../overview.md`](../overview.md): 500 physicians × 40 queries/day = **~600k queries/month**. 30/70 emergency/complex split. Average request 3,000 input + 350 output tokens (emergency) or 3,000 + 600 (complex). All list prices, USD, early 2026.
+Assumptions: 500 physicians, 40 queries per day, 30/70 emergency to complex split, 3,000 input + 350 output tokens emergency, 3,000 + 600 complex. All list prices, USD, early 2026.
 
-### 15.1 Monthly production cost (launch-day — student committed, active from day one)
-
-All capabilities from §14.1 are running. Student is NOT optional — it's part of the launch scope per §3.2 (principle 8: one product, no phases).
-
-| Item | Calc | Cost |
+| Item | Calculation | Monthly cost |
 |---|---|---|
-| Fast lane — Qwen3.5-Flash | 180k × 65% (post-L1-cache) × $0.0004 | ~$47 |
-| Complex lane — Qwen3.5-Plus (40% of complex traffic, rest goes to student) | 420k × 40% × $0.0026 | ~$440 |
-| Complex lane — Qwen3-8B student on PAI-EAS (60% of complex traffic) | A10 always-on (see below) | baked into infra |
-| PAI-EAS A10 always-on (student serving) | 720 hr × ~$1.00–2.00/hr | +$720–1,500 |
-| SFT + LoRA training, amortized quarterly | $15–40 per run / 3 months | ~$5–15 |
-| `text-embedding-v4` | ~500M tokens × $0.07 / 1M | ~$35 |
-| `tongyi-embedding-vision-plus` (figure chunks) | ~5M text × $0.09 + ~50k images metered | ~$50 |
-| `qwen3-rerank` (top-20, ~10% of complex) | ~500M tokens amortized | ~$50 |
-| Content Moderation 2.0 | per call | ~$50 |
-| OpenSearch Vector Search Edition HA | small cluster | ~$180 |
-| **AnalyticDB PG GraphRAG** (4-core 32 GB + extraction tokens) | | ~$300 |
-| DataWorks SDDP PHI masking | per document + runtime | ~$120 |
-| Function Compute + API Gateway + CDN + WAF | serverless | ~$90 |
-| OSS + ActionTrail + SLS WORM | 6-year retention | ~$70 |
-| Tair (Redis OSS-compatible) | clustered | ~$60 |
-| IPsec VPN Gateway (data plane, per tenant) | 100 Mbps tier | ~$110–150 |
-| **Launch-day monthly total** | | **~$2,280–3,060** |
+| Fast lane, Qwen3.5-Flash | 180k calls post L1 cache | 47 |
+| Complex lane, Qwen3.5-Plus (40 percent of complex) | 420k calls at 40 percent | 440 |
+| PAI-EAS A10 always-on (student, 60 percent of complex) | 720 hr at 1.00 to 2.00/hr | 720 to 1,500 |
+| SFT plus LoRA training amortized quarterly | 15 to 40 per run, divided by 3 | 5 to 15 |
+| text-embedding-v4 | 500M tokens at 0.07/1M | 35 |
+| tongyi-embedding-vision-plus | 5M text tokens plus per-image | 50 |
+| qwen3-rerank | 500M tokens amortized | 50 |
+| Content Moderation 2.0 | Per call | 50 |
+| OpenSearch Vector Search HA | Small cluster | 180 |
+| AnalyticDB PG GraphRAG (4-core 32 GB) | Baseline plus extraction tokens | 300 |
+| DataWorks SDDP | Per document plus runtime | 120 |
+| Function Compute plus API Gateway plus CDN plus WAF | Serverless | 90 |
+| OSS plus ActionTrail plus SLS WORM | 6-year retention | 70 |
+| Tair (Redis OSS-compatible) | Clustered | 60 |
+| IPsec VPN Gateway (data plane) | 100 Mbps, per tenant | 110 to 150 |
+| **Launch-day monthly total** | | **2,280 to 3,060** |
 
-**Why a range, not a single number**:
-- PAI-EAS A10 pricing is ~$1.00–$2.00/hr depending on spot vs pay-as-you-go and current Alibaba promotions; we model both ends
-- Qwen PTU (Layer 3 cache) adds $150–300/mo when activated for emergency peak — not enabled on day one, brought up after first-month peak-TPM measurement
+Per-call:
 
-### 15.2 What the student buys us (why it's not optional)
-
-The student handles the 60% of complex-lane traffic where distilled quality matches the teacher. Four things would regress if we dropped it:
-
-1. **Tone control** — SFT on Nova-approved answers gives the assistant a consistent voice across the 40 specialty agents. Prompt engineering alone drifts.
-2. **Locally-controlled weights** — the student is trained on Nova data and hosted on a Nova-controlled endpoint. Compliance officers can attest to exactly what's served; we're not dependent on an upstream model-version bump silently changing clinical output.
-3. **Retrain cadence** — $15–40/run vs ~$1,700–2,700 on AWS Bedrock Model Distillation. Monthly DPO + quarterly SFT are affordable; without the student we lose this iteration speed.
-4. **DR fallback for emergency lane** — if Model Studio has an endpoint outage, the PAI-EAS student keeps the emergency lane running through a circuit-breaker switch. Without the student, a Model Studio outage = full assistant outage.
-
-The $720–1,500/month A10 endpoint is the cost of those four properties. Removing it saves that amount but loses all four.
-
-### 15.3 Per-call cost
-
-| Call class | Cost |
+| Call class | Cost (USD) |
 |---|---|
-| Emergency (Qwen3.5-Flash, L2 cache hit) | ~$0.0008 |
-| Emergency (student on PAI-EAS, amortized) | ~$0.0003 |
-| Complex (Qwen3.5-Plus, L2 cache hit) | ~$0.0026 |
-| Vision (Qwen3-VL-Plus, no cache) | ~$0.004 |
+| Emergency, Qwen3.5-Flash with L2 cache hit | 0.0008 |
+| Emergency, Qwen3-8B student amortized | 0.0003 |
+| Complex, Qwen3.5-Plus with L2 cache hit | 0.0026 |
+| Vision, Qwen3-VL-Plus no cache | 0.004 |
 
-### 15.4 Training and retraining cost
+Training runs:
 
-| Run | Cost |
+| Item | Cost (USD) |
 |---|---|
-| Teacher dataset generation (Qwen3.5-Plus batch, 80M in + 6M out) | ~$23 |
-| SFT + LoRA training (2–4 GPU-hr × A10) | ~$5–30 |
-| Clinician review (in-house, ~15% sample) | $0 |
-| Eval harness run (Qwen3.5-Plus as judge) | ~$5 |
-| **Per-run total** | **~$15–40** |
+| Teacher dataset generation (Qwen3.5-Plus batch, 80M in + 6M out) | 23 |
+| SFT plus LoRA training (2 to 4 GPU-hr A10) | 5 to 30 |
+| Clinician review (in-house 15 percent sample) | 0 |
+| Eval harness run (Qwen3.5-Plus judge) | 5 |
+| **Per-run total** | **15 to 40** |
 
-Cheapest retrain cadence of the three versions. Monthly DPO + quarterly SFT fit the continuous-ops budget with room to spare.
+One-time pre-launch:
 
-### 15.5 One-time (pre-launch) costs
-
-| Item | Cost |
+| Item | Cost (USD) |
 |---|---|
-| Pre-launch build engineering (6–10 weeks of Nova team, assumed internal) | excluded |
-| Alibaba account setup + quota uplift paperwork | $0 |
-| First student training run (pre-launch) | ~$25 |
-| Red team 200-prompt assessment | ~$100 Model Studio + in-house labor |
-| Load test to 200 qpm | ~$50 Model Studio + infrastructure ramp |
-| DR game-day (first run) | negligible |
-| **One-time subtotal** | **~$175** infrastructure (excluding engineering labor) |
+| First student training run | 25 |
+| Red team 200-prompt assessment | 100 |
+| Load test to 200 qpm | 50 |
+| DR game-day | negligible |
+| **Subtotal** | **175** |
 
-### 15.6 Cost sensitivities
-
-| Change | Impact on monthly |
-|---|---|
-| Toggle shift 30/70 → 60/40 emergency/complex | −$900 |
-| **Remove student (Qwen3.5-Plus takes 100% complex) — NOT recommended, loses tone control + retrain cadence + DR fallback** | **−$60 to −$840** (net; depends on A10 endpoint cost) |
-| OpenSearch HA → single-AZ | −$90 |
-| AnalyticDB PG 4-core → 8-core for larger graph | +$300 |
-| Qwen PTU 1 unit for emergency peak (not day-one default) | +$150–300 |
-| Drop `tongyi-embedding-vision-plus`, text-only retrieval | −$50 |
-| Add 2,000 physician tenant (4× volume) | roughly +$2,500–3,500 |
-| Add a second tenant (data-plane VPN scales per-tenant) | +$110–150 per new tenant |
-
-"Student off" is shown as a sensitivity only because reviewers ask about it. **The launch configuration includes the student.** A client that contractually removes the student would see roughly $60–840 savings depending on where A10 pricing lands, at the cost of tone inconsistency, upstream model-version dependency, slower retrain cadence, and losing the emergency DR fallback.
-
-### 15.7 Cost comparison against Versions A and B
-
-All three launch-day numbers include their respective student / custom-model cost, for apples-to-apples comparison.
-
-| Version | Monthly (launch, all features on) | Quarterly training cost | Residency |
-|---|---|---|---|
-| **C — Alibaba + Qwen (SG)** | **~$2,280–3,060** | **~$15–40/run** | **SG-native (zero cross-region)** |
-| A1+ — AWS Nova (SG) | ~$4,655–5,655 (after Nova Lite distillation) | $1,700–2,700/run | SG chat; Tokyo embed+rerank |
-| B — AWS Qwen (Sydney) | ~$3,240 (with RFT'd Qwen3-32B) | ~$640/run Bedrock RFT | Sydney chat |
-| A2 — AWS Claude (SG) | ~$5,765 (after Nova Lite distillation) | $1,700–2,700/run | SG chat; Tokyo embed+rerank |
-
-Version C is still cheapest, still only fully SG-native.
-
-### 15.8 Free-tier and trial credits
-
-- Alibaba account activation: 1M free tokens per Qwen model (one-time)
-- PAI workspace activation: free; pay per job
-- OpenSearch / AnalyticDB: periodic trial banners; confirm with account team before launch
+Reference:
+1. https://www.alibabacloud.com/help/en/model-studio/model-pricing
+2. https://www.alibabacloud.com/help/en/pai/use-cases/quick-start-deploy-fine-tune-and-evaluate-qwen3-models
+3. https://www.alibabacloud.com/help/en/model-studio/context-cache
+4. https://www.alibabacloud.com/help/en/model-studio/model-training-and-deployment-billing
 
 ---
+
 
 ## 16. Appendices
 
