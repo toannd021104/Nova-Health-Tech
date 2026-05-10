@@ -1,0 +1,208 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1360 920" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+    <marker id="arr-em" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/></marker>
+    <marker id="arr-cp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/></marker>
+    <marker id="arr-vpn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker>
+    <style>
+      .box       { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.2; rx:8; ry:8; }
+      .box-svc   { fill:#eff6ff; stroke:#60a5fa; }
+      .box-user  { fill:#f0fdf4; stroke:#4ade80; }
+      .box-data  { fill:#fefce8; stroke:#facc15; }
+      .box-ext   { fill:#faf5ff; stroke:#c084fc; }
+      .box-em    { fill:#fef2f2; stroke:#dc2626; stroke-width:1.5; }
+      .box-cp    { fill:#eff6ff; stroke:#1d4ed8; stroke-width:1.5; }
+      .box-ali   { fill:#fff7ed; stroke:#fb923c; }
+      .group     { fill:#f8fafc; stroke:#94a3b8; stroke-dasharray:4 3; stroke-width:1.2; rx:12; ry:12; }
+      .title     { font-weight:700; fill:#0f172a; }
+      .lbl       { fill:#334155; }
+      .lbl-sm    { fill:#64748b; font-size:10.5px; }
+      .edge      { stroke:#64748b; stroke-width:1.3; fill:none; }
+      .edge-em   { stroke:#dc2626; stroke-width:1.8; fill:none; }
+      .edge-cp   { stroke:#1d4ed8; stroke-width:1.8; fill:none; }
+      .edge-vpn  { stroke:#7c3aed; stroke-width:1.8; fill:none; stroke-dasharray:6 3; }
+      .edge-dash { stroke:#64748b; stroke-width:1.2; fill:none; stroke-dasharray:5 3; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text x="680" y="28" text-anchor="middle" font-size="18" class="title">Nova Health Tech · Clinical GenAI · Version C — Alibaba Cloud Singapore International</text>
+  <text x="680" y="48" text-anchor="middle" class="lbl-sm">Emergency toggle (if/else) · 40-department multi-agent · Model Studio + PAI-EAS · Managed GraphRAG · Site-to-Site VPN · PDPA zero cross-region</text>
+
+  <!-- Legend -->
+  <g transform="translate(20,70)">
+    <rect width="170" height="14" class="box-em"/><text x="8" y="11" class="lbl-sm">Emergency path</text>
+    <rect y="18" width="170" height="14" class="box-cp"/><text x="8" y="29" class="lbl-sm">Complex path</text>
+    <rect y="36" width="170" height="14" class="box-user"/><text x="8" y="47" class="lbl-sm">User/hospital</text>
+    <rect y="54" width="170" height="14" class="box-ali"/><text x="8" y="65" class="lbl-sm">Alibaba Cloud SG Intl</text>
+    <rect y="72" width="170" height="14" class="box-data"/><text x="8" y="83" class="lbl-sm">Data store</text>
+    <rect y="90" width="170" height="14" class="box-ext"/><text x="8" y="101" class="lbl-sm">External API</text>
+  </g>
+
+  <!-- HOSPITAL NETWORK (left column) -->
+  <rect x="210" y="70" width="250" height="360" class="group"/>
+  <text x="230" y="92" class="title">Hospital network (Vietnam)</text>
+
+  <rect x="230" y="110" width="210" height="50" class="box box-user"/>
+  <text x="335" y="130" text-anchor="middle" class="title">Clinician browser / EHR iframe</text>
+  <text x="335" y="146" text-anchor="middle" class="lbl-sm">HTTPS · SMART App Launch v2</text>
+
+  <rect x="230" y="180" width="210" height="50" class="box box-user"/>
+  <text x="335" y="200" text-anchor="middle" class="title">Clinical curator</text>
+  <text x="335" y="216" text-anchor="middle" class="lbl-sm">Upload Portal · over VPN</text>
+
+  <rect x="230" y="250" width="210" height="50" class="box box-user"/>
+  <text x="335" y="270" text-anchor="middle" class="title">SharePoint / OneDrive</text>
+  <text x="335" y="286" text-anchor="middle" class="lbl-sm">Microsoft Graph Sites.Selected</text>
+
+  <rect x="230" y="320" width="210" height="50" class="box box-user"/>
+  <text x="335" y="340" text-anchor="middle" class="title">EHR (Epic / Cerner / Allscripts)</text>
+  <text x="335" y="356" text-anchor="middle" class="lbl-sm">FHIR R4 over IPsec VPN</text>
+
+  <rect x="230" y="390" width="210" height="30" class="box"/>
+  <text x="335" y="410" text-anchor="middle" class="lbl-sm">Customer Gateway (IPsec)</text>
+
+  <!-- EDGE (top of SG cloud) -->
+  <rect x="500" y="70" width="840" height="70" class="group"/>
+  <text x="520" y="92" class="title">Edge tier (Alibaba Cloud Singapore International)</text>
+
+  <rect x="520" y="100" width="180" height="32" class="box box-ali"/>
+  <text x="610" y="121" text-anchor="middle">CDN + Anti-DDoS + WAF</text>
+
+  <rect x="720" y="100" width="180" height="32" class="box box-ali"/>
+  <text x="810" y="121" text-anchor="middle">API Gateway + RAM/IDaaS authorizer</text>
+
+  <rect x="920" y="100" width="200" height="32" class="box box-ali"/>
+  <text x="1020" y="121" text-anchor="middle">VPN Gateway (IPsec · dual-tunnel)</text>
+
+  <rect x="1140" y="100" width="180" height="32" class="box box-ali"/>
+  <text x="1230" y="121" text-anchor="middle">IDaaS EIAM 2.0 (SAML/OIDC)</text>
+
+  <!-- CHAT RUNTIME -->
+  <rect x="500" y="170" width="840" height="230" class="group"/>
+  <text x="520" y="192" class="title">Chat runtime tier (Function Compute in VPC)</text>
+
+  <rect x="520" y="210" width="260" height="90" class="box box-ali"/>
+  <text x="650" y="232" text-anchor="middle" class="title">FC /chat</text>
+  <text x="650" y="250" text-anchor="middle" class="lbl-sm">1. IDaaS JWT check</text>
+  <text x="650" y="266" text-anchor="middle" class="lbl-sm">2. DataWorks SDDP PHI mask</text>
+  <text x="650" y="282" text-anchor="middle" class="lbl-sm">3. If/else on emergency flag</text>
+  <text x="650" y="298" text-anchor="middle" class="lbl-sm">4. Agent/Workflow invoke · audit</text>
+
+  <!-- Cache: L1 L2 L3 -->
+  <rect x="800" y="210" width="150" height="90" class="box box-data"/>
+  <text x="875" y="232" text-anchor="middle" class="title">Layer 1</text>
+  <text x="875" y="252" text-anchor="middle">Tair + TairVector</text>
+  <text x="875" y="270" text-anchor="middle" class="lbl-sm">LangChain RedisSemanticCache</text>
+  <text x="875" y="288" text-anchor="middle" class="lbl-sm">30–45% hit on emergency</text>
+
+  <rect x="970" y="210" width="180" height="90" class="box box-ali"/>
+  <text x="1060" y="232" text-anchor="middle" class="title">Layer 2</text>
+  <text x="1060" y="252" text-anchor="middle">Qwen Context Cache</text>
+  <text x="1060" y="270" text-anchor="middle" class="lbl-sm">implicit + explicit</text>
+  <text x="1060" y="288" text-anchor="middle" class="lbl-sm">20% of input price on hit</text>
+
+  <rect x="1170" y="210" width="150" height="90" class="box box-ali"/>
+  <text x="1245" y="232" text-anchor="middle" class="title">Layer 3</text>
+  <text x="1245" y="252" text-anchor="middle">Qwen PTU</text>
+  <text x="1245" y="270" text-anchor="middle" class="lbl-sm">reserved capacity</text>
+  <text x="1245" y="288" text-anchor="middle" class="lbl-sm">emergency peak</text>
+
+  <!-- Model Studio + PAI-EAS -->
+  <rect x="520" y="310" width="380" height="80" class="box box-ali"/>
+  <text x="710" y="332" text-anchor="middle" class="title">Model Studio (Bailian / dashscope-intl) + PAI-EAS</text>
+  <text x="710" y="350" text-anchor="middle" class="lbl-sm">Qwen3.5-Flash · Qwen3.5-Plus · Qwen3-VL-Plus</text>
+  <text x="710" y="366" text-anchor="middle" class="lbl-sm">Qwen3-8B student (A10) · Content Moderation 2.0</text>
+  <text x="710" y="382" text-anchor="middle" class="lbl-sm">40-department Agent apps + 1 emergency Workflow app</text>
+
+  <rect x="920" y="310" width="200" height="80" class="box box-ali"/>
+  <text x="1020" y="332" text-anchor="middle" class="title">Citation + grounding</text>
+  <text x="1020" y="350" text-anchor="middle" class="lbl-sm">validator + grounding ≥ 0.7</text>
+  <text x="1020" y="366" text-anchor="middle" class="lbl-sm">emergency disclaimer</text>
+  <text x="1020" y="382" text-anchor="middle" class="lbl-sm">PHI re-check</text>
+
+  <rect x="1140" y="310" width="180" height="80" class="box box-ali"/>
+  <text x="1230" y="332" text-anchor="middle" class="title">Streaming response</text>
+  <text x="1230" y="350" text-anchor="middle" class="lbl-sm">SSE back to client</text>
+  <text x="1230" y="366" text-anchor="middle" class="lbl-sm">citations rendered inline</text>
+
+  <!-- DATA TIER -->
+  <rect x="500" y="430" width="840" height="260" class="group"/>
+  <text x="520" y="452" class="title">Data tier (Singapore International — multi-AZ)</text>
+
+  <rect x="520" y="470" width="260" height="100" class="box box-data"/>
+  <text x="650" y="492" text-anchor="middle" class="title">OpenSearch Vector Search HA</text>
+  <text x="650" y="512" text-anchor="middle" class="lbl-sm">Hybrid BM25 + HNSW kNN · dual-zone</text>
+  <text x="650" y="528" text-anchor="middle" class="lbl-sm">kb-who-guidelines · kb-internal-trials</text>
+  <text x="650" y="544" text-anchor="middle" class="lbl-sm">kb-treatment-protocols · kb-icd11</text>
+  <text x="650" y="560" text-anchor="middle" class="lbl-sm">text-embedding-v4 · tongyi-emb-vision-plus · qwen3-rerank</text>
+
+  <rect x="800" y="470" width="260" height="100" class="box box-data"/>
+  <text x="930" y="492" text-anchor="middle" class="title">AnalyticDB PG GraphRAG</text>
+  <text x="930" y="512" text-anchor="middle" class="lbl-sm">gpdb + adbpg_graphrag extension</text>
+  <text x="930" y="528" text-anchor="middle" class="lbl-sm">engine ≥ 7.2.1.4 · 4-core 32 GB</text>
+  <text x="930" y="544" text-anchor="middle" class="lbl-sm">3 zones · multi-hop entity retrieval</text>
+  <text x="930" y="560" text-anchor="middle" class="lbl-sm">Qwen3.5-Plus for graph extraction</text>
+
+  <rect x="1080" y="470" width="240" height="100" class="box box-data"/>
+  <text x="1200" y="492" text-anchor="middle" class="title">OSS raw + WORM audit</text>
+  <text x="1200" y="512" text-anchor="middle" class="lbl-sm">/raw/who · /raw/icd11 · /raw/trials</text>
+  <text x="1200" y="528" text-anchor="middle" class="lbl-sm">/raw/manual · /audit (6-year WORM)</text>
+  <text x="1200" y="544" text-anchor="middle" class="lbl-sm">KMS BYOK</text>
+
+  <rect x="520" y="590" width="800" height="90" class="box box-ali"/>
+  <text x="920" y="612" text-anchor="middle" class="title">Function Workflow — ingestion pipeline</text>
+  <text x="920" y="630" text-anchor="middle" class="lbl-sm">DocMind parse (complex pages → Qwen-VL-Max) → chunker → text-embedding-v4 + tongyi-embedding-vision-plus</text>
+  <text x="920" y="646" text-anchor="middle" class="lbl-sm">→ OpenSearch upsert → adbpg_graphrag.upload → Tair cache invalidation → audit write</text>
+  <text x="920" y="666" text-anchor="middle" class="lbl-sm">Security Center malware scan + DataWorks SDDP PHI scan before index</text>
+
+  <!-- EXTERNAL APIS (right column) -->
+  <rect x="500" y="720" width="840" height="90" class="group"/>
+  <text x="520" y="742" class="title">External APIs (agent tools — runtime)</text>
+
+  <rect x="520" y="760" width="250" height="40" class="box box-ext"/>
+  <text x="645" y="784" text-anchor="middle">WHO ICD-11 API (daily delta + runtime)</text>
+
+  <rect x="790" y="760" width="250" height="40" class="box box-ext"/>
+  <text x="915" y="784" text-anchor="middle">NCBI PubMed E-utilities (runtime tool)</text>
+
+  <rect x="1060" y="760" width="260" height="40" class="box box-ext"/>
+  <text x="1190" y="784" text-anchor="middle">Microsoft Graph webhooks (SharePoint)</text>
+
+  <!-- OBSERVABILITY + IDENTITY footer -->
+  <rect x="20" y="840" width="1320" height="60" class="group"/>
+  <text x="40" y="862" class="title">Observability + Audit</text>
+  <text x="40" y="884" class="lbl">ActionTrail → SLS → OSS WORM (6-year) · ARMS LLM Trace Explorer · DataV compliance dashboards · ARMS SLO alerts on p95 latency + guardrail block rate + grounding score</text>
+
+  <!-- Arrows: Hospital → Edge -->
+  <path d="M440 135 L500 135 L520 116" class="edge" marker-end="url(#arr)"/>
+  <path d="M440 205 L490 205 L490 290 L1020 290 L1020 132" class="edge-vpn" marker-end="url(#arr-vpn)"/>
+  <path d="M440 275 L500 275 L500 550" class="edge-vpn" marker-end="url(#arr-vpn)"/>
+  <path d="M440 345 L500 345" class="edge-vpn" marker-end="url(#arr-vpn)"/>
+
+  <!-- Edge → FC -->
+  <path d="M810 132 L810 210" class="edge" marker-end="url(#arr)"/>
+
+  <!-- FC → Cache & Model Studio -->
+  <path d="M780 250 L800 250" class="edge-em" marker-end="url(#arr-em)"/>
+  <path d="M950 250 L970 250" class="edge-em" marker-end="url(#arr-em)"/>
+  <path d="M650 300 L650 310" class="edge-cp" marker-end="url(#arr-cp)"/>
+  <path d="M900 350 L920 350" class="edge" marker-end="url(#arr)"/>
+  <path d="M1120 350 L1140 350" class="edge" marker-end="url(#arr)"/>
+
+  <!-- FC → Data tier (retrieval) -->
+  <path d="M650 390 L650 470" class="edge-cp" marker-end="url(#arr-cp)"/>
+  <path d="M820 390 Q820 420 930 470" class="edge-cp" marker-end="url(#arr-cp)"/>
+
+  <!-- External APIs ↔ FC -->
+  <path d="M645 760 Q645 720 650 390" class="edge-dash"/>
+  <path d="M915 760 Q915 720 900 390" class="edge-dash"/>
+
+  <!-- Ingestion → Data tier -->
+  <path d="M650 590 L650 570" class="edge" marker-end="url(#arr)"/>
+  <path d="M930 590 L930 570" class="edge" marker-end="url(#arr)"/>
+  <path d="M1200 590 L1200 570" class="edge" marker-end="url(#arr)"/>
+
+  <!-- Graph webhook → Ingestion -->
+  <path d="M1190 760 L1190 680" class="edge-dash" marker-end="url(#arr)"/>
+</svg>

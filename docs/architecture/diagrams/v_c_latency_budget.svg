@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 600" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
+  <defs>
+    <style>
+      .title     { font-weight:700; fill:#0f172a; }
+      .lbl       { fill:#334155; }
+      .lbl-sm    { fill:#64748b; font-size:10.5px; }
+      .axis      { stroke:#cbd5e1; stroke-width:1; }
+      .tick      { stroke:#94a3b8; stroke-width:1; }
+      .seg-auth  { fill:#93c5fd; }
+      .seg-retr  { fill:#fcd34d; }
+      .seg-ttft  { fill:#fb923c; }
+      .seg-gen   { fill:#f97316; }
+      .seg-mod   { fill:#a78bfa; }
+      .seg-cache { fill:#4ade80; }
+      .sla-line  { stroke:#dc2626; stroke-width:2; stroke-dasharray:6 4; }
+      .bg        { fill:#f8fafc; stroke:#cbd5e1; rx:8; ry:8; }
+    </style>
+  </defs>
+
+  <text x="640" y="28" text-anchor="middle" font-size="17" class="title">Emergency-Lane Latency Budget (p95, Singapore)</text>
+  <text x="640" y="48" text-anchor="middle" class="lbl-sm">Target ≤ 2,000 ms · measured end-to-end from client request to complete streamed answer</text>
+
+  <!-- Axis -->
+  <g transform="translate(240,100)">
+    <!-- X-axis ticks every 200 ms, axis span 0..2200 ms over 900 px -->
+    <line x1="0" y1="400" x2="900" y2="400" class="axis"/>
+    <g class="tick">
+      <line x1="0"   y1="400" x2="0"   y2="406"/>
+      <line x1="82"  y1="400" x2="82"  y2="406"/>
+      <line x1="164" y1="400" x2="164" y2="406"/>
+      <line x1="245" y1="400" x2="245" y2="406"/>
+      <line x1="327" y1="400" x2="327" y2="406"/>
+      <line x1="409" y1="400" x2="409" y2="406"/>
+      <line x1="491" y1="400" x2="491" y2="406"/>
+      <line x1="573" y1="400" x2="573" y2="406"/>
+      <line x1="655" y1="400" x2="655" y2="406"/>
+      <line x1="736" y1="400" x2="736" y2="406"/>
+      <line x1="818" y1="400" x2="818" y2="406"/>
+    </g>
+    <g class="lbl-sm" text-anchor="middle">
+      <text x="0"   y="420">0</text>
+      <text x="82"  y="420">200</text>
+      <text x="164" y="420">400</text>
+      <text x="245" y="420">600</text>
+      <text x="327" y="420">800</text>
+      <text x="409" y="420">1000</text>
+      <text x="491" y="420">1200</text>
+      <text x="573" y="420">1400</text>
+      <text x="655" y="420">1600</text>
+      <text x="736" y="420">1800</text>
+      <text x="818" y="420">2000</text>
+    </g>
+    <text x="450" y="445" text-anchor="middle" class="lbl">milliseconds</text>
+
+    <!-- SLA line at 2000 ms = 818 px -->
+    <line x1="818" y1="30" x2="818" y2="400" class="sla-line"/>
+    <text x="818" y="24" text-anchor="middle" class="title" fill="#dc2626">2 s SLA</text>
+
+    <!-- Bar 1: Cold path (no cache) - total ~1705 ms -->
+    <text x="-10" y="68" text-anchor="end" class="lbl">Cold (L1+L2 miss)</text>
+    <!-- auth 100 ms = 41 px -->
+    <rect x="0"   y="56" width="10"  height="24" class="seg-auth"/>
+    <rect x="10"  y="56" width="31"  height="24" class="seg-auth"/>
+    <!-- SDDP included in auth -->
+    <!-- retrieval 70 ms = 29 px -->
+    <rect x="41"  y="56" width="29"  height="24" class="seg-retr"/>
+    <!-- TTFT 300 ms = 123 px -->
+    <rect x="70"  y="56" width="123" height="24" class="seg-ttft"/>
+    <!-- Generation 1100 ms = 450 px -->
+    <rect x="193" y="56" width="450" height="24" class="seg-gen"/>
+    <!-- Moderation 110 ms = 45 px -->
+    <rect x="643" y="56" width="45"  height="24" class="seg-mod"/>
+    <!-- Cache write 25 ms = 10 px -->
+    <rect x="688" y="56" width="10"  height="24" class="seg-cache"/>
+    <text x="708" y="73" class="lbl-sm">~1,705 ms</text>
+
+    <!-- Bar 2: L2 hit only - total ~1300 ms (TTFT shortened) -->
+    <text x="-10" y="128" text-anchor="end" class="lbl">L2 cache hit</text>
+    <rect x="0"   y="116" width="41"  height="24" class="seg-auth"/>
+    <rect x="41"  y="116" width="29"  height="24" class="seg-retr"/>
+    <!-- TTFT 180 ms = 74 px (cache trim) -->
+    <rect x="70"  y="116" width="74"  height="24" class="seg-ttft"/>
+    <!-- Generation 900 ms = 368 px (slightly faster with cache) -->
+    <rect x="144" y="116" width="368" height="24" class="seg-gen"/>
+    <rect x="512" y="116" width="45"  height="24" class="seg-mod"/>
+    <rect x="557" y="116" width="10"  height="24" class="seg-cache"/>
+    <text x="580" y="133" class="lbl-sm">~1,300 ms</text>
+
+    <!-- Bar 3: L1 semantic cache hit - total ~150 ms -->
+    <text x="-10" y="188" text-anchor="end" class="lbl">L1 cache hit (30–45%)</text>
+    <rect x="0"   y="176" width="41"  height="24" class="seg-auth"/>
+    <!-- 10 ms cache lookup = 4 px -->
+    <rect x="41"  y="176" width="4"   height="24" class="seg-cache"/>
+    <!-- decrypt + render 10 ms = 4 px -->
+    <rect x="45"  y="176" width="12"  height="24" class="seg-cache"/>
+    <text x="75" y="193" class="lbl-sm">~150 ms</text>
+
+    <!-- Bar 4: Student model (Qwen3-8B on PAI-EAS) -->
+    <text x="-10" y="248" text-anchor="end" class="lbl">Student Qwen3-8B (~60% cases)</text>
+    <rect x="0"   y="236" width="41"  height="24" class="seg-auth"/>
+    <rect x="41"  y="236" width="29"  height="24" class="seg-retr"/>
+    <!-- TTFT 250 ms = 102 px -->
+    <rect x="70"  y="236" width="102" height="24" class="seg-ttft"/>
+    <!-- Gen 700 ms = 286 px -->
+    <rect x="172" y="236" width="286" height="24" class="seg-gen"/>
+    <rect x="458" y="236" width="45"  height="24" class="seg-mod"/>
+    <rect x="503" y="236" width="10"  height="24" class="seg-cache"/>
+    <text x="535" y="253" class="lbl-sm">~1,130 ms</text>
+
+    <!-- Bar 5: Blended p95 indicator -->
+    <text x="-10" y="308" text-anchor="end" class="title" fill="#16a34a">Blended p95</text>
+    <rect x="0"   y="296" width="41"  height="24" class="seg-auth"/>
+    <rect x="41"  y="296" width="29"  height="24" class="seg-retr"/>
+    <rect x="70"  y="296" width="102" height="24" class="seg-ttft"/>
+    <rect x="172" y="296" width="330" height="24" class="seg-gen"/>
+    <rect x="502" y="296" width="45"  height="24" class="seg-mod"/>
+    <rect x="547" y="296" width="10"  height="24" class="seg-cache"/>
+    <text x="580" y="313" class="title" fill="#16a34a">~1,200 ms (target 2,000 ms)</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(240,520)">
+    <rect x="0"   y="0" width="12" height="12" class="seg-auth"/>  <text x="18" y="10" class="lbl-sm">IDaaS + SDDP PHI mask (~100 ms)</text>
+    <rect x="220" y="0" width="12" height="12" class="seg-retr"/>  <text x="238" y="10" class="lbl-sm">Hybrid retrieval + rerank (~70 ms)</text>
+    <rect x="460" y="0" width="12" height="12" class="seg-ttft"/>  <text x="478" y="10" class="lbl-sm">TTFT first-token (~300 ms / ~180 ms L2 / ~250 ms student)</text>
+    <rect x="0"   y="24" width="12" height="12" class="seg-gen"/>  <text x="18" y="34" class="lbl-sm">Full answer generation (~700–1,100 ms)</text>
+    <rect x="280" y="24" width="12" height="12" class="seg-mod"/>  <text x="298" y="34" class="lbl-sm">Moderation + citation validation (~110 ms)</text>
+    <rect x="560" y="24" width="12" height="12" class="seg-cache"/><text x="578" y="34" class="lbl-sm">Cache write / decrypt / audit (~10–25 ms)</text>
+  </g>
+</svg>

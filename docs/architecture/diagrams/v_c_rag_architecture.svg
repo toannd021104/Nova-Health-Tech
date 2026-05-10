@@ -1,0 +1,178 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 820" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+    <marker id="arr-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker>
+    <marker id="arr-c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ca8a04"/></marker>
+    <style>
+      .box       { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.2; rx:8; ry:8; }
+      .box-in    { fill:#f0fdf4; stroke:#4ade80; }
+      .box-proc  { fill:#eff6ff; stroke:#60a5fa; }
+      .box-data  { fill:#fefce8; stroke:#facc15; }
+      .box-llm   { fill:#fff7ed; stroke:#fb923c; }
+      .box-out   { fill:#fef2f2; stroke:#dc2626; }
+      .group     { fill:#f8fafc; stroke:#94a3b8; stroke-dasharray:4 3; stroke-width:1.2; rx:12; ry:12; }
+      .title     { font-weight:700; fill:#0f172a; }
+      .lbl-sm    { fill:#64748b; font-size:10.5px; }
+      .edge      { stroke:#64748b; stroke-width:1.3; fill:none; }
+      .edge-g    { stroke:#16a34a; stroke-width:1.6; fill:none; }
+      .edge-c    { stroke:#ca8a04; stroke-width:1.6; fill:none; stroke-dasharray:5 3; }
+    </style>
+  </defs>
+
+  <text x="640" y="28" text-anchor="middle" font-size="17" class="title">RAG Architecture — Hybrid Retrieval + Managed GraphRAG (Version C)</text>
+  <text x="640" y="48" text-anchor="middle" class="lbl-sm">Ingest path (green) · Query path (gold) · Zero cross-region hops</text>
+
+  <!-- INGEST PIPELINE (top row) -->
+  <rect x="30" y="70" width="1220" height="240" class="group"/>
+  <text x="50" y="92" class="title">Ingest pipeline (scheduled + webhook + upload)</text>
+
+  <rect x="50" y="110" width="200" height="80" class="box box-in"/>
+  <text x="150" y="132" text-anchor="middle" class="title">Sources</text>
+  <text x="150" y="152" text-anchor="middle" class="lbl-sm">WHO guidelines (monthly)</text>
+  <text x="150" y="168" text-anchor="middle" class="lbl-sm">WHO ICD-11 (daily delta)</text>
+  <text x="150" y="184" text-anchor="middle" class="lbl-sm">Trials + protocols (weekly)</text>
+
+  <rect x="50" y="200" width="200" height="50" class="box box-in"/>
+  <text x="150" y="220" text-anchor="middle" class="lbl-sm">Upload Portal (VPN)</text>
+  <text x="150" y="236" text-anchor="middle" class="lbl-sm">Microsoft Graph webhook</text>
+
+  <rect x="270" y="110" width="170" height="140" class="box box-data"/>
+  <text x="355" y="132" text-anchor="middle" class="title">OSS raw bucket</text>
+  <text x="355" y="152" text-anchor="middle" class="lbl-sm">/raw/who · /raw/icd11</text>
+  <text x="355" y="168" text-anchor="middle" class="lbl-sm">/raw/trials · /raw/protocols</text>
+  <text x="355" y="184" text-anchor="middle" class="lbl-sm">/raw/manual</text>
+  <text x="355" y="208" text-anchor="middle" class="lbl-sm">document_id = hash(source+URI)</text>
+  <text x="355" y="224" text-anchor="middle" class="lbl-sm">revision = hash(bytes)</text>
+  <text x="355" y="240" text-anchor="middle" class="lbl-sm">idempotent upsert</text>
+
+  <rect x="460" y="110" width="180" height="140" class="box box-proc"/>
+  <text x="550" y="132" text-anchor="middle" class="title">Function Workflow</text>
+  <text x="550" y="152" text-anchor="middle" class="lbl-sm">1. Security Center malware scan</text>
+  <text x="550" y="168" text-anchor="middle" class="lbl-sm">2. DataWorks SDDP PHI scan</text>
+  <text x="550" y="184" text-anchor="middle" class="lbl-sm">3. DocMind parse</text>
+  <text x="550" y="200" text-anchor="middle" class="lbl-sm">   (complex → Qwen-VL-Max)</text>
+  <text x="550" y="216" text-anchor="middle" class="lbl-sm">4. Hierarchical chunk</text>
+  <text x="550" y="232" text-anchor="middle" class="lbl-sm">   1500/300 tokens · 15% overlap</text>
+
+  <rect x="660" y="110" width="180" height="140" class="box box-llm"/>
+  <text x="750" y="132" text-anchor="middle" class="title">Embedding</text>
+  <text x="750" y="152" text-anchor="middle" class="lbl-sm">text-embedding-v4</text>
+  <text x="750" y="168" text-anchor="middle" class="lbl-sm">1024-dim text</text>
+  <text x="750" y="192" text-anchor="middle" class="lbl-sm">tongyi-embedding-vision-plus</text>
+  <text x="750" y="208" text-anchor="middle" class="lbl-sm">1152-dim figures</text>
+  <text x="750" y="232" text-anchor="middle" class="lbl-sm">batch mode · 50% off</text>
+
+  <rect x="860" y="110" width="180" height="140" class="box box-data"/>
+  <text x="950" y="132" text-anchor="middle" class="title">OpenSearch</text>
+  <text x="950" y="152" text-anchor="middle" class="lbl-sm">Vector Search HA</text>
+  <text x="950" y="168" text-anchor="middle" class="lbl-sm">dual-zone</text>
+  <text x="950" y="192" text-anchor="middle" class="lbl-sm">HNSW (M=16, ef=80)</text>
+  <text x="950" y="208" text-anchor="middle" class="lbl-sm">+ BM25 inverted index</text>
+  <text x="950" y="232" text-anchor="middle" class="lbl-sm">chunk_text_vec · chunk_mm_vec</text>
+
+  <rect x="1060" y="110" width="180" height="140" class="box box-data"/>
+  <text x="1150" y="132" text-anchor="middle" class="title">AnalyticDB PG</text>
+  <text x="1150" y="152" text-anchor="middle" class="lbl-sm">adbpg_graphrag extension</text>
+  <text x="1150" y="168" text-anchor="middle" class="lbl-sm">engine ≥ 7.2.1.4</text>
+  <text x="1150" y="192" text-anchor="middle" class="lbl-sm">adbpg_graphrag.upload()</text>
+  <text x="1150" y="208" text-anchor="middle" class="lbl-sm">entity + relation extraction</text>
+  <text x="1150" y="232" text-anchor="middle" class="lbl-sm">using Qwen3.5-Plus</text>
+
+  <!-- Ingest arrows -->
+  <path d="M250 150 L270 150" class="edge-g" marker-end="url(#arr-g)"/>
+  <path d="M250 225 Q260 225 270 220" class="edge-g" marker-end="url(#arr-g)"/>
+  <path d="M440 180 L460 180" class="edge-g" marker-end="url(#arr-g)"/>
+  <path d="M640 180 L660 180" class="edge-g" marker-end="url(#arr-g)"/>
+  <path d="M840 180 L860 180" class="edge-g" marker-end="url(#arr-g)"/>
+  <path d="M950 250 L950 290 L1150 290 L1150 250" class="edge-g" marker-end="url(#arr-g)"/>
+  <text x="1050" y="284" text-anchor="middle" class="lbl-sm">upsert triggers graph extraction</text>
+
+  <!-- QUERY PIPELINE (bottom row) -->
+  <rect x="30" y="340" width="1220" height="450" class="group"/>
+  <text x="50" y="362" class="title">Query pipeline (one clinician question)</text>
+
+  <!-- Lane decision -->
+  <rect x="50" y="380" width="200" height="50" class="box box-in"/>
+  <text x="150" y="402" text-anchor="middle" class="title">Chat request</text>
+  <text x="150" y="418" text-anchor="middle" class="lbl-sm">{message, emergency, image?}</text>
+
+  <rect x="50" y="450" width="200" height="70" class="box box-proc"/>
+  <text x="150" y="472" text-anchor="middle" class="title">FC /chat preflight</text>
+  <text x="150" y="488" text-anchor="middle" class="lbl-sm">IDaaS check · SDDP mask</text>
+  <text x="150" y="504" text-anchor="middle" class="lbl-sm">If/else emergency toggle</text>
+
+  <rect x="270" y="380" width="200" height="50" class="box box-data"/>
+  <text x="370" y="402" text-anchor="middle" class="title">Tair semantic cache</text>
+  <text x="370" y="418" text-anchor="middle" class="lbl-sm">hit → return (30–45%)</text>
+
+  <!-- Emergency lane box -->
+  <rect x="270" y="450" width="460" height="130" class="box box-out"/>
+  <text x="500" y="472" text-anchor="middle" class="title">Emergency lane (hybrid one-pass)</text>
+  <text x="500" y="494" text-anchor="middle" class="lbl-sm">1. BM25 + HNSW parallel (RRF fusion, top-20)</text>
+  <text x="500" y="510" text-anchor="middle" class="lbl-sm">2. Metadata pre-filter (review_date, tenant, specialty)</text>
+  <text x="500" y="526" text-anchor="middle" class="lbl-sm">3. qwen3-rerank → top-5</text>
+  <text x="500" y="546" text-anchor="middle" class="lbl-sm">4. Qwen3.5-Flash generate (Qwen Context Cache hit)</text>
+  <text x="500" y="562" text-anchor="middle" class="lbl-sm">5. Content Moderation 2.0 + citation validator → stream</text>
+
+  <!-- Complex lane box with tools -->
+  <rect x="270" y="600" width="460" height="170" class="box box-llm"/>
+  <text x="500" y="622" text-anchor="middle" class="title">Complex lane (agentic + graph)</text>
+  <text x="500" y="642" text-anchor="middle" class="lbl-sm">Router → 1 of 40 department agents (Qwen3.5-Plus)</text>
+  <text x="500" y="660" text-anchor="middle" class="lbl-sm">Agent picks tools adaptively:</text>
+
+  <rect x="290" y="675" width="100" height="30" class="box box-data"/>
+  <text x="340" y="694" text-anchor="middle" class="lbl-sm">kb_retrieve</text>
+  <rect x="400" y="675" width="100" height="30" class="box box-data"/>
+  <text x="450" y="694" text-anchor="middle" class="lbl-sm">graph_retrieve</text>
+  <rect x="510" y="675" width="100" height="30" class="box box-data"/>
+  <text x="560" y="694" text-anchor="middle" class="lbl-sm">icd11_lookup</text>
+  <rect x="620" y="675" width="100" height="30" class="box box-data"/>
+  <text x="670" y="694" text-anchor="middle" class="lbl-sm">pubmed_search</text>
+
+  <text x="500" y="730" text-anchor="middle" class="lbl-sm">Clinical Pharmacy side-channel on prescribing · Radiology forces Qwen3-VL on image</text>
+  <text x="500" y="748" text-anchor="middle" class="lbl-sm">Qwen3.5-Plus synthesis · grounding score ≥ 0.7 · citation validation</text>
+
+  <!-- Data stores accessed (right side) -->
+  <rect x="760" y="450" width="180" height="80" class="box box-data"/>
+  <text x="850" y="472" text-anchor="middle" class="title">OpenSearch Vector</text>
+  <text x="850" y="492" text-anchor="middle" class="lbl-sm">hybrid BM25 + kNN</text>
+  <text x="850" y="508" text-anchor="middle" class="lbl-sm">text + multimodal fields</text>
+  <text x="850" y="524" text-anchor="middle" class="lbl-sm">cosine HNSW · 5 ms @ top-20</text>
+
+  <rect x="960" y="450" width="180" height="80" class="box box-data"/>
+  <text x="1050" y="472" text-anchor="middle" class="title">qwen3-rerank</text>
+  <text x="1050" y="492" text-anchor="middle" class="lbl-sm">top-20 → top-5</text>
+  <text x="1050" y="508" text-anchor="middle" class="lbl-sm">skip if top kNN > 0.85</text>
+  <text x="1050" y="524" text-anchor="middle" class="lbl-sm">~30 ms · $0.10/1M tokens</text>
+
+  <rect x="760" y="550" width="180" height="80" class="box box-data"/>
+  <text x="850" y="572" text-anchor="middle" class="title">AnalyticDB PG</text>
+  <text x="850" y="592" text-anchor="middle" class="lbl-sm">adbpg_graphrag.query()</text>
+  <text x="850" y="608" text-anchor="middle" class="lbl-sm">hybrid | local | global mode</text>
+  <text x="850" y="624" text-anchor="middle" class="lbl-sm">multi-hop entity traversal</text>
+
+  <rect x="960" y="550" width="180" height="80" class="box box-llm"/>
+  <text x="1050" y="572" text-anchor="middle" class="title">LLM generation</text>
+  <text x="1050" y="592" text-anchor="middle" class="lbl-sm">Qwen3.5-Flash (fast)</text>
+  <text x="1050" y="608" text-anchor="middle" class="lbl-sm">Qwen3.5-Plus (complex)</text>
+  <text x="1050" y="624" text-anchor="middle" class="lbl-sm">Qwen3-VL-Plus (vision)</text>
+
+  <rect x="760" y="650" width="380" height="100" class="box box-out"/>
+  <text x="950" y="672" text-anchor="middle" class="title">Validation + streaming</text>
+  <text x="950" y="692" text-anchor="middle" class="lbl-sm">Content Moderation 2.0 (green)</text>
+  <text x="950" y="708" text-anchor="middle" class="lbl-sm">citation validator · grounding ≥ 0.7 · PHI re-check</text>
+  <text x="950" y="724" text-anchor="middle" class="lbl-sm">Tair cache write · audit log · SSE to client</text>
+  <text x="950" y="740" text-anchor="middle" class="lbl-sm">emergency disclaimer prepended</text>
+
+  <!-- Query arrows -->
+  <path d="M250 405 L270 405" class="edge-c" marker-end="url(#arr-c)"/>
+  <path d="M250 485 L270 485" class="edge-c" marker-end="url(#arr-c)"/>
+  <path d="M250 500 L270 635" class="edge-c" marker-end="url(#arr-c)"/>
+  <path d="M730 490 L760 490" class="edge-c" marker-end="url(#arr-c)"/>
+  <path d="M940 490 L960 490" class="edge-c" marker-end="url(#arr-c)"/>
+  <path d="M730 685 Q740 650 850 630" class="edge-c" marker-end="url(#arr-c)"/>
+  <path d="M1050 530 L1050 550" class="edge-c" marker-end="url(#arr-c)"/>
+  <path d="M940 570 L960 570" class="edge-c" marker-end="url(#arr-c)"/>
+  <path d="M1050 630 L1050 650" class="edge-c" marker-end="url(#arr-c)"/>
+  <path d="M850 630 L850 650" class="edge-c" marker-end="url(#arr-c)"/>
+</svg>

@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 680" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+    <marker id="arr-hit" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker>
+    <marker id="arr-miss" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/></marker>
+    <style>
+      .box       { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.2; rx:8; ry:8; }
+      .box-l1    { fill:#f0fdf4; stroke:#16a34a; stroke-width:1.5; }
+      .box-l2    { fill:#fff7ed; stroke:#fb923c; stroke-width:1.5; }
+      .box-l3    { fill:#eff6ff; stroke:#1d4ed8; stroke-width:1.5; }
+      .box-miss  { fill:#fef2f2; stroke:#dc2626; }
+      .title     { font-weight:700; fill:#0f172a; }
+      .lbl-sm    { fill:#64748b; font-size:10.5px; }
+      .edge      { stroke:#64748b; stroke-width:1.3; fill:none; }
+      .edge-hit  { stroke:#16a34a; stroke-width:1.8; fill:none; }
+      .edge-miss { stroke:#dc2626; stroke-width:1.6; fill:none; stroke-dasharray:5 3; }
+    </style>
+  </defs>
+
+  <text x="640" y="28" text-anchor="middle" font-size="17" class="title">Three-Layer Cache Strategy — Version C</text>
+  <text x="640" y="48" text-anchor="middle" class="lbl-sm">Cheapest on Alibaba: Qwen Context Cache is native + implicit-on + explicit · hit billed at 20% of input price</text>
+
+  <!-- Request entry -->
+  <rect x="540" y="80" width="200" height="50" class="box"/>
+  <text x="640" y="102" text-anchor="middle" class="title">Clinician question</text>
+  <text x="640" y="120" text-anchor="middle" class="lbl-sm">FC /chat after IDaaS + SDDP</text>
+
+  <path d="M640 130 L640 160" class="edge" marker-end="url(#arr)"/>
+
+  <!-- LAYER 1 -->
+  <rect x="360" y="160" width="560" height="130" class="box box-l1"/>
+  <text x="640" y="184" text-anchor="middle" class="title">Layer 1 — Semantic response cache (LangChain)</text>
+  <text x="640" y="206" text-anchor="middle" class="lbl-sm">Tair (Redis OSS-compatible, NOT Valkey) + TairVector · hosted outside the model</text>
+  <text x="640" y="224" text-anchor="middle" class="lbl-sm">langchain.cache.RedisSemanticCache · similarity threshold 0.95 · TTL 10 min emergency / 24 hr general</text>
+  <text x="640" y="244" text-anchor="middle" class="lbl-sm">key = sha256(normalize(question) | emergency | tenant_id | model_version)</text>
+  <text x="640" y="264" text-anchor="middle" class="lbl-sm">Hit rate: 30–45% on repeating emergency protocols · ~20 ms lookup</text>
+  <text x="640" y="282" text-anchor="middle" class="lbl-sm">Invalidation on: KB upsert · ICD-11 delta · model/prompt version change</text>
+
+  <!-- Hit path -->
+  <path d="M360 225 L150 225 L150 550 L350 550" class="edge-hit" marker-end="url(#arr-hit)"/>
+  <text x="90" y="420" text-anchor="middle" class="title" fill="#16a34a">HIT</text>
+  <text x="90" y="438" text-anchor="middle" class="lbl-sm" fill="#16a34a">skip LLM entirely</text>
+  <text x="90" y="452" text-anchor="middle" class="lbl-sm" fill="#16a34a">~150 ms total</text>
+
+  <!-- Miss path -->
+  <path d="M640 290 L640 330" class="edge-miss" marker-end="url(#arr-miss)"/>
+  <text x="670" y="312" class="lbl-sm" fill="#dc2626">miss → LLM call</text>
+
+  <!-- LAYER 2 -->
+  <rect x="360" y="330" width="560" height="130" class="box box-l2"/>
+  <text x="640" y="354" text-anchor="middle" class="title">Layer 2 — Qwen Context Cache (inside Model Studio)</text>
+  <text x="640" y="376" text-anchor="middle" class="lbl-sm">Transformer KV-tensor reuse on the model server</text>
+  <text x="640" y="396" text-anchor="middle" class="lbl-sm">Implicit cache: enabled by default, zero config · hit billed at 20% of normal input price</text>
+  <text x="640" y="414" text-anchor="middle" class="lbl-sm">Explicit cache IDs: Nova's system prompt + safety template (~2 KB static prefix)</text>
+  <text x="640" y="432" text-anchor="middle" class="lbl-sm">TTFT drop: ~500 ms → ~300 ms on cached prefix</text>
+  <text x="640" y="450" text-anchor="middle" class="lbl-sm">Input-token billing drop: ~50% on cached portions</text>
+
+  <!-- LAYER 3 -->
+  <rect x="360" y="480" width="560" height="130" class="box box-l3"/>
+  <text x="640" y="504" text-anchor="middle" class="title">Layer 3 — Qwen Provisioned Throughput Units (peak only)</text>
+  <text x="640" y="526" text-anchor="middle" class="lbl-sm">Reserved inference capacity, not a cache in the strict sense</text>
+  <text x="640" y="546" text-anchor="middle" class="lbl-sm">Sized to peak TPM observed in first month; on-demand outside peak</text>
+  <text x="640" y="566" text-anchor="middle" class="lbl-sm">Eliminates throttling on morning-shift handoff spikes</text>
+  <text x="640" y="584" text-anchor="middle" class="lbl-sm">Primary use: emergency lane (where 2-s SLA matters most)</text>
+
+  <!-- Response out -->
+  <rect x="180" y="530" width="340" height="40" class="box"/>
+  <text x="350" y="554" text-anchor="middle" class="title">Stream response · audit · Layer-1 cache write</text>
+
+  <path d="M920 395 L1060 395 L1060 550 L920 550" class="edge" marker-end="url(#arr)"/>
+  <text x="1100" y="480" class="lbl-sm">→ Layer 2 hit</text>
+
+  <!-- Composite budget -->
+  <rect x="950" y="160" width="290" height="280" class="box"/>
+  <text x="1095" y="182" text-anchor="middle" class="title">Composed emergency p95</text>
+  <text x="970" y="212" class="lbl-sm">L1 hit (~35%)</text>
+  <text x="1230" y="212" text-anchor="end" class="title" fill="#16a34a">~150 ms</text>
+  <text x="970" y="238" class="lbl-sm">L1 miss + L2 hit</text>
+  <text x="1230" y="238" text-anchor="end" class="title" fill="#fb923c">~1,300 ms</text>
+  <text x="970" y="264" class="lbl-sm">L1+L2 miss (cold)</text>
+  <text x="1230" y="264" text-anchor="end" class="title" fill="#dc2626">~1,700 ms</text>
+
+  <text x="1095" y="300" text-anchor="middle" class="lbl-sm">Blended p95 = ~1,200 ms</text>
+  <text x="1095" y="320" text-anchor="middle" class="lbl-sm">SLA target = 2,000 ms</text>
+  <text x="1095" y="344" text-anchor="middle" class="title" fill="#16a34a">✓ SLA met with margin</text>
+
+  <text x="970" y="380" class="lbl-sm">Cost at steady state:</text>
+  <text x="970" y="398" class="lbl-sm">• L1 hit → ~$0 per call</text>
+  <text x="970" y="414" class="lbl-sm">• L2 hit → ~50% input tokens @ 20% price</text>
+  <text x="970" y="430" class="lbl-sm">• Peak → L3 PTU = flat fee</text>
+</svg>

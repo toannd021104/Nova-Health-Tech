@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 820" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+    <marker id="arr-em" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/></marker>
+    <marker id="arr-cp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/></marker>
+    <style>
+      .box       { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.2; rx:8; ry:8; }
+      .box-em    { fill:#fef2f2; stroke:#dc2626; stroke-width:1.5; }
+      .box-cp    { fill:#eff6ff; stroke:#1d4ed8; stroke-width:1.5; }
+      .box-router{ fill:#f5f3ff; stroke:#7c3aed; stroke-width:1.5; }
+      .box-llm   { fill:#fff7ed; stroke:#fb923c; }
+      .box-dept  { fill:#f0fdf4; stroke:#4ade80; }
+      .box-tool  { fill:#fefce8; stroke:#facc15; }
+      .group     { fill:#f8fafc; stroke:#94a3b8; stroke-dasharray:4 3; stroke-width:1.2; rx:12; ry:12; }
+      .title     { font-weight:700; fill:#0f172a; }
+      .lbl-sm    { fill:#64748b; font-size:10.5px; }
+      .edge      { stroke:#64748b; stroke-width:1.3; fill:none; }
+      .edge-em   { stroke:#dc2626; stroke-width:1.8; fill:none; }
+      .edge-cp   { stroke:#1d4ed8; stroke-width:1.6; fill:none; }
+    </style>
+  </defs>
+
+  <text x="640" y="28" text-anchor="middle" font-size="17" class="title">Model Orchestration — Emergency Bypass + 40-Department Multi-Agent</text>
+  <text x="640" y="48" text-anchor="middle" class="lbl-sm">Model Studio Agent apps + Workflow app · LangChain only for cache + memory</text>
+
+  <!-- Clinician entry -->
+  <rect x="500" y="80" width="280" height="60" class="box"/>
+  <text x="640" y="102" text-anchor="middle" class="title">Clinician question</text>
+  <text x="640" y="122" text-anchor="middle" class="lbl-sm">{message, emergency toggle, optional image, FHIR context}</text>
+
+  <!-- Step 1: if/else -->
+  <path d="M640 140 L640 170" class="edge" marker-end="url(#arr)"/>
+
+  <rect x="490" y="170" width="300" height="60" class="box box-router"/>
+  <text x="640" y="192" text-anchor="middle" class="title">Step 1 — Lane selection (PURE IF/ELSE, no LLM)</text>
+  <text x="640" y="212" text-anchor="middle" class="lbl-sm">if state.emergency: → emergency lane · else: → complex lane</text>
+
+  <!-- Fork left (emergency) / right (complex) -->
+  <path d="M520 230 L520 270 L280 270 L280 310" class="edge-em" marker-end="url(#arr-em)"/>
+  <path d="M760 230 L760 270 L1000 270 L1000 310" class="edge-cp" marker-end="url(#arr-cp)"/>
+
+  <!-- EMERGENCY LANE (left) -->
+  <rect x="60" y="300" width="450" height="440" class="group"/>
+  <text x="80" y="322" class="title" fill="#dc2626">Emergency lane · ≤ 2 s SLA</text>
+
+  <rect x="90" y="340" width="390" height="70" class="box box-em"/>
+  <text x="285" y="362" text-anchor="middle" class="title">Workflow Application (deterministic DAG)</text>
+  <text x="285" y="380" text-anchor="middle" class="lbl-sm">Retrieve → Prompt → Generate → Moderation</text>
+  <text x="285" y="396" text-anchor="middle" class="lbl-sm">bypasses router; auditable fixed path</text>
+
+  <rect x="90" y="430" width="180" height="70" class="box box-llm"/>
+  <text x="180" y="452" text-anchor="middle" class="title">Qwen3.5-Flash</text>
+  <text x="180" y="470" text-anchor="middle" class="lbl-sm">temperature=0.1</text>
+  <text x="180" y="486" text-anchor="middle" class="lbl-sm">max_tokens=700 · streaming</text>
+
+  <rect x="290" y="430" width="190" height="70" class="box box-llm"/>
+  <text x="385" y="452" text-anchor="middle" class="title">Qwen3-8B student</text>
+  <text x="385" y="470" text-anchor="middle" class="lbl-sm">PAI-EAS A10</text>
+  <text x="385" y="486" text-anchor="middle" class="lbl-sm">~60% traffic via feature flag</text>
+
+  <rect x="90" y="520" width="390" height="50" class="box"/>
+  <text x="285" y="540" text-anchor="middle" class="title">Emergency Medicine agent</text>
+  <text x="285" y="556" text-anchor="middle" class="lbl-sm">kb-who-emergency + sepsis/stroke/MI templates</text>
+
+  <rect x="90" y="590" width="390" height="140" class="box box-em"/>
+  <text x="285" y="612" text-anchor="middle" class="title">Latency budget</text>
+  <text x="285" y="634" text-anchor="middle" class="lbl-sm">25 ms   Tair miss/hit</text>
+  <text x="285" y="650" text-anchor="middle" class="lbl-sm">100 ms  IDaaS + SDDP</text>
+  <text x="285" y="666" text-anchor="middle" class="lbl-sm">70 ms   Retrieval + rerank</text>
+  <text x="285" y="682" text-anchor="middle" class="lbl-sm">300 ms  Qwen3.5-Flash TTFT (L2 cache)</text>
+  <text x="285" y="698" text-anchor="middle" class="lbl-sm">1,100 ms Full answer (~250 tok)</text>
+  <text x="285" y="714" text-anchor="middle" class="lbl-sm">110 ms  Moderation + citation · ≤ 1,705 ms p95</text>
+
+  <!-- COMPLEX LANE (right) -->
+  <rect x="540" y="300" width="700" height="440" class="group"/>
+  <text x="560" y="322" class="title" fill="#1d4ed8">Complex lane · ≤ 6 s target</text>
+
+  <rect x="575" y="340" width="640" height="60" class="box box-cp"/>
+  <text x="895" y="362" text-anchor="middle" class="title">Step 2 — Router agent (complex lane only)</text>
+  <text x="895" y="380" text-anchor="middle" class="lbl-sm">Qwen3.5-Flash · temperature=0 · response_format=json_object · ~150–200 ms</text>
+
+  <rect x="575" y="420" width="640" height="80" class="box box-router"/>
+  <text x="895" y="442" text-anchor="middle" class="title">Router output</text>
+  <text x="895" y="462" text-anchor="middle" class="lbl-sm">{department, secondary[], confidence, reason}</text>
+  <text x="895" y="482" text-anchor="middle" class="lbl-sm">Image attachment → forces Radiology · prescribing → adds Clinical Pharmacy side-channel</text>
+
+  <!-- 40 department agents strip -->
+  <rect x="575" y="520" width="640" height="90" class="box box-dept"/>
+  <text x="895" y="542" text-anchor="middle" class="title">40 specialty agents (UI never exposes list)</text>
+  <text x="895" y="562" text-anchor="middle" class="lbl-sm">Emergency · ICU · Anesthesia · Infection Control · Cardiology (Int/Interv/Surg)</text>
+  <text x="895" y="578" text-anchor="middle" class="lbl-sm">Pulm · GI · Endoscopy · Neph · Endo · Neuro · Oncology · OB · Neonatology · ENT</text>
+  <text x="895" y="594" text-anchor="middle" class="lbl-sm">Radiology (Qwen3-VL-Plus) · Pharmacy · Derm · Plastic · 21 others · + Triage fallback</text>
+
+  <!-- Tools -->
+  <rect x="575" y="630" width="150" height="90" class="box box-tool"/>
+  <text x="650" y="652" text-anchor="middle" class="title">kb_retrieve</text>
+  <text x="650" y="670" text-anchor="middle" class="lbl-sm">hybrid BM25 + kNN</text>
+  <text x="650" y="686" text-anchor="middle" class="lbl-sm">OpenSearch</text>
+  <text x="650" y="704" text-anchor="middle" class="lbl-sm">pre-filter by metadata</text>
+
+  <rect x="735" y="630" width="150" height="90" class="box box-tool"/>
+  <text x="810" y="652" text-anchor="middle" class="title">graph_retrieve</text>
+  <text x="810" y="670" text-anchor="middle" class="lbl-sm">adbpg_graphrag.query</text>
+  <text x="810" y="686" text-anchor="middle" class="lbl-sm">multi-hop entity</text>
+  <text x="810" y="704" text-anchor="middle" class="lbl-sm">hybrid | local | global</text>
+
+  <rect x="895" y="630" width="150" height="90" class="box box-tool"/>
+  <text x="970" y="652" text-anchor="middle" class="title">icd11_lookup</text>
+  <text x="970" y="670" text-anchor="middle" class="lbl-sm">live WHO API</text>
+  <text x="970" y="686" text-anchor="middle" class="lbl-sm">+ query expansion</text>
+  <text x="970" y="704" text-anchor="middle" class="lbl-sm">synonym boost</text>
+
+  <rect x="1055" y="630" width="160" height="90" class="box box-tool"/>
+  <text x="1135" y="652" text-anchor="middle" class="title">pubmed_search</text>
+  <text x="1135" y="670" text-anchor="middle" class="lbl-sm">NCBI E-utilities</text>
+  <text x="1135" y="686" text-anchor="middle" class="lbl-sm">3 req/s free · 10/s key</text>
+  <text x="1135" y="704" text-anchor="middle" class="lbl-sm">runtime only</text>
+
+  <!-- Bottom: convergence -->
+  <rect x="60" y="760" width="1180" height="40" class="box"/>
+  <text x="650" y="784" text-anchor="middle" class="title">Content Moderation 2.0 · citation validator (≥ 0.7 grounding) · PHI re-check · audit · stream to client</text>
+
+  <!-- Router to department -->
+  <path d="M895 500 L895 520" class="edge-cp" marker-end="url(#arr-cp)"/>
+  <path d="M895 610 L895 630" class="edge-cp" marker-end="url(#arr-cp)"/>
+
+  <!-- Department to tools (fan-out) -->
+  <path d="M650 720 L650 755" class="edge-cp" marker-end="url(#arr-cp)"/>
+  <path d="M810 720 L810 755" class="edge-cp" marker-end="url(#arr-cp)"/>
+  <path d="M970 720 L970 755" class="edge-cp" marker-end="url(#arr-cp)"/>
+  <path d="M1135 720 L1135 755" class="edge-cp" marker-end="url(#arr-cp)"/>
+
+  <!-- Emergency to convergence -->
+  <path d="M285 730 L285 755" class="edge-em" marker-end="url(#arr-em)"/>
+</svg>

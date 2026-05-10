@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="13">
+  <defs>
+    <style>
+      .title       { font-weight:700; fill:#0f172a; }
+      .subtitle    { fill:#475569; }
+      .label       { fill:#334155; font-weight:600; }
+      .value       { fill:#0f172a; font-weight:700; }
+      .lbl-sm      { fill:#64748b; font-size:11px; }
+      .kpi-bg      { fill:#eff6ff; stroke:#1d4ed8; stroke-width:1.5; rx:10; ry:10; }
+      .kpi-ok      { fill:#f0fdf4; stroke:#16a34a; stroke-width:1.5; rx:10; ry:10; }
+      .kpi-hot     { fill:#fef2f2; stroke:#dc2626; stroke-width:1.5; rx:10; ry:10; }
+      .panel       { fill:#f8fafc; stroke:#cbd5e1; stroke-width:1.2; rx:10; ry:10; }
+      .banner      { fill:#0f172a; }
+      .banner-text { fill:#ffffff; font-weight:700; }
+    </style>
+  </defs>
+
+  <rect width="1280" height="720" fill="#ffffff"/>
+
+  <!-- Top banner -->
+  <rect x="0" y="0" width="1280" height="70" class="banner"/>
+  <text x="40" y="32" font-size="22" class="banner-text">Nova Health Tech — Clinical GenAI Assistant</text>
+  <text x="40" y="54" font-size="14" fill="#cbd5e1">Version C · Alibaba Cloud + Qwen · Singapore · Technical Architecture Proposal</text>
+  <text x="1240" y="32" text-anchor="end" font-size="14" fill="#cbd5e1">Version 1.0 · May 2026</text>
+  <text x="1240" y="54" text-anchor="end" font-size="12" fill="#94a3b8">One product · No phases · Launch = all features on</text>
+
+  <!-- KPI row -->
+  <rect x="40"  y="100" width="280" height="110" class="kpi-ok"/>
+  <text x="180" y="128" text-anchor="middle" class="lbl-sm">EMERGENCY SLA (p95)</text>
+  <text x="180" y="170" text-anchor="middle" font-size="38" class="title">≤ 2 s</text>
+  <text x="180" y="195" text-anchor="middle" class="lbl-sm">If/else toggle · no classifier call</text>
+
+  <rect x="340" y="100" width="280" height="110" class="kpi-ok"/>
+  <text x="480" y="128" text-anchor="middle" class="lbl-sm">CROSS-REGION HOPS</text>
+  <text x="480" y="170" text-anchor="middle" font-size="38" class="title">0</text>
+  <text x="480" y="195" text-anchor="middle" class="lbl-sm">SG-native · PDPA-compatible</text>
+
+  <rect x="640" y="100" width="280" height="110" class="kpi-bg"/>
+  <text x="780" y="128" text-anchor="middle" class="lbl-sm">MONTHLY COST (BASE)</text>
+  <text x="780" y="170" text-anchor="middle" font-size="38" class="title">~$2,220</text>
+  <text x="780" y="195" text-anchor="middle" class="lbl-sm">~$2,280–3,060 with Qwen3-8B student</text>
+
+  <rect x="940" y="100" width="300" height="110" class="kpi-bg"/>
+  <text x="1090" y="128" text-anchor="middle" class="lbl-sm">AUDIT RETENTION</text>
+  <text x="1090" y="170" text-anchor="middle" font-size="38" class="title">6 years</text>
+  <text x="1090" y="195" text-anchor="middle" class="lbl-sm">HIPAA §164.530(j) · PDPA aligned</text>
+
+  <!-- Stack + Data flow panel -->
+  <rect x="40" y="240" width="590" height="440" class="panel"/>
+  <text x="60" y="270" class="title" font-size="16">Technology stack (Singapore International)</text>
+
+  <text x="60" y="300" class="label">Chat serving</text>
+  <text x="220" y="300" class="value">Model Studio (dashscope-intl)</text>
+  <text x="60" y="318" class="lbl-sm">Qwen3.5-Flash (fast + router) · Qwen3.5-Plus (complex + teacher) · Qwen3-VL-Plus (Radiology)</text>
+
+  <text x="60" y="348" class="label">Student model</text>
+  <text x="220" y="348" class="value">Qwen3-8B on PAI-EAS</text>
+  <text x="60" y="366" class="lbl-sm">SFT + LoRA · A10 GPU · serves ~60% of complex-lane traffic</text>
+
+  <text x="60" y="396" class="label">Vector store</text>
+  <text x="220" y="396" class="value">OpenSearch Vector Search HA</text>
+  <text x="60" y="414" class="lbl-sm">Hybrid BM25 + HNSW kNN · text-embedding-v4 · tongyi-embedding-vision-plus · qwen3-rerank</text>
+
+  <text x="60" y="444" class="label">Graph store</text>
+  <text x="220" y="444" class="value">AnalyticDB PG GraphRAG</text>
+  <text x="60" y="462" class="lbl-sm">Managed GraphRAG · adbpg_graphrag extension · 4-core 32 GB · 3 zones</text>
+
+  <text x="60" y="492" class="label">Caching (3 layers)</text>
+  <text x="220" y="492" class="value">Tair · Qwen Context Cache · PTU</text>
+  <text x="60" y="510" class="lbl-sm">Tair (Redis OSS-compatible, NOT Valkey) + TairVector · semantic response cache</text>
+
+  <text x="60" y="540" class="label">Orchestration</text>
+  <text x="220" y="540" class="value">Model Studio Agent + Workflow apps</text>
+  <text x="60" y="558" class="lbl-sm">40-department multi-agent · LangChain only for semantic cache + memory</text>
+
+  <text x="60" y="588" class="label">Identity</text>
+  <text x="220" y="588" class="value">IDaaS EIAM 2.0 · Cloud SSO + RAM</text>
+  <text x="60" y="606" class="lbl-sm">SAML/OIDC federation to hospital IdP · MFA enforced</text>
+
+  <text x="60" y="636" class="label">Audit + compliance</text>
+  <text x="220" y="636" class="value">ActionTrail → SLS → OSS WORM</text>
+  <text x="60" y="654" class="lbl-sm">Content Moderation 2.0 · DataWorks SDDP PHI mask · KMS BYOK</text>
+
+  <!-- Launch scope panel -->
+  <rect x="650" y="240" width="590" height="210" class="panel"/>
+  <text x="670" y="270" class="title" font-size="16">Launch scope — everything active on day one</text>
+
+  <g font-size="12" fill="#334155">
+    <text x="670" y="295">✓ Scheduled ingestion + Upload Portal over Site-to-Site IPsec VPN</text>
+    <text x="670" y="315">✓ Hybrid BM25 + kNN retrieval + qwen3-rerank</text>
+    <text x="670" y="335">✓ Managed GraphRAG on AnalyticDB PG for multi-hop questions</text>
+    <text x="670" y="355">✓ Emergency toggle pure if/else · no classifier LLM call</text>
+    <text x="670" y="375">✓ 40-department multi-agent (Vietnamese tertiary hospital)</text>
+    <text x="670" y="395">✓ Fine-tuned Qwen3-8B student trained pre-launch · serving on day one</text>
+    <text x="670" y="415">✓ Tair L1 + Qwen Context Cache L2 + Qwen PTU L3</text>
+    <text x="670" y="435">✓ Content Moderation 2.0 + DataWorks SDDP + citation validator</text>
+  </g>
+
+  <!-- Decision summary panel -->
+  <rect x="650" y="470" width="590" height="210" class="panel"/>
+  <text x="670" y="500" class="title" font-size="16">Key architectural decisions (rationale → §1.3)</text>
+
+  <g font-size="12" fill="#334155">
+    <text x="670" y="525">• Singapore single-region · PDPA-native · zero cross-region query path</text>
+    <text x="670" y="545">• Qwen family · open-weights · 3–5× cheaper per token at equivalent benchmarks</text>
+    <text x="670" y="565">• Emergency routing · pure if/else · deterministic · saves ~300 ms</text>
+    <text x="670" y="585">• Fine-tuned student on day one · $15–40 per retrain · cheap iteration</text>
+    <text x="670" y="605">• Managed GraphRAG over self-hosted · no Neo4j ops burden</text>
+    <text x="670" y="625">• Tair (Redis OSS-compatible) · NOT Valkey</text>
+    <text x="670" y="645">• 6-year audit retention · harmonizes HIPAA + PDPA in one policy</text>
+    <text x="670" y="665">• One product · pre-launch build + continuous operations · no phases</text>
+  </g>
+</svg>
