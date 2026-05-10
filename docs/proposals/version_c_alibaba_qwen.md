@@ -7,26 +7,6 @@
 
 ---
 
-## Cover summary
-
-![Cover summary](../architecture/diagrams/v_c_cover_summary.svg)
-
-| Property | Value |
-|---|---|
-| Primary region | Singapore International (Alibaba Cloud) |
-| Cross-region hops at query time | **0** |
-| Emergency SLA (p95) | **≤ 2 s** |
-| Fast-lane model | [Qwen3.5-Flash](https://www.alibabacloud.com/help/en/model-studio/model-pricing) |
-| Complex-lane model | Qwen3.5-Plus + fine-tuned [Qwen3-8B student](https://www.alibabacloud.com/help/en/pai/use-cases/quick-start-deploy-fine-tune-and-evaluate-qwen3-models) on PAI-EAS (trained pre-launch, serves ~60% of complex traffic) |
-| Vision specialist | Qwen3-VL-Plus |
-| Managed GraphRAG | [AnalyticDB PG GraphRAG service](https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql/user-guide/use-the-graphrag-service) |
-| Cache | [Tair (Redis OSS-compatible)](https://www.alibabacloud.com/product/tair) + [Qwen Context Cache](https://www.alibabacloud.com/help/en/model-studio/context-cache) |
-| Data residency | PDPA-native; zero default cross-border transfer |
-| Audit retention | 6 years, [HIPAA §164.530(j)](https://www.hipaajournal.com/hipaa-retention-requirements/) |
-| Monthly cost (launch-day) | **~$2,280–3,060** (student active from day one — committed) |
-
----
-
 ## Table of Contents
 
 1. [Executive Summary](#1-executive-summary)
@@ -43,70 +23,78 @@
 12. [Use Case Walkthroughs](#12-use-case-walkthroughs)
 13. [Risks & Mitigations](#13-risks--mitigations)
 14. [Implementation Roadmap](#14-implementation-roadmap)
-15. [Budget & Cost Model](#15-budget--cost-model)
+15. [Estimation Cost](#15-estimation-cost)
 16. [Appendices](#16-appendices)
 
 ---
 
 ## 1. Executive Summary
 
-### 1.1 Business context and problem statement
+### 1.1 Problem statement
 
-Nova Health Tech's flagship clinical decision-support tool is struggling to meet physician expectations on two dimensions: **speed** and **medical relevance**. Clinicians need answers in seconds during diagnosis, grounded in current evidence, and the board has approved a GenAI assistant initiative for internal clinical staff and hospital clients.
-
-The assistant must:
-
-1. Answer complex medical questions in natural language
-2. Rely on **internal clinical trial reports, treatment protocols, and external sources** (PubMed, [WHO](https://www.who.int/publications), [WHO ICD-11](https://id.who.int/swagger/index.html))
-3. Be **auditable** and compliant with regulations applicable to each hospital deployment
-4. Be **fast enough for use during diagnosis** — a 2-second target on emergency cases
-
-Operating constraints the board has called out:
-
-- WHO publishes monthly protocol updates
-- Emergency care needs a 2-second response time
-- Internal trials include patient-sensitive data (PHI / PDPA-regulated)
-- Users want consistent tone and phrasing
-- Internal trial reports are in legacy PDF formats with inconsistent tagging; WHO updates are in a structured API
+Nova Health Tech's clinical decision-support tool cannot keep pace with physician needs on two fronts: speed and medical relevance. Clinicians need grounded answers in seconds during diagnosis, with a hard 2-second target for emergency cases. Internal clinical trial reports sit in legacy PDFs with inconsistent tagging. WHO publishes monthly protocol updates that must reach clinicians within 24 hours. Patient-sensitive data carries PDPA, HCSA, and HIPAA obligations. The assistant must answer complex medical questions in natural language, ground every claim in internal trial reports plus WHO guidelines plus WHO ICD-11 plus PubMed, stay auditable, and hold consistent tone across forty clinical specialties. The board has approved building this as a GenAI assistant for internal clinical staff and hospital clients.
 
 ### 1.2 Proposed solution overview
 
-A single-region Singapore deployment on Alibaba Cloud International using:
+Single-region SaaS on Alibaba Cloud Singapore. Components grouped by layer:
 
-- [**Model Studio**](https://www.alibabacloud.com/help/en/model-studio/what-is-model-studio) for chat serving — Qwen3.5-Flash on the emergency lane, Qwen3.5-Plus on the complex lane, Qwen3-VL-Plus for Radiology
-- A fine-tuned **Qwen3-8B student** (trained pre-launch on [PAI Model Gallery](https://www.alibabacloud.com/help/en/pai/use-cases/quick-start-deploy-fine-tune-and-evaluate-qwen3-models) with SFT + LoRA, distilled from Qwen3.5-Plus) served on [PAI-EAS](https://www.alibabacloud.com/help/en/pai) — **committed, serving ~60% of complex-lane traffic on day one** (Nova-voice tone control, cheapest-in-class retrain cadence at $15–40/run, and locally-controlled weights). Also acts as emergency DR fallback if Model Studio has an outage.
-- **Hybrid RAG** on [OpenSearch Vector Search Edition](https://www.alibabacloud.com/help/en/open-search/vector-search-edition/product-overview) HA, combined with **managed GraphRAG** via the [AnalyticDB for PostgreSQL GraphRAG service](https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql/user-guide/use-the-graphrag-service)
-- A **three-layer cache**: [Tair (Redis OSS-compatible)](https://www.alibabacloud.com/product/tair) semantic cache at Layer 1, [Qwen Context Cache](https://www.alibabacloud.com/help/en/model-studio/context-cache) at Layer 2, [Qwen Provisioned Throughput Units](https://www.alibabacloud.com/help/en/model-studio/model-training-and-deployment-billing) at Layer 3
-- **40-department multi-agent topology** behind a router — Emergency bypasses the router via a pure if/else on the explicit emergency toggle (no classifier LLM call)
-- [**IDaaS EIAM 2.0**](https://www.alibabacloud.com/help/en/idaas/) Premium+ federating each hospital's IdP (EntraID / Okta / ADFS) for clinician access; Cloud SSO + RAM for Nova staff
-- **Two distinct network planes for hospital integration**:
-  - **Control plane (clinician traffic)** — pure SaaS over public HTTPS: TLS 1.3 + IDaaS JWT + WAF + Anti-DDoS + **per-tenant WAF IP allow-list** (hospital's egress IP range). Hospital whitelists Nova's API IP range and domain on their egress firewall. No VPN on this path — matches how every modern healthcare SaaS onboards (Epic cloud, Cerner CommunityWorks, Salesforce Health Cloud).
-  - **Data plane (backend system-to-system flows carrying raw PHI)** — Site-to-Site IPsec-VPN on [Alibaba VPN Gateway](https://www.alibabacloud.com/help/en/vpn-gateway): IKEv2 + AES-256-GCM + SHA-2, dual-tunnel HA. Carries the SharePoint / SMB trial-report pull, on-prem EHR FHIR callback, and Upload Portal traffic when PHI-bearing documents cross the hospital boundary. **Rationale**: bulk document transfer containing raw patient names, MRN, NRIC must not cross the public Internet even under TLS — the encrypted tunnel is the industry-standard belt-and-braces for bulk PHI transit.
-- No Apsara Stack, no Express Connect dedicated line, no Nova-specific software installed inside the hospital beyond existing firewall rules (both a WAF allow-list entry and an IPsec tunnel endpoint).
-- Full audit pipeline: [ActionTrail](https://www.alibabacloud.com/product/actiontrail) → [SLS](https://www.alibabacloud.com/product/log-service) → OSS WORM, **6-year retention** per [HIPAA §164.530(j)](https://www.law.cornell.edu/cfr/text/45/164.530)
-- [**Content Moderation 2.0 for Generative AI**](https://www.alibabacloud.com/product/content-moderation) + [DataWorks SDDP](https://www.alibabacloud.com/product/sddp) for PHI masking
+**Edge and access**
 
-### 1.3 Key architectural decisions and rationale
-
-| Decision | Rationale |
+| Component | Purpose |
 |---|---|
-| **Single region in Singapore** | PDPA data residency is the simplest posture; [Model Studio](https://www.alibabacloud.com/help/en/model-studio/regions/) has Singapore as a first-class region (5-region deployment: SG, Beijing, HK, Frankfurt, Virginia). All query-path compute fits in SG — zero cross-region hops. |
-| **Qwen family over other LLMs** | Native on Alibaba; open weights available for PAI fine-tuning; [Model Studio pricing](https://www.alibabacloud.com/help/en/model-studio/model-pricing) 3–5× cheaper per token than commercial alternatives at equivalent benchmarks. |
-| **Emergency routing via explicit if/else toggle, not classifier** | Deterministic; saves ~300 ms per emergency call; matches [`aws-demo/ec2/app/graph.py`](../../aws-demo/ec2/app/graph.py) baseline. |
-| **Fine-tuned student active on day one** | Bedrock-equivalent Model Distillation not available on Alibaba, but PAI SFT+LoRA delivers the same outcome — smaller model, faster first-token, cheaper per call — and is ~40× cheaper to retrain ($15–40/run vs $1,700–2,700 on Bedrock Model Distillation). |
-| **Managed GraphRAG over self-hosted** | [AnalyticDB PG GraphRAG](https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql/user-guide/use-the-graphrag-service) removes the Neo4j / Microsoft GraphRAG operational burden. Multi-hop clinical questions ("what diseases can drug X cause if patient has condition Y") gain 3–8% accuracy per [Microsoft Research GraphRAG evaluation](https://www.microsoft.com/en-us/research/blog/graphrag-unlocking-llm-discovery-on-narrative-private-data/). |
-| **40-department multi-agent** | Clinical reasoning benefits from specialist system prompts + department-scoped KB namespaces. Per [MMedAgent-RL benchmark](https://arxiv.org/html/2506.00555v2), specialist agents beat single-agent baselines by 3–8% on MedQA. |
-| **Tair, not Valkey** | [Tair](https://www.alibabacloud.com/product/tair) is Alibaba's mature Redis OSS-compatible service with a strong HA story in Singapore (4 zones + 3 MAZ combos). Valkey doesn't have a comparable Alibaba offering. |
-| **6-year audit retention** | HIPAA §164.530(j) baseline. PDPA doesn't prescribe a fixed retention; harmonizing at 6 years covers both regimes. |
+| CDN, Anti-DDoS, WAF | Public HTTPS edge with per-tenant IP allow-list |
+| API Gateway | Request entry with RAM and IDaaS authorization |
+| IDaaS EIAM 2.0 | SAML or OIDC federation to hospital IdP |
+| VPN Gateway (IPsec) | Data-plane tunnel for bulk PHI transfer |
 
-### 1.4 What this version is NOT
+**AI and chat**
 
-- Not a staged rollout. **One product** launches with all capabilities active: ingestion, multi-agent, RAG, GraphRAG, fine-tuned student, 3-layer cache, guardrails, audit.
-- **Not on-prem.** No Apsara Stack, no Nova-specific software installed inside the hospital. The hospital provides two things: a firewall WAF allow-list entry for the clinician chat path, and an IPsec VPN endpoint termination for the backend data-plane flows that carry raw PHI (SharePoint / SMB / on-prem FHIR / Upload Portal).
-- Not dependent on Chinese Mainland data sovereignty — see the "Singapore International" note below.
-- Not a pure Model Studio or pure PAI solution. The design uses **both** — Model Studio for API-driven serving, PAI for training + custom student serving.
+| Component | Purpose |
+|---|---|
+| Qwen3.5-Flash | Fast-lane chat for 2-second emergency SLA |
+| Qwen3.5-Plus | Complex-lane reasoning and teacher model |
+| Qwen3-VL-Plus | Vision specialist for Radiology images |
+| Qwen3-8B student on PAI-EAS | Serves 60 percent of complex traffic |
+| Model Studio Applications | Agent apps per department, Workflow for emergency |
 
-### 1.5 A note on "Singapore International" / "SG Intl"
+**Retrieval and knowledge**
+
+| Component | Purpose |
+|---|---|
+| OpenSearch Vector Search Edition | Hybrid BM25 plus kNN retrieval |
+| AnalyticDB PG GraphRAG | Multi-hop knowledge graph queries |
+| text-embedding-v4, tongyi-embedding-vision-plus | Text and multimodal embeddings |
+| qwen3-rerank | Top-20 to top-5 relevance reranking |
+| DocMind, Qwen-VL-Max | PDF parsing including tables and figures |
+
+**Caching**
+
+| Component | Purpose |
+|---|---|
+| Tair plus TairVector | Semantic response cache, Layer 1 |
+| Qwen Context Cache | Prefix KV cache, Layer 2 |
+| Qwen PTU | Reserved capacity for emergency peak, Layer 3 |
+
+**Security and compliance**
+
+| Component | Purpose |
+|---|---|
+| DataWorks SDDP | PHI detection and tokenization |
+| Content Moderation 2.0 | Guardrails for jailbreak and misinformation |
+| KMS plus Credentials Manager | Customer-managed keys, secret rotation |
+| ActionTrail, SLS, OSS WORM | Audit pipeline with 6-year retention |
+
+**Compute and operations**
+
+| Component | Purpose |
+|---|---|
+| Function Compute 3.0 | Stateless chat request handler |
+| Function Workflow | Ingestion orchestration |
+| SAE | Upload Portal container |
+| PAI DLC plus Model Gallery | Student model training |
+| ARMS LLM Trace Explorer | Distributed tracing and SLO alerting |
+
+### 1.3 A note on "Singapore International"
 
 [Alibaba Cloud operates two consoles from one physical cloud](https://www.alibabacloud.com/help/en/general-reference/latest/alibaba-cloud-overview): the **Mainland China site** (`aliyun.com`, RMB billing, primarily serves PRC customers) and the **International site** (`alibabacloud.com`, USD billing, everywhere else). Some services are only exposed through one site or the other, even when both physically could reach the Singapore (`ap-southeast-1`) region.
 
