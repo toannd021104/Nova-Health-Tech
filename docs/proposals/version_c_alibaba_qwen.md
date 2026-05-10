@@ -887,110 +887,59 @@ Hospital-side footprint: firewall WAF allow-list entry (clinician path) and IPse
 
 **Hybrid fallback exists** for clients who contractually require on-prem:
 - Apsara Stack mirrors the public Singapore region API surface; the architecture documented here would drop into Apsara Stack with minimal changes
-- Self-hosted alternatives for Managed GraphRAG (e.g. [Microsoft GraphRAG](https://microsoft.github.io/graphrag/) on self-hosted Neo4j) exist but trade ops burden for no material quality gain
-- This path is offered on a case-by-case basis, not as the default posture
+### 9.2 Public cloud components (Alibaba Cloud Singapore International)
 
-### 9.2 On-premise / private cloud components
-
-**None in the baseline deployment.** The only hospital-side component is the Customer Gateway (IPsec VPN endpoint) on the hospital's edge router: typically already deployed.
-
-**On hospital network**:
-- Customer Gateway (IPsec endpoint): existing hospital firewall/router
-- Clinician workstations with standard web browser (Chrome 120+, Edge 120+, Safari 17+)
-- Hospital's existing EHR with FHIR R4 endpoint enabled
-- Hospital's existing IdP (EntraID / Okta / ADFS) with SAML 2.0 or OIDC
-
-**Nothing Nova-specific** deployed on the hospital side: simplifies adoption and keeps Nova responsible for its own uptime.
-
-### 9.3 Public cloud components (Alibaba Cloud Singapore International)
-
-Full list in §3.3. Grouped by tier:
+Tier view (full service list in §3.3):
 
 ```
-Edge tier:         CDN + Anti-DDoS + WAF + API Gateway
-Compute tier:      Function Compute (chat runtime) + Function Workflow (ingest) +
-                   SAE (upload portal container)
-AI tier:           Model Studio (API) + PAI-EAS (student model) + PAI DLC (training)
-Data tier:         OpenSearch Vector Search HA + AnalyticDB PG (with adbpg_graphrag) +
-                   Tair + TairVector + OSS (raw + WORM audit)
-Identity tier:     IDaaS EIAM 2.0 (clinicians) + Cloud SSO + RAM (staff)
-Security tier:     KMS + Credentials Manager + Content Moderation 2.0 +
-                   DataWorks SDDP + Security Center
-Observability:     ARMS LLM Trace Explorer + SLS + ActionTrail
-Network tier:      VPC + VPN Gateway (IPsec) + PrivateLink endpoints
+Edge:          CDN + Anti-DDoS + WAF + API Gateway
+Compute:       Function Compute (chat) + Function Workflow (ingest) + SAE (Upload Portal)
+AI:            Model Studio + PAI-EAS (student) + PAI DLC (training)
+Data:          OpenSearch Vector Search HA + AnalyticDB PG (adbpg_graphrag) + Tair + OSS
+Identity:      IDaaS EIAM 2.0 (clinicians) + Cloud SSO + RAM (staff)
+Security:      KMS + Credentials Manager + Content Moderation 2.0 + DataWorks SDDP + Security Center
+Observability: ARMS LLM Trace Explorer + SLS + ActionTrail
+Network:       VPC + VPN Gateway (IPsec) + PrivateLink
 ```
 
-### 9.4 Containerization and orchestration (Kubernetes)
+### 9.3 Containerization
 
-**Primary compute is serverless, not Kubernetes.**
+Serverless-first. Kubernetes only on request.
 
-| Workload | Runtime | Why not Kubernetes |
-|---|---|---|
-| Chat request handling | Function Compute 3.0 (`fc-open`) | FC scales to zero + auto-scales; no ops |
-| Ingestion pipeline | Function Workflow | Managed state machine; no workers to run |
-| Upload Portal UI | [SAE (Serverless App Engine)](https://www.alibabacloud.com/product/sae) container | Managed container; no ACK to maintain |
-| PAI training | PAI DLC managed jobs | Alibaba-managed GPU scheduling |
-| PAI student serving | PAI-EAS (single A10) | Managed inference endpoint |
+| Workload | Runtime |
+|---|---|
+| Chat request handling | Function Compute 3.0 |
+| Ingestion pipeline | Function Workflow |
+| Upload Portal UI | SAE container |
+| PAI training | PAI DLC managed jobs |
+| PAI student serving | PAI-EAS (single A10) |
 
-**Kubernetes is used only when unavoidable**:
-- A dedicated [ACK (Container Service for Kubernetes)](https://www.alibabacloud.com/product/kubernetes) cluster is available as an optional footprint for clients who have existing K8s operations and want Nova's components deployed there. Not in the baseline. If activated, the same FC logic ports to a Deployment + HPA with minor code changes.
+ACK cluster available as optional footprint on client contract.
 
-**Why not K8s by default**: 40-department multi-agent topology at FC scale-to-zero is ~$90/mo for FC + API GW + CDN. An equivalent ACK footprint with comparable HA is ~$400–600/mo. K8s ops burden is not justified at this scale.
+### 9.4 CI/CD
 
-### 9.5 CI/CD pipeline and model versioning
+Code CI/CD: GitHub Actions to Alibaba Cloud. Dev push to lint and tests to staging deploy to integration tests to manual approval to production deploy to smoke test.
 
-**Code CI/CD**: GitHub to GitHub Actions to Alibaba Cloud:
+Model CI/CD: PAI Model Gallery training to eval harness (Qwen3.5-Plus judge) to gate (>= 95 percent teacher) to PAI-EAS feature flag to 5 percent canary for 72 hours to full ramp. Previous version retained for 30-day rollback.
 
-```
-dev branch push
-  to ruff lint + mypy + pytest + security scans (gosec for FC code)
-  to Docker build (for SAE container components)
-  to aliyun deploy to staging tenant
-  to integration tests against staging Model Studio
-  to manual approval gate
-  to aliyun deploy to production tenant
-  to post-deploy smoke test
-  to announce in #nova-deploys Slack
-```
+Prompt CI/CD: prompts in Git, referenced by hash in audit log. Production changes require PR review and eval-harness re-run.
 
-**Model CI/CD**: PAI Model Gallery training to eval harness to PAI-EAS promotion:
+### 9.5 Disaster recovery
 
-```
-Training run on PAI (quarterly SFT, monthly DPO micro-runs)
-  to artifacts: LoRA adapter + merged model
-  to eval harness (Qwen3.5-Plus as LLM-judge on accuracy/citation/PHI/tone/emergency)
-  to gate: ≥ 95% of teacher + zero safety regression
-  to deploy to PAI-EAS behind feature flag (0% traffic)
-  to 5% canary for 72 hours, monitor p95 latency + guardrail block rate
-  to ramp to 100% if clean
-  to previous model version retained for instant rollback for 30 days
-```
-
-**Prompt CI/CD**: prompts in Git (`prompts/*.md`), referenced by hash in audit log. Any production prompt change requires PR review + eval-harness re-run.
-
-### 9.6 Disaster recovery and business continuity
-
-| Component | DR strategy | RPO | RTO |
+| Component | DR | RPO | RTO |
 |---|---|---|---|
-| OSS raw bucket | Cross-zone replication within SG (3 zones) | 0 | ~15 min |
-| OSS WORM audit | Cross-zone replication within SG | 0 | ~15 min |
-| OpenSearch Vector Search | HA dual-zone deployment (SG Zone B + Zone C) | ~5 min | ~10 min |
-| AnalyticDB PG | Multi-AZ within SG (3-zone instance) + automated daily snapshot | ~1 hour | ~30 min |
-| Tair | Multi-AZ (one of the 3 MAZ combos in SG) | Rebuilds from source on miss (not primary source of truth) | ~5 min |
-| FC / API GW | Regional service; auto-failover across zones | 0 | ~1 min |
-| Model Studio | Alibaba-managed HA | 0 | ~1 min |
-| PAI-EAS student endpoint | Single-A10 instance; restart on failure | N/A (stateless) | ~5 min |
+| OSS raw bucket | Cross-zone replication in SG | 0 | 15 min |
+| OSS WORM audit | Cross-zone replication in SG | 0 | 15 min |
+| OpenSearch Vector Search | HA dual-zone | 5 min | 10 min |
+| AnalyticDB PG | Multi-AZ in SG + daily snapshot | 1 hour | 30 min |
+| Tair | Multi-AZ MAZ combo | Rebuilds from source on miss | 5 min |
+| FC / API Gateway | Regional auto-failover | 0 | 1 min |
+| Model Studio | Alibaba-managed HA | 0 | 1 min |
+| PAI-EAS student endpoint | Single-A10, restart on failure | Stateless | 5 min |
 
-**Meets targets**: RPO ≤ 1 hour, RTO ≤ 4 hours.
+Targets met: RPO <= 1 hour, RTO <= 4 hours. Cross-region warm standby is a roadmap item.
 
-**Cross-region warm standby** is a roadmap item requiring PDPA transfer-limitation review. If activated, Tokyo is the intended DR region (though Model Studio is not in Tokyo: the chat tier would need to fail over to us-east-1 Virginia or Frankfurt Intl, which is a contract-clause conversation with the client).
-
-**Runbooks** (stored in Git alongside code):
-- `runbooks/incident-response.md`: on-call pager flow, severity matrix
-- `runbooks/restore-opensearch.md`: step-by-step from snapshot
-- `runbooks/restore-analyticdb.md`: GraphRAG index rebuild
-- `runbooks/model-rollback.md`: PAI-EAS version rollback
-- `runbooks/cache-flush.md`: Tair full flush (model/prompt version bump)
+Runbooks in Git: incident-response, restore-opensearch, restore-analyticdb, model-rollback, cache-flush.
 
 ---
 
