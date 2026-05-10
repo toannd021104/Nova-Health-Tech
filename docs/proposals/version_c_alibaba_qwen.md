@@ -504,152 +504,98 @@ Chunk revisions are hashed; new `revision` replaces old in place while audit log
 
 ![Model orchestration: if/else + 40-dept multi-agent](../architecture/diagrams/v_c_model_orchestration.svg)
 
-Framework decision, model lineup, and routing. Diagram: [`../architecture/diagrams/v_c_model_orchestration.svg`](../architecture/diagrams/v_c_model_orchestration.svg).
+### 6.1 Model lineup
 
-### 6.1 LLM selection and justification
-
-| Role | Model | Justification |
+| Role | Model | Notes |
 |---|---|---|
-| **Emergency fast lane** | **[Qwen3.5-Flash](https://www.alibabacloud.com/help/en/model-studio/model-pricing)** (1M-context, streaming) | Cheapest Qwen family member on Model Studio SG Intl at $0.10/1M input, $0.40/1M output (tier 1). First-token ~300 ms under Qwen Context Cache hit. Already fast enough for the 2-s SLA with 3-layer cache; no student needed here. |
-| **Complex lane + teacher** | **Qwen3.5-Plus** (Feb 2026 release) | Replaced Qwen-Max (retired as default): same or better benchmarks, ~3× cheaper input / ~2.5× cheaper output. 1M-context, multimodal-capable. $0.40/1M input, $2.40/1M output (tier 1). Handles the 40% hardest clinical questions. |
-| **Complex-lane student** | **Qwen3-8B** on PAI-EAS (trained via [PAI Model Gallery](https://www.alibabacloud.com/help/en/pai/use-cases/quick-start-deploy-fine-tune-and-evaluate-qwen3-models) SFT + LoRA, distilled from Qwen3.5-Plus) | **Committed, active on day one.** Serves the 60% of complex traffic where distilled quality matches the teacher. 8B fits on a single A10 GPU; ~2× faster than Qwen3.5-Plus; gives Nova-voice tone control + locally-controlled weights + cheapest-in-class retrain cadence ($15–40/run). Not optional: the launch cost numbers (§15) include it. |
-| **Vision specialist (Radiology)** | **Qwen3-VL-Plus** | Native image input; router forces this model on any `has_image=true` request |
-| **Router** | Qwen3.5-Flash with `response_format=json_object` | Cheap structured-output; 150–200 ms p95 |
-| **Emergency DR fallback** | Qwen3-8B student on PAI-EAS (circuit-breaker path) | When Model Studio endpoint has an outage, the same PAI-EAS student that serves complex-lane traffic can keep the emergency lane running until Model Studio is back |
+| Emergency fast lane | Qwen3.5-Flash (1M context, streaming) | $0.10/1M in, $0.40/1M out; first-token ~300 ms with cache hit |
+| Complex lane + teacher | Qwen3.5-Plus | $0.40/1M in, $2.40/1M out; 1M context, multimodal |
+| Complex-lane student | Qwen3-8B on PAI-EAS | SFT + LoRA distilled from Qwen3.5-Plus; serves 60 percent of complex traffic; single A10 GPU |
+| Vision specialist (Radiology) | Qwen3-VL-Plus | Router forces on `has_image=true` |
+| Router | Qwen3.5-Flash (`response_format=json_object`) | Structured output, 150 to 200 ms p95 |
+| Emergency DR fallback | Qwen3-8B student | Circuit-breaker path on Model Studio outage |
 
-Qwen3.6-27B (22 April 2026 release) is not chosen. Coding-specialist model; lower general-knowledge scores; not on Model Studio API as of verification date.
+### 6.2 Fine-tuning
 
-### 6.2 Fine-tuning strategy
-
-**Techniques supported on PAI**:
+Techniques on PAI:
 
 | Technique | Use |
 |---|---|
-| **SFT (supervised fine-tuning) + LoRA** | Primary technique: teach student to mimic teacher's grounded-answer style + Nova's approved tone |
-| **DPO (direct preference optimization)** | Monthly micro-run on clinician preference pairs collected post-launch |
-| **GRPO (reinforcement with verifiable reward)** | Ad-hoc: when tool-calling regressions appear, reward function grades the tool JSON |
-| QLoRA, full-parameter SFT | Available on PAI but unused for Qwen3-8B (LoRA is sufficient) |
+| SFT + LoRA | Primary; teacher mimicry and Nova tone |
+| DPO | Monthly micro-run on clinician preference pairs |
+| GRPO | Ad-hoc; tool-calling regression recovery |
 
-**Hyperparameters** (matches [AWS Builder GRPO recipe](https://builder.aws.com/content/35x6VR6kZYSn3JgNQmcNmIVK32Y/fine-tune-small-language-models-for-production-grade-tool-calling-with-grpo-using-hugging-face-trl-on-amazon-sagemaker-ai): applies equally to Qwen3-8B on PAI):
-
-```
-LoRA rank:           16
-LoRA alpha:          32
-LoRA dropout:        0.05
-learning_rate:       2e-4
-epochs:              3
-warmup_ratio:        0.03
-bf16:                true
-batch_size:          4 per device
-grad_accum_steps:    4
-```
-
-GPU: single A10 on PAI DLC in Singapore. Runtime: 2–4 GPU-hours per run.
-
-**Training pipeline**:
+Hyperparameters:
 
 ```
-1. Seed prompts
-   (a) de-identified clinician questions from production invocation logs
-       (DataWorks SDDP masks before logging: see §8.2)
-   (b) teacher-paraphrases of WHO / protocol chunks
-       (generated in batch for 50% off)
-   target: 10k–30k prompts
-
-2. Teacher generation on Qwen3.5-Plus batch mode
-   for each prompt: retrieve RAG context to ask teacher to record (prompt, context, answer)
-
-3. Clinician review (Alibaba Human Verification, ~15% sample)
-   approved to SFT dataset
-   clinician-preferred-of-pair to DPO dataset
-
-4. Train on PAI Model Gallery: Qwen3-8B + hyperparameters above
-   output: LoRA adapter weights + merged model artifact
-
-5. Eval harness (Qwen3.5-Plus as LLM-judge)
-   metrics: accuracy, citation coverage, PHI leakage (must be 0),
-            tone score, emergency-appropriateness
-
-6. Promote to PAI-EAS behind feature flag
-   gate: student ≥ 95% of teacher on holdout + zero regression on safety suite
-   launch-day: 100% on emergency lane
-   post-launch: 5% canary for 72 hours before full promotion
+LoRA rank 16, alpha 32, dropout 0.05
+learning_rate 2e-4, epochs 3, warmup_ratio 0.03, bf16
+batch_size 4 per device, grad_accum_steps 4
 ```
 
-Facts always come from RAG. Fine-tuning gives Nova-voice clinical phrasing, citation-consistent formatting, and emergency-brevity discipline.
+Hardware: single A10 on PAI DLC, 2 to 4 GPU-hours per run.
 
-### 6.3 Prompt engineering and system prompt design
-
-Each of the 40 department agents has its own system prompt. Shared structure:
+Training pipeline:
 
 ```
-You are the {DEPARTMENT} specialist for the Nova Health Tech clinical assistant.
-
-YOUR ROLE
-- Answer clinical questions within {DEPARTMENT_SCOPE}.
-- Ground every factual claim in the retrieved context; cite as [n].
-- Defer to a human physician for final decisions.
-
-TONE
-- Concise, unambiguous, clinically neutral.
-- Use the patient's clinical situation (if provided via FHIR context) to tailor the answer.
-- Never fabricate drug doses or guideline recommendations.
-
-FORMAT
-- Opening sentence: direct answer.
-- Supporting detail: 1–4 bullets with inline [n] citations.
-- Closing: caveats, contraindications, or "clinician review required" line.
-
-HARD RULES
-- Emergency lane: keep answer ≤ 200 words.
-- If retrieved context is insufficient, say "I cannot answer this from the current context": do NOT guess.
-- Never return a drug dose without the source citation.
-- Never output PHI tokens (raw names, MRN, DOB): they are replaced with <NAME_0>, <MRN_0>, etc.
+1. Seed prompts: de-identified clinician questions + teacher paraphrases of WHO/protocol chunks; target 10k to 30k
+2. Teacher generation on Qwen3.5-Plus batch mode: (prompt, RAG context, answer) triples
+3. Clinician review, ~15 percent sample: SFT dataset + DPO pairs
+4. Train on PAI Model Gallery: LoRA adapter + merged model
+5. Eval harness (Qwen3.5-Plus judge): accuracy, citation coverage, PHI leakage (must be 0), tone, emergency fit
+6. Promote to PAI-EAS behind feature flag; gate on >= 95 percent of teacher; 5 percent canary for 72 hours
 ```
 
-The emergency-lane system prompt is more restrictive (word cap, mandatory structured template: triage / immediate action / red-flags). See `prompts/emergency_v3.md` in the deployment repo.
+No PHI in training data. Fine-tuning carries tone and format, not facts.
+
+### 6.3 System prompts
+
+Each of the 40 department agents has its own system prompt with a shared structure:
+
+```
+You are the {DEPARTMENT} specialist.
+
+ROLE: answer within {DEPARTMENT_SCOPE}; ground every claim in retrieved context; cite as [n]; defer to physician.
+TONE: concise, unambiguous, clinically neutral.
+FORMAT: direct answer; 1 to 4 cited bullets; closing caveat.
+HARD RULES:
+- Emergency lane: <= 200 words.
+- Insufficient context: "I cannot answer this from the current context".
+- Never output raw PHI; tokens like <NAME_0>, <MRN_0> are already redacted.
+```
+
+Emergency lane uses a stricter template (triage, immediate action, red-flags).
 
 ### 6.4 Orchestration framework
 
-Decision: **[Model Studio Applications](https://www.alibabacloud.com/help/en/model-studio/application-introduction) as primary runtime, LangChain only for narrow glue.**
+[Model Studio Applications](https://www.alibabacloud.com/help/en/model-studio/application-introduction):
 
-| Application type | Used for |
+| Application type | Use |
 |---|---|
-| **Agent application** | Conversational; LLM-driven tool selection. One per department (40 agents). |
-| **Workflow application** | Deterministic DAG (retrieve to prompt to generate to moderation). Used for the **emergency lane** where the path is fixed and auditability matters most. |
+| Agent application | Conversational; LLM-driven tool selection. One per department (40 agents). |
+| Workflow application | Deterministic DAG (retrieve, prompt, generate, moderation). Emergency lane. |
 
-**LangChain used only for**:
-- Layer-1 semantic response cache (`RedisSemanticCache` against Tair + TairVector)
-- Per-session chat memory (`ConversationBufferWindowMemory`, 6-turn window)
+LangChain used only for the Layer-1 semantic response cache and per-session chat memory.
 
-### 6.5 Response validation and hallucination mitigation
+### 6.5 Response validation
 
 Five gates between LLM output and the clinician:
 
-1. **Content Moderation 2.0**: `green` API validates output content (jailbreak, self-harm, hate, medical misinformation). Medical allow-list pre-approved by Alibaba account team.
-2. **Citation validator** (see §5.4): every `[n]` must map to a retrieved chunk.
-3. **Grounding threshold**: the Agent's built-in grounding score must be ≥ 0.7; below that, answer is blocked.
-4. **PHI filter**: a last-mile regex + ML filter on MRN, NRIC/FIN, DOB, phone, email patterns to catch anything the earlier DataWorks SDDP pass missed.
-5. **Emergency disclaimer**: emergency-lane answers auto-prepend the Nova-approved disclaimer: *"Review by physician required before acting. If this is a life-threatening emergency, call emergency services."*
+1. Content Moderation 2.0 (`green` API): jailbreak, self-harm, hate, medical misinformation
+2. Citation validator: every `[n]` maps to a retrieved chunk
+3. Grounding score >= 0.7
+4. Last-mile PHI filter (regex + ML) on MRN, NRIC/FIN, DOB, phone, email
+5. Emergency disclaimer prepended on emergency-lane answers
 
-Any gate-fail is logged + paged if patterns emerge (e.g. grounding drift over the past 24 hours).
+Any gate fail is logged; patterns trigger pages.
 
-### 6.6 Multi-turn conversation and context management
-
-Sessions are thread-scoped per clinician per patient context:
+### 6.6 Multi-turn context
 
 ```
 session_id = sha256(clinician_id | tenant_id | patient_fhir_id | login_time)
 ```
 
-**Memory model**:
-- `ConversationBufferWindowMemory`: last 6 turns in Tair (~20-min TTL)
-- Each turn stores `{role, content, retrieved_chunk_ids, route, model_version}`
-- On turn 7+, oldest turn is summarized by Qwen3.5-Flash and prepended as a system note
-
-**Emergency lane resets memory**: the toggle flip is treated as a session boundary. This avoids the cognitive risk of dragging non-urgent context into an emergency decision.
-
-**Cross-session memory**: none by default. Clinicians cannot "remember" prior conversations about the same patient unless the EHR exposes the note via FHIR `DocumentReference`: in which case it's pulled at runtime, not stored by Nova.
+Memory: last 6 turns in Tair with 20-min TTL. Turn 7+ summarized by Qwen3.5-Flash and prepended as a system note. Emergency toggle flip resets memory. No cross-session memory; prior clinician notes pulled from EHR FHIR `DocumentReference` at runtime.
 
 ---
 
