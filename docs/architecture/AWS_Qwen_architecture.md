@@ -115,15 +115,17 @@ Optional customization (quarterly):
 With **Qwen3 Next 80B A3B** on Bedrock Sydney:
 
 ```
-  25 ms   Tair/ElastiCache semantic cache hit (skip to step 7 if hit)
+  25 ms   ElastiCache semantic cache hit (skip to step 7 if hit)
  100 ms   Cognito auth + PHI mask (Lambda in SG)
   70 ms   Retrieval (OpenSearch Serverless SG)
   90 ms   cross-region call SG → Sydney (Bedrock)
- 400 ms   Qwen3 Next first-token (MoE; ~300 ms in-region first-token + crossing)
-1000 ms   Full answer (250 tokens @ ~250 tok/s via MoE)
+ 500 ms   Qwen3 Next first-token (MoE; no prompt cache — full prefix processed each call)
+1100 ms   Full answer (250 tokens @ ~250 tok/s via MoE)
  110 ms   Guardrails + citation validation
 ───────
-≤ 1,795 ms  p95 emergency budget
+≤ 1,995 ms  p95 emergency budget
+
+Note: Bedrock Prompt Caching does NOT support Qwen3 models (verified May 2026). The first-token time above assumes no Layer 2 cache. Ver A (Claude) saves ~300–400 ms on TTFT via prompt caching; Ver B cannot replicate this without a future AWS update adding Qwen3 to the supported-models list.
 ```
 
 The SG→Sydney RTT (~90 ms each way) is the cross-region tax. If we later pick a custom SageMaker endpoint hosted in Singapore, we save the ~180 ms round-trip.

@@ -19,20 +19,32 @@ This cache goes in front of both the teacher and student lanes.
 
 ## Layer 2 — Provider-managed prompt/context caching (cuts both latency and cost on the LLM)
 
-The RAG system prompt + retrieved chunks for a given clinical question are often ~3–5k tokens. Most of that is repeated verbatim across many calls — the system prompt, the tone template, the recent-WHO-updates preface, sometimes the same top chunks. Both clouds now ship a managed cache for exactly this.
+The RAG system prompt + retrieved chunks for a given clinical question are often ~3–5k tokens. Most of that is repeated verbatim across many calls — the system prompt, the tone template, the recent-WHO-updates preface, sometimes the same top chunks.
 
-### AWS — Amazon Bedrock Prompt Caching
+**Availability by version:**
+
+| Version | Layer 2 cache | Notes |
+|---|---|---|
+| **Ver A** — AWS + Claude | ✅ Bedrock Prompt Caching | Claude + Nova families supported |
+| **Ver B** — AWS + Qwen | ❌ Not available | Qwen3 models on Bedrock do not support prompt caching (verified May 2026) |
+| **Ver C** — Alibaba + Qwen | ✅ Qwen Context Cache | Implicit (auto) + Explicit modes |
+
+### Ver A — Amazon Bedrock Prompt Caching
 
 - **Savings** — up to **90% off input tokens** on cache hits; **up to 85% latency reduction** for the cached portion of a prompt. Must place the static content at the *start* of the prompt and mark it as `<cachePoint/>` in the Converse API.
-- **Supported models** — Claude 4.x family, Amazon Nova family, and more. (Confirm current list before deployment.)
-- **How it fits our design** — cache the system prompt + tone template + the top-N most-frequent WHO guideline chunks. Emergency-care answers that share the same "sepsis bundle" context see a much lower per-call cost and faster time-to-first-token.
+- **Supported models** — Claude 4.x family, Amazon Nova family. Qwen3 on Bedrock is explicitly not supported.
+- **How it fits** — cache the system prompt + tone template + top-N most-frequent WHO guideline chunks. Emergency-care answers sharing the "sepsis bundle" context become near-free on input tokens after the first hit.
 
-### Alibaba — Qwen Context Cache
+### Ver B — No Layer 2 cache
+
+Qwen3 models (`qwen3-next-80b-a3b`, `qwen3-vl-235b-a22b`) on Bedrock bedrock-mantle do not appear in the AWS prompt-caching supported-models list. The `<cachePoint/>` marker and `cache_control` field have no effect. Ver B relies entirely on Layer 1 (semantic cache) and Layer 3 (reserved throughput) to hit the 2-second SLA. The cold-path latency budget for Ver B is therefore higher than Ver A at equal token counts — partially offset by Qwen's lower per-token price.
+
+### Ver C — Alibaba Qwen Context Cache
 
 - **Two modes**:
-  - **Implicit cache** — automatic, zero config. The system detects repeated prefixes; cache hits bill **20% of standard input price**. No guarantee of a hit, but free upside when the pattern exists.
-  - **Explicit cache** — you create a named cache ID for a prompt prefix and reference it per call. Slightly lower hit-rate risk; gives you guaranteed discount on that prefix.
-- **How it fits** — same shape as AWS: put the system prompt, tone template, and hot RAG chunks in the prefix; call with the per-query chunks + the user's question as the suffix.
+  - **Implicit cache** — automatic, zero config, active from Phase 1 (no code change needed). The system detects repeated prefixes; cache hits bill **20% of standard input price**.
+  - **Explicit cache** — create a named cache ID for a prompt prefix and reference it per call; guaranteed discount on that prefix.
+- **How it fits** — put the system prompt, tone template, and hot RAG chunks in the prefix; call with the per-query chunks + the user's question as the suffix. Implicit mode is free upside from day 1 — do not defer to Phase 3.
 
 ### Batch inference — for training data generation and eval
 

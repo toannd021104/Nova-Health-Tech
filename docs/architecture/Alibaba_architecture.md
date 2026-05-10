@@ -157,9 +157,9 @@ All tools are read-only.
 
 | Phase | Weeks | Deliverable | Typical cost |
 |---|---|---|---|
-| 1 | 1–6 | Scheduled WHO + ICD-11 ingestion live, upload portal live, RAG with Qwen3.5-Flash (fast) + **Qwen3.5-Plus** (complex) | Low hundreds of USD/mo |
-| 2 | 7–10 | Distill Qwen3-8B student from Qwen3.5-Plus outputs; LoRA on PAI Model Gallery | ~$30–100 per retrain |
-| 3 | 11–14 | Student at 100% via PAI-EAS; enable Qwen Context Cache (implicit + explicit); PTU on emergency lane | Marginal; PTU only when sustained TPM high |
+| 1 | 1–6 | Scheduled WHO + ICD-11 ingestion live, upload portal live, RAG with Qwen3.5-Flash (fast) + **Qwen3.5-Plus** (complex); Qwen Context Cache implicit mode active from day 1 (zero config) | Low hundreds of USD/mo |
+| 2 | 7–10 | Distill Qwen3-8B student from Qwen3.5-Plus outputs; LoRA on PAI Model Gallery; enable explicit Context Cache for the system-prompt prefix | ~$30–100 per retrain |
+| 3 | 11–14 | Student at 100% via PAI-EAS; PTU on emergency lane | Marginal; PTU only when sustained TPM high |
 | 4 | quarterly | Retrain with new WHO + clinician data | < $100 per retrain |
 
 ### 7.3 Corporate integration
