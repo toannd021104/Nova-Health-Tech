@@ -88,16 +88,16 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 | **Cross-border transfer** | None by default; stays in Singapore | None by default; stays in Singapore |
 | **Hospital integration** | Site-to-Site VPN (IPsec IKEv2). No Outposts, no Direct Connect | Site-to-Site VPN on VPN Gateway. No Apsara Stack unless requested |
 | **AI framework** | Bedrock Agents + Knowledge Bases (primary); LangChain only for semantic cache + memory | Model Studio **Agent application** for chat, **Workflow application** for emergency lane; LangChain only for cache + memory |
-| **Fast-lane model (emergency, ≤ 2 s)** | Claude Haiku 4.5 (+ Nova Lite fine-tuned student from phase 3) | Qwen3.5-Flash (+ Qwen3-8B PAI-EAS student from phase 3) |
-| **Complex-lane / teacher model** | Claude Sonnet 4.6 | Qwen-Max (Qwen3-Max) |
+| **Fast-lane model (emergency, ≤ 2 s)** | Claude Haiku 4.5 (+ Nova Lite fine-tuned student from phase 3) — or Nova Micro for the cheapest SG-native variant | Qwen3.5-Flash (+ Qwen3-8B PAI-EAS student from phase 3) |
+| **Complex-lane / teacher model** | Claude Sonnet 4.5 — or Nova Pro for the Nova-only variant | Qwen3.5-Plus (Feb 2026 release; replaces Qwen-Max) |
 | **Claude Opus** | Not used (overkill, price hard to justify) | N/A |
-| **Text embeddings** | Titan Embed Text v2 | text-embedding-v4 ($0.07/1M) |
+| **Text embeddings** | Cohere Embed v4 on Bedrock (running demo) | text-embedding-v4 ($0.07/1M) |
 | **Multimodal embeddings (figures)** | Amazon Nova Multimodal Embeddings | tongyi-embedding-vision-plus (SG International, 1152-dim). `qwen3-vl-embedding` with `enable_fusion=True` is Chinese Mainland only. |
 | **Reranker (Alibaba)** | Cohere Rerank 3.5 on Bedrock | qwen3-rerank ($0.10/1M, 500-doc cap) |
 | **Vector store** | OpenSearch Serverless (hybrid kNN + BM25) | OpenSearch Vector Search Edition |
 | **PDF parsing** | Bedrock Data Automation (advanced parsing) | DocMind + Qwen-VL-Max for complex pages |
 | **Semantic cache (Layer 1)** | ElastiCache Valkey + RediSearch, LangChain `RedisSemanticCache` | Tair + TairVector, same LangChain pattern |
-| **Prompt/context cache (Layer 2)** | Bedrock Prompt Caching | Qwen Context Cache (implicit + explicit) |
+| **Prompt/prefix cache (Layer 2)** | Bedrock Prompt Caching for Claude 4.x / Nova (Version A). Not available for Qwen3 on Bedrock → Version B uses vLLM APC / SGLang RadixAttention on self-hosted path, no Layer 2 on Bedrock default. | Qwen Context Cache (implicit from day 1 + explicit) |
 | **Reserved capacity (Layer 3, peak only)** | Bedrock Reserved Tier | Qwen PTU |
 | **Batch (offline teacher + eval)** | Bedrock Batch (50% off) | Model Studio Batch (50% off) |
 | **Tone consistency** | Distillation + `temperature=0.1, top_p=0.7, top_k=40`, fixed system prompt | Same + `seed=42` (Qwen supports seed) |

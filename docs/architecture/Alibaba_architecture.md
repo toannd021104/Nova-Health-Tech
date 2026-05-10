@@ -51,21 +51,23 @@ Parallel production design using Qwen and Alibaba Cloud managed services in the 
    │ Function Compute /chat (VPC) │                        │ OSS raw bucket            │
    │  0. authn (RAM/IDaaS token)  │◄──── semantic cache ──┤ /raw/scheduled/...        │
    │  1. PHI mask (DataWorks SDDP) │     hit returns early │ /raw/manual/...           │
-   │  2. router (Qwen-Flash)       │                       │ /raw/icd11/...            │
-   │  3. route to Agent / Workflow │                       │ /raw/who/...              │
-   │     (Model Studio Application)│                       └──────────┬───────────────┘
-   │  4. ground-check + audit      │                                  │ ObjectCreated
-   └─────┬──────────────┬──────────┘                                  ▼
-         │              │                                ┌──────────────────────────┐
- Layer 1 │    Layer 2   │  Generation                    │ Function Workflow        │
- Tair    │    Qwen      │  (Model Studio / PAI-EAS):     │  DocMind parse → chunk → │
- +Tair   │    Context   │    Qwen-Flash (fast lane)      │  embed → KB sync         │
- Vector  │    Cache     │    Qwen3.5-Plus (complex +     │                          │
-                              │              │     teacher, Feb 2026 release) │                          │
- semantic│              │    Qwen3-8B student (phase 3)  │ + Security Center scan   │
- cache   │              │  + Content Moderation          │ + SDDP PHI scan          │
-         │              │                                └──────────┬───────────────┘
-         │              │                                           ▼
+   │  2. if/else router on         │                       │ /raw/icd11/...            │
+   │     explicit emergency flag   │                       │ /raw/who/...              │
+   │     (no classifier LLM call)  │                       └──────────┬───────────────┘
+   │  3. call Model Studio         │                                  │ ObjectCreated
+   │     Agent / Workflow app      │                                  ▼
+   │  4. ground-check + audit      │                       ┌──────────────────────────┐
+   └─────┬──────────────┬──────────┘                       │ Function Workflow        │
+         │              │                                  │  DocMind parse → chunk → │
+ Layer 1 │    Layer 2   │  Generation                      │  embed → KB sync         │
+ Tair    │    Qwen      │  (Model Studio / PAI-EAS):       │                          │
+ +Tair   │    Context   │    Qwen3.5-Flash (fast lane)     │ + Security Center scan   │
+ Vector  │    Cache     │    Qwen3.5-Plus (complex +       │ + SDDP PHI scan          │
+ semantic│  (implicit   │     teacher, Feb 2026 release)   │                          │
+ cache   │   from day1) │    Qwen3-8B student (phase 3)    │                          │
+         │              │  + Content Moderation            │                          │
+         │              │                                  └──────────┬───────────────┘
+         │              │                                             ▼
          │              │                             ┌────────────────────────────┐
          │              │                             │ Model Studio Knowledge Base│
          │              │                             │  kb-who-guidelines         │
@@ -107,12 +109,12 @@ See `docs/architecture/framework_choice.md`. Two application types per Alibaba's
 
 ### 5.2 Router and lanes
 
-A small FC classifier (Qwen3.5-Flash, ~200 ms) picks the lane:
+Routing is a **pure if/else on the explicit emergency toggle** sent by the chat UI — no classifier LLM call. Same rule as Version A; matches `aws-demo/ec2/app/graph.py` (`_route_next`) and `docs/architecture/workflow_detailed.md` §Step 5.
 
 | Question class | Model | Hyperparameters | Guardrail | Latency target |
 |---|---|---|---|---|
-| Emergency / acute | **Qwen3.5-Flash** (streaming) with optional Qwen3-8B distillation student behind a feature flag | `temperature=0.1, top_p=0.7, top_k=40, seed=42` | Strict PHI + emergency disclaimer | **≤ 2 s** |
-| Complex differential | **Qwen3.5-Plus** (Feb 2026 release; replaced Qwen-Max here) (streaming) | `temperature=0.2, top_p=0.9` | Standard | 3–6 s |
+| Emergency / acute (toggle ON) | **Qwen3.5-Flash** (streaming) with optional Qwen3-8B distillation student behind a feature flag | `temperature=0.1, top_p=0.7, top_k=40, seed=42` | Strict PHI + emergency disclaimer | **≤ 2 s** |
+| Complex differential (toggle OFF — default) | **Qwen3.5-Plus** (Feb 2026 release; replaced Qwen-Max here) (streaming) | `temperature=0.2, top_p=0.9` | Standard | 3–6 s |
 | Literature / citation | Qwen3.5-Flash, grounded-only mode | `temperature=0.1, top_p=0.7, top_k=40` | No-hallucination | 1.5–2 s |
 | Patient-education phrasing | Qwen3.5-Flash with tone preset | `temperature=0.2, top_p=0.9` | Standard + tone | 1–2 s |
 

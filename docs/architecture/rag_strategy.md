@@ -51,7 +51,7 @@ Reasoning:
 
 - **Parser**: Amazon Bedrock Data Automation (BDA) in advanced-parsing mode.
 - **Chunking**: Bedrock Knowledge Bases hierarchical chunking (parent 1500 tokens, child 300 tokens, 15% overlap). Parent chunks give the LLM enough context; child chunks drive precise retrieval.
-- **Embeddings**: Amazon Titan Embed Text v2 for text chunks; Amazon Nova Multimodal Embeddings for any chunk that contains a figure reference (embedding both text and cropped figure into one vector).
+- **Embeddings**: Cohere Embed v4 on Bedrock (`global.cohere.embed-v4:0`, 1024-dim) for text chunks — matches the running demo in `aws-demo/ec2/app/rag.py`. Amazon Nova Multimodal Embeddings for figure-bearing chunks, stored in a **separate** vector field on the same document (the two embeddings live in different vector spaces, so retrieval runs two parallel kNN searches and merges at rerank time).
 - **Vector store**: OpenSearch Serverless (vector collection) with HNSW + BM25 in the same index for hybrid retrieval.
 - **Metadata** on every chunk: `source`, `document_id`, `document_type` ∈ {who-guideline, internal-trial, drug-label, icd11}, `publication_date`, `review_date`, `specialty`, `evidence_grade`, `page`, `section_heading`, `has_table`, `has_figure`.
 - **Retrieval**: hybrid query, metadata pre-filter (default `review_date >= NOW-18m`), top-20 kNN, cross-encoder rerank (Cohere Rerank on Bedrock) to top-5, pass to the generation model.

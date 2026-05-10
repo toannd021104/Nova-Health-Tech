@@ -45,13 +45,13 @@ This changes the verdict: **Version A with Nova Micro on the fast lane is the ch
 
 ## 3. Three cost levers available on all three clouds
 
-| Lever | AWS Bedrock (A & B) | Alibaba Model Studio (C) | Savings |
-|---|---|---|---|
-| **Prompt / context caching** on static prefix | Bedrock Prompt Caching (`<cachePoint/>`) | Qwen Context Cache (implicit + explicit) | Up to 90 % off on cached input tokens |
-| **Batch inference** for offline jobs | Bedrock Batch, Flex tier | Model Studio Batch | 50 % off tokens |
-| **Reserved capacity** for peak | Bedrock Reserved Tier | Qwen PTU | Flat rate; no queueing |
+| Lever | AWS Bedrock — Version A (Claude/Nova) | AWS Bedrock — Version B (Qwen, Sydney) | Alibaba Model Studio (C) | Savings |
+|---|---|---|---|---|
+| **Prefix / prompt caching** on static prefix | ✅ Bedrock Prompt Caching (`<cachePoint/>`) — Claude 4.x + Nova | ❌ Not supported for Qwen3 on Bedrock (verified May 2026). Self-hosted path uses vLLM APC / SGLang RadixAttention instead. | ✅ Qwen Context Cache (implicit from day 1 + explicit) | Up to 90% off on cached input tokens |
+| **Batch inference** for offline jobs | Bedrock Batch, Flex tier | Bedrock Batch, Flex tier | Model Studio Batch | 50% off tokens |
+| **Reserved capacity** for peak | Bedrock Reserved Tier | Bedrock Reserved Tier | Qwen PTU | Flat rate; no queueing |
 
-Our chosen defaults: on-demand + prompt caching for realtime traffic; batch for the teacher-data generation; reserved tier only if the fast lane goes steady-state TPM.
+Our chosen defaults: on-demand + prefix caching (where supported) for realtime traffic; batch for the teacher-data generation; reserved tier only if the fast lane goes steady-state TPM. See `docs/architecture/caching_strategy.md` for the full Layer 1 / Layer 2 / Layer 3 breakdown and the LangChain-vs-inference-engine split.
 
 ## 4. Per-token model pricing (per 1 M tokens)
 
@@ -127,7 +127,7 @@ Batch 50 % off. Implicit context-cache hits bill at 20 % of normal input price.
 
 ## 5. Per-call cost (emergency vs complex, with all caching on)
 
-Shows what one `/chat` request costs on each version after Layer-2 prompt caching kicks in.
+Shows what one `/chat` request costs on each version after Layer-1 semantic cache miss + Layer-2 prefix cache where available (Version A on Bedrock Prompt Caching; Version C on Qwen Context Cache implicit). Version B on Bedrock has no Layer-2; the "50% cache" assumption below for B represents partial reuse via batched RAG context reordering, not Bedrock prompt caching — it would only apply literally if Ver B pivots to a self-hosted vLLM/SGLang endpoint (see `docs/architecture/caching_strategy.md`).
 
 ### Version A (Claude / Nova)
 

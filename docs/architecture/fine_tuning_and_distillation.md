@@ -41,7 +41,7 @@ Path B-1 is the default: simpler operations, one AWS service, and the $0.78/1M o
 
 | Role | Model | Customization |
 |---|---|---|
-| Complex-lane / teacher | Qwen-Max (Qwen3-Max) on Model Studio | — |
+| Complex-lane / teacher | **Qwen3.5-Plus** (Feb 2026 release; replaced Qwen-Max) on Model Studio | — |
 | Student | **Qwen3-8B on PAI Model Gallery → PAI-EAS** | **SFT + LoRA** (or QLoRA for 4-bit memory savings), optional **DPO**, optional **GRPO** (Qwen3 explicitly supports GRPO per Alibaba docs) |
 
 Most flexible of the three. Qwen2.5-7B-Instruct and Qwen1.5 also fine-tunable on PAI for Base/Chat variants.

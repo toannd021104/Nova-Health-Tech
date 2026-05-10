@@ -62,17 +62,18 @@ Production design for the AI assistant service deployed in **AWS Singapore (ap-s
    │ Lambda /chat (VPC)           │                        │ S3 raw bucket             │
    │  0. authn (Cognito JWT)       │◄──── semantic cache ──┤ /raw/scheduled/...        │
    │  1. PHI mask (Comprehend Med) │     hit returns early │ /raw/manual/...           │
-   │  2. router (Haiku classifier) │                       │ /raw/icd11/...            │
-   │  3. route to Agent / Workflow │                       │ /raw/who/...              │
-   │     (Bedrock Agents)          │                       └──────────┬───────────────┘
-   │  4. ground-check + audit      │                                  │ ObjectCreated
-   └─────┬──────────────┬──────────┘                                  ▼
-         │              │                                ┌──────────────────────────┐
- Layer 1 │    Layer 2   │  Generation                    │ Step Functions pipeline  │
- Elasti- │    Bedrock   │  (Bedrock):                    │  BDA parse → chunk →     │
- Cache   │    Prompt    │    Haiku 4.5 (fast, student)   │  embed → KB sync         │
- Valkey  │    Caching   │    Sonnet 4.6 (complex,        │                          │
- semantic│              │     teacher of distillation)   │ + GuardDuty Malware scan │
+   │  2. if/else router on         │                       │ /raw/icd11/...            │
+   │     explicit emergency flag   │                       │ /raw/who/...              │
+   │     (no classifier LLM call)  │                       └──────────┬───────────────┘
+   │  3. call Bedrock Agent        │                                  │ ObjectCreated
+   │  4. ground-check + audit      │                                  ▼
+   └─────┬──────────────┬──────────┘                        ┌──────────────────────────┐
+         │              │                                   │ Step Functions pipeline  │
+ Layer 1 │    Layer 2   │  Generation                       │  BDA parse → chunk →     │
+ Elasti- │    Bedrock   │  (Bedrock):                       │  embed → KB sync         │
+ Cache   │    Prompt    │    Haiku 4.5 (fast lane)          │                          │
+ Valkey  │    Caching   │    Sonnet 4.5 (complex lane,      │                          │
+ semantic│              │     teacher of distillation)      │ + GuardDuty Malware scan │
  cache   │              │  + Guardrails                  │ + Macie PHI scan         │
          │              │                                └──────────┬───────────────┘
          │              │                                           ▼
@@ -84,7 +85,7 @@ Production design for the AI assistant service deployed in **AWS Singapore (ap-s
          │              │                             │  kb-icd11                  │
          │              │                             │  on OpenSearch Serverless  │
          │              │                             │  (hybrid kNN + BM25)       │
-         │              │                             │  + Titan Embed Text v2     │
+         │              │                             │  + Cohere Embed v4         │
          │              │                             │  + Nova Multimodal Emb     │
          │              │                             └────────────────────────────┘
          ▼              ▼
@@ -104,7 +105,7 @@ See `docs/architecture/rag_strategy.md` for the strategy decision. Summary:
 
 - **Parser**: Bedrock Data Automation with advanced parsing (handles 100+ page PDFs with horizontal / vertical tables and text-based flowcharts out of the box).
 - **Chunking**: hierarchical 1500 / 300 tokens with 15% overlap; section-aware.
-- **Embeddings**: Titan Embed Text v2 for text; Nova Multimodal Embeddings for figure-bearing chunks.
+- **Embeddings**: Cohere Embed v4 (`global.cohere.embed-v4:0`) for text chunks; Amazon Nova Multimodal Embeddings for figure-bearing chunks.
 - **Vector store**: OpenSearch Serverless vector collection; BM25 + HNSW hybrid in one index.
 - **Metadata on every chunk**: `source`, `document_id`, `revision`, `document_type`, `publication_date`, `review_date`, `specialty`, `evidence_grade`, `page`, `section_heading`, `has_table`, `has_figure`.
 - **Retrieval**: hybrid query + metadata pre-filter (default `review_date >= NOW-18m`) → top-20 kNN → Cohere Rerank (Bedrock) → top-5 → Bedrock Agent.
@@ -120,18 +121,19 @@ See `docs/architecture/framework_choice.md`.
 
 ### 5.2 Router and lanes
 
-A small Lambda classifier (Nova Micro, ~150 ms) picks the lane for each query:
+Routing is a **pure if/else on the explicit emergency toggle** sent by the chat UI — no classifier LLM call. This matches `aws-demo/ec2/app/graph.py` (`_route_next`) and is covered in `docs/architecture/workflow_detailed.md` §Step 5.
 
 | Question class | Model | Hyperparameters | Guardrail | Latency target |
 |---|---|---|---|---|
-| Emergency / acute | **Claude Haiku 4.5** (streaming) with optional Nova Lite distillation student behind a feature flag | `temperature=0.1, top_p=0.7, max_tokens=700, stop=[...]` | Strict PHI + emergency disclaimer | **≤ 2 s** |
-| Complex differential | **Claude Sonnet 4.6** (streaming) | `temperature=0.2, top_p=0.9, max_tokens=1500` | Standard | 3–6 s |
-| Literature / citation | Haiku 4.5, grounded-only mode | `temperature=0.1, top_p=0.7` | No-hallucination | 1.5–2 s |
-| Patient-education phrasing | Haiku 4.5 with tone preset | `temperature=0.2, top_p=0.9` | Standard + tone | 1–2 s |
+| Emergency / acute (toggle ON) | **Claude Haiku 4.5** (streaming) with optional Nova Lite distillation student behind a feature flag | `temperature=0.1, max_tokens=700, stop=[...]` — Claude rejects sending temperature + top_p together | Strict PHI + emergency disclaimer | **≤ 2 s** |
+| Complex differential (toggle OFF — default) | **Claude Sonnet 4.5** (streaming) | `temperature=0.2, max_tokens=1500` | Standard | 3–6 s |
+| Literature / citation | Haiku 4.5, grounded-only mode | `temperature=0.1` | No-hallucination | 1.5–2 s |
+| Patient-education phrasing | Haiku 4.5 with tone preset | `temperature=0.2` | Standard + tone | 1–2 s |
 
 **Notes on models used:**
 - Demo uses plain Claude Haiku 4.5 + Sonnet 4.5; no fine-tuning. Phase-3 customization goes through **Bedrock Model Distillation from Sonnet → Amazon Nova Lite**. Haiku 4.5 itself cannot be fine-tuned on Bedrock (only Claude 3 Haiku is). See `docs/architecture/model_customization_research.md`.
 - **Claude Opus is not used** — priced out for this volume and Sonnet covers the complex lane.
+- **Nova Micro / Nova Pro** are available in Singapore and are the cost-sensitive alternative (Version A1+); see `docs/pricing/cost_analysis.md`.
 
 ### 5.3 Agent tools
 
@@ -174,9 +176,9 @@ Full mapping in `docs/compliance/security_compliance.md`.
 
 | Phase | Weeks | Deliverable |
 |---|---|---|
-| 1 | 1–6 | Scheduled WHO + ICD-11 ingestion live, upload portal live, RAG with Haiku (fast) + Sonnet (complex); eval baseline |
+| 1 | 1–6 | Scheduled WHO + ICD-11 ingestion live, upload portal live, RAG with Haiku (fast) + Sonnet (complex); Bedrock Prompt Caching on the static prefix (Claude 4.x supports it out of the box); eval baseline |
 | 2 | 7–10 | Distillation round 1: Sonnet generates Qs+answers from curated seed → clinician review → Nova Lite SFT → ship behind feature flag at 5% canary |
-| 3 | 11–14 | Student at 100%; enable Bedrock Prompt Caching; add DPO preference-tuning; Reserved Tier on the emergency lane |
+| 3 | 11–14 | Student at 100%; add DPO preference-tuning; Reserved Tier on the emergency lane if sustained TPM justifies it |
 | 4 | quarterly | Retrain student on accumulated new clinician data + new WHO / ICD-11 |
 
 ### 7.3 Corporate integration

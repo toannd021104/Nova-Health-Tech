@@ -115,7 +115,7 @@ Plus Model Studio's HTTP API offers token-billed fine-tuning for Qwen-Plus / Qwe
 
 ### Version C — Alibaba Cloud (Qwen, Singapore)
 
-- **Base**: Qwen3.5-Flash (fast) + Qwen3-Max (complex, teacher) on Model Studio in the Singapore region.
+- **Base**: Qwen3.5-Flash (fast) + Qwen3.5-Plus (complex, teacher — Feb 2026 release; replaced the older Qwen-Max) on Model Studio in the Singapore region. Embeddings: `text-embedding-v4` + `tongyi-embedding-vision-plus`. Reranker: `qwen3-rerank`. See `docs/architecture/regional_availability.md` §8 for SG International availability.
 - **Student**: Qwen3-8B fine-tuned on PAI Model Gallery with **SFT + LoRA**, optionally + DPO. GRPO available for a future round if we need reasoning/verifiable-reward alignment.
 - The entire chain — inference, fine-tune, serve — is native Alibaba, single-vendor, Singapore-resident.
 - Cheapest of the three. Most flexible for fine-tuning technique. Biggest question mark is the regulatory posture for US-onboarded hospitals.

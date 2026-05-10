@@ -28,8 +28,8 @@ Matches the numbered steps on `diagrams/aws_workflow.svg`.
 
 - LangGraph `retrieve` node runs a hybrid **BM25 + kNN HNSW** query against the `kb-who-guidelines`, `kb-internal-trials`, `kb-treatment-protocols`, `kb-icd11` indexes on **OpenSearch Serverless**.
 - Pre-filter by metadata: `review_date >= NOW-18m`, `specialty IN (...)`, `document_type`, hospital tenant if applicable.
-- **Cohere Embed v4** (`global.cohere.embed-v4:0`) embeds the query (text-only) at 1024 dims.
-- **Amazon Nova Multimodal Embeddings** is used at ingest time for figure-bearing chunks; those chunks share the same index via a unified fused-vector space.
+- **Cohere Embed v4** (`global.cohere.embed-v4:0`) embeds the query (text-only) at 1024 dims; all text chunks are embedded the same way at ingest time, so queries and chunks live in the same vector space.
+- **Amazon Nova Multimodal Embeddings** — used at ingest time for figure-bearing chunks, stored in a **separate vector field** (`chunk_mm_vec`) alongside the text field (`chunk_text_vec`). Retrieval runs two parallel kNN searches (text + multimodal) and merges results at rerank time, rather than sharing one combined vector space. The running demo on EC2 uses Cohere v4 only (text-only corpus); Nova Multimodal is wired in the production plan for figure-heavy documents.
 - Top-20 by kNN → **Cohere Rerank** on Bedrock → keep top-5 chunks with `{source, page, section}` metadata preserved.
 
 ### Step 5 — Route (pure if/else, no LLM call)
@@ -120,7 +120,7 @@ On every S3 `ObjectCreated` event:
 2. **Macie** PHI scan — quarantine + notify admin on a hit; the document never reaches the index until reviewed.
 3. **GuardDuty Malware Protection** for S3 — rejects infected uploads before parsing.
 4. **Lambda chunker**: hierarchical 1500/300 tokens, 15% overlap, section-aware. Figure-bearing chunks flagged for the multimodal embedding.
-5. **Embedding**: text chunks → `global.cohere.embed-v4:0`; figure chunks → Amazon Nova Multimodal Embeddings (1024 dims, fused). Both land in the same OpenSearch Serverless vector field.
+5. **Embedding**: text chunks → `global.cohere.embed-v4:0` into `chunk_text_vec`; figure-bearing chunks also get Amazon Nova Multimodal Embeddings into a separate `chunk_mm_vec` field on the same document (not concatenated into one vector space). OpenSearch Serverless stores both vector fields per chunk.
 6. **Bedrock Knowledge Base sync** (incremental upsert by `document_id + revision_hash` — unchanged chunks are free).
 7. On completion, publish to SNS → Lambda flushes semantic-cache keys tagged with the changed `source:*` so stale answers disappear.
 
