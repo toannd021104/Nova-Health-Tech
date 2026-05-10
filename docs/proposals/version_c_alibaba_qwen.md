@@ -104,7 +104,7 @@ For Version C, all tenants are registered on the **International site**. When th
 - **"Singapore International"** or **"SG Intl"**: specifically means "the `ap-southeast-1` region accessed through the International site". Used to call out services whose availability differs between sites. [Model Studio](https://www.alibabacloud.com/help/en/model-studio/what-is-model-studio), for example, is International-site only: its runtime endpoint is `https://dashscope-intl.aliyuncs.com/...` (the `-intl` suffix is the manifestation of this split)
 - **"Chinese Mainland"** or **"CN Mainland"**: the China site (Beijing, Shanghai, etc.). Out of scope for all Version C tenants. A few Qwen models (`qwen3-vl-embedding`, `qwen3-vl-rerank`, `gte-rerank-v2`) exist only on this site and are therefore unavailable to us: we work around them with the International-site alternatives
 
-The shorthand "SG Intl" appears in tables where column-width is tight, especially in [`../regional_services.md`](../regional_services.md). Read it as "Singapore region via Alibaba Cloud International site".
+Read "SG Intl" as "Singapore region via Alibaba Cloud International site".
 
 ---
 
@@ -330,8 +330,6 @@ ASCII equivalent (for text-only renderers):
 
 ![Data pipeline architecture](../architecture/diagrams/v_c_data_pipeline.svg)
 
-Shared design in [`../rag_and_pipelines.md`](../rag_and_pipelines.md). This section covers Version C specifics.
-
 ### 4.1 Data sources inventory
 
 | Source | Access method | Structure | Volume | Freshness need |
@@ -483,13 +481,11 @@ Both are used, but for different purposes. RAG is the primary mechanism for fact
 | Consistent tone | **Fine-tuning** (SFT on approved answers) + fixed system prompt + `temperature=0.1` | Tone drifts with prompt engineering alone |
 | Tool-calling reliability (emergency template calls, ICD-11 lookup) | **GRPO** on open-weight Qwen (optional, post-launch) | Pure SFT doesn't optimize for tool-selection correctness |
 
-**Never train on PHI.** Training data is de-identified via DataWorks SDDP before any fine-tuning pipeline can read it. Full plan in [`../customization.md`](../customization.md).
+**Never train on PHI.** Training data is de-identified via DataWorks SDDP before any fine-tuning pipeline can read it.
 
 ### 5.2 Vector database design and retrieval strategy
 
 ![RAG architecture: ingest + query paths](../architecture/diagrams/v_c_rag_architecture.svg)
-
-Design in [`../architecture/diagrams/v_c_rag_architecture.svg`](../architecture/diagrams/v_c_rag_architecture.svg).
 
 **Vector store**: [OpenSearch Vector Search Edition](https://www.alibabacloud.com/help/en/open-search/vector-search-edition/product-overview) HA Edition, dual-zone in Singapore.
 - Algorithm: HNSW (M=16, efConstruction=200, efSearch=80)
@@ -606,7 +602,7 @@ Qwen3.6-27B (22 Apr 2026 release) is **not chosen**. It's a coding-specialist mo
 
 ### 6.2 Fine-tuning strategy (tone, phrasing consistency, clinical vocabulary)
 
-**Techniques supported on PAI** (from [`../customization.md`](../customization.md) §3):
+**Techniques supported on PAI**:
 
 | Technique | Use |
 |---|---|
@@ -696,7 +692,7 @@ The emergency-lane system prompt is more restrictive (word cap, mandatory struct
 
 ### 6.4 Orchestration framework
 
-Decision in [`../rag_and_pipelines.md` §Framework](../rag_and_pipelines.md#4-orchestration-framework): **[Model Studio Applications](https://www.alibabacloud.com/help/en/model-studio/application-introduction) as primary runtime, LangChain only for narrow glue.**
+Decision: **[Model Studio Applications](https://www.alibabacloud.com/help/en/model-studio/application-introduction) as primary runtime, LangChain only for narrow glue.**
 
 | Application type | Used for |
 |---|---|
@@ -746,8 +742,6 @@ session_id = sha256(clinician_id | tenant_id | patient_fhir_id | login_time)
 ## 7. Corporate Integration Architecture
 
 ![Corporate integration: EHR / IAM / SharePoint / external APIs](../architecture/diagrams/v_c_corporate_integration.svg)
-
-Shared design in [`../rag_and_pipelines.md` §Corporate integration](../rag_and_pipelines.md#6-corporate-integration).
 
 ### 7.1 EHR / EMR integration (HL7 FHIR, CDS Hooks)
 
@@ -993,8 +987,6 @@ Not required for baseline (single-region SG) but the path is prepared:
 ## 8. Security Architecture
 
 ![Security architecture: PHI flow + zero-trust VPC + audit](../architecture/diagrams/v_c_security_architecture.svg)
-
-Shared design in [`../compliance.md`](../compliance.md). This section covers the Version-C-specific mechanisms.
 
 ### 8.1 Threat model and risk assessment
 
@@ -1997,7 +1989,7 @@ All diagrams live in [`../architecture/diagrams/`](../architecture/diagrams/) an
 
 ### 16.B Technology vendor comparison matrix
 
-Full service-by-service comparison with live-verified regional availability: [`../regional_services.md`](../regional_services.md). Summary of why Alibaba wins for the SG-native scenario:
+Summary of why Alibaba wins for the SG-native scenario:
 
 | Criterion | AWS (Version A/B) | Alibaba (Version C) | Winner |
 |---|---|---|---|
@@ -2028,8 +2020,6 @@ Full service-by-service comparison with live-verified regional availability: [`.
 | De-identification | §164.514 | Protection Obligation | DataWorks SDDP + tokenization |
 | Right to access | §164.524 | Access Obligation | Per-tenant DSAR runbook via SLS queries |
 | Right to amend | §164.526 | Correction Obligation | Document-replacement ingest path; RAG re-index |
-
-Full mapping in [`../compliance.md`](../compliance.md).
 
 ### 16.D Glossary
 
