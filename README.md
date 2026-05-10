@@ -27,6 +27,7 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 │   ├── architecture/
 │   │   ├── AWS_architecture.md                         ← production AWS design (Singapore, no Opus, no Outposts)
 │   │   ├── Alibaba_architecture.md                     ← parallel Qwen design (Singapore)
+│   │   ├── technology_options.md                       ← per-domain options (Data / Retrieval / Orchestration / Training / Integration / Perf / Observability), multi-agent + Agentic RAG + GraphRAG
 │   │   ├── workflow_detailed.md                        ← step-by-step runtime + ingestion walkthrough
 │   │   ├── rag_strategy.md                             ← 3 RAG strategies for complex PDFs; one chosen
 │   │   ├── fine_tuning_and_distillation.md             ← teacher→student distillation + tone via hyperparams
@@ -68,17 +69,18 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 ## Read order
 
 1. `docs/architecture/AWS_architecture.md` — the build target (Singapore, Haiku-first, Site-to-Site VPN).
-2. `docs/architecture/workflow_detailed.md` — the numbered end-to-end flow (matches the SVG).
-3. `docs/architecture/diagrams/aws_workflow.svg` — one-page visual architecture.
-4. `docs/architecture/corporate_integration.md` — EHR / SMART on FHIR, SharePoint / Microsoft Graph, upload portal.
-5. `docs/architecture/ingestion_and_identity.md` — scheduled ingestion, hospital IdP federation, VPN details.
-6. `docs/architecture/rag_strategy.md` — handling the WHO PDFs and the ICD-11 API.
-7. `docs/architecture/fine_tuning_and_distillation.md` — 2-second SLA without losing accuracy.
-8. `docs/architecture/caching_strategy.md` — three cache layers.
-9. `docs/architecture/framework_choice.md` — why Bedrock Agents + Model Studio Application are primary.
-10. `docs/architecture/Alibaba_architecture.md` — parallel Qwen plan.
-11. `docs/compliance/security_compliance.md` — regulation coverage, 6-year retention.
-12. `docs/pricing/cost_analysis.md` — cost sheet with caching / batch / distillation applied.
+2. `docs/architecture/technology_options.md` — per-domain options menu: data pipeline, retrieval (incl. Agentic RAG + KG-RAG), orchestration (incl. multi-agent specialist), training, integration, performance, observability.
+3. `docs/architecture/workflow_detailed.md` — the numbered end-to-end flow (matches the SVG).
+4. `docs/architecture/diagrams/aws_workflow.svg` — one-page visual architecture.
+5. `docs/architecture/corporate_integration.md` — EHR / SMART on FHIR, SharePoint / Microsoft Graph, upload portal.
+6. `docs/architecture/ingestion_and_identity.md` — scheduled ingestion, hospital IdP federation, VPN details.
+7. `docs/architecture/rag_strategy.md` — handling the WHO PDFs and the ICD-11 API.
+8. `docs/architecture/fine_tuning_and_distillation.md` — 2-second SLA without losing accuracy.
+9. `docs/architecture/caching_strategy.md` — three cache layers.
+10. `docs/architecture/framework_choice.md` — why Bedrock Agents + Model Studio Application are primary.
+11. `docs/architecture/Alibaba_architecture.md` — parallel Qwen plan.
+12. `docs/compliance/security_compliance.md` — regulation coverage, 6-year retention.
+13. `docs/pricing/cost_analysis.md` — cost sheet with caching / batch / distillation applied.
 
 ## Key production decisions (summary)
 
