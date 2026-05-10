@@ -79,7 +79,10 @@ A single-region Singapore deployment on Alibaba Cloud International using:
 - A **three-layer cache**: [Tair (Redis OSS-compatible)](https://www.alibabacloud.com/product/tair) semantic cache at Layer 1, [Qwen Context Cache](https://www.alibabacloud.com/help/en/model-studio/context-cache) at Layer 2, [Qwen Provisioned Throughput Units](https://www.alibabacloud.com/help/en/model-studio/model-training-and-deployment-billing) at Layer 3
 - **40-department multi-agent topology** behind a router — Emergency bypasses the router via a pure if/else on the explicit emergency toggle (no classifier LLM call)
 - [**IDaaS EIAM 2.0**](https://www.alibabacloud.com/help/en/idaas/) Premium+ federating each hospital's IdP (EntraID / Okta / ADFS) for clinician access; Cloud SSO + RAM for Nova staff
-- Hospital access via **SaaS-default public HTTPS** — TLS 1.3 + IDaaS JWT + WAF + Anti-DDoS + optional per-tenant IP allow-listing. Optional Site-to-Site IPsec-VPN on [VPN Gateway](https://www.alibabacloud.com/help/en/vpn-gateway) for hospitals with on-prem-only EHR / SharePoint Server / legacy file shares (see §7.6). No Apsara Stack, no Express Connect dedicated line.
+- **Two distinct network planes for hospital integration**:
+  - **Control plane (clinician traffic)** — pure SaaS over public HTTPS: TLS 1.3 + IDaaS JWT + WAF + Anti-DDoS + **per-tenant WAF IP allow-list** (hospital's egress IP range). Hospital whitelists Nova's API IP range and domain on their egress firewall. No VPN on this path — matches how every modern healthcare SaaS onboards (Epic cloud, Cerner CommunityWorks, Salesforce Health Cloud).
+  - **Data plane (backend system-to-system flows carrying raw PHI)** — Site-to-Site IPsec-VPN on [Alibaba VPN Gateway](https://www.alibabacloud.com/help/en/vpn-gateway): IKEv2 + AES-256-GCM + SHA-2, dual-tunnel HA. Carries the SharePoint / SMB trial-report pull, on-prem EHR FHIR callback, and Upload Portal traffic when PHI-bearing documents cross the hospital boundary. **Rationale**: bulk document transfer containing raw patient names, MRN, NRIC must not cross the public Internet even under TLS — the encrypted tunnel is the industry-standard belt-and-braces for bulk PHI transit.
+- No Apsara Stack, no Express Connect dedicated line, no Nova-specific software installed inside the hospital beyond existing firewall rules (both a WAF allow-list entry and an IPsec tunnel endpoint).
 - Full audit pipeline: [ActionTrail](https://www.alibabacloud.com/product/actiontrail) → [SLS](https://www.alibabacloud.com/product/log-service) → OSS WORM, **6-year retention** per [HIPAA §164.530(j)](https://www.law.cornell.edu/cfr/text/45/164.530)
 - [**Content Moderation 2.0 for Generative AI**](https://www.alibabacloud.com/product/content-moderation) + [DataWorks SDDP](https://www.alibabacloud.com/product/sddp) for PHI masking
 
@@ -99,7 +102,7 @@ A single-region Singapore deployment on Alibaba Cloud International using:
 ### 1.4 What this version is NOT
 
 - Not a staged rollout. **One product** launches with all capabilities active: ingestion, multi-agent, RAG, GraphRAG, fine-tuned student, 3-layer cache, guardrails, audit.
-- Not on Apsara Stack or any on-prem footprint unless the hospital specifically requests it.
+- **Not on-prem.** No Apsara Stack, no Nova-specific software installed inside the hospital. The hospital provides two things: a firewall WAF allow-list entry for the clinician chat path, and an IPsec VPN endpoint termination for the backend data-plane flows that carry raw PHI (SharePoint / SMB / on-prem FHIR / Upload Portal).
 - Not dependent on Chinese Mainland data sovereignty — Singapore International is PDPA-compatible.
 - Not a pure Model Studio or pure PAI solution. The design uses **both** — Model Studio for API-driven serving, PAI for training + custom student serving.
 
@@ -154,9 +157,10 @@ Industry baseline: [**ISO 27001 / 27017 / 27018 / 27701**](https://www.iso.org/s
 | Assumption | Impact if wrong |
 |---|---|
 | Hospitals accept PDPA-native Singapore region; no default cross-border replication | Additional DR region would require PDPA transfer-limitation assessment |
-| Clinicians access the assistant over public Internet (TLS 1.3 + IDaaS JWT + WAF) or inside the EHR iframe (SMART App Launch v2) | Standalone clinical UI still works without EHR; public Internet is standard SaaS pattern |
-| Hospital EHR exposes an Internet-reachable FHIR R4 endpoint with SMART App Launch v2 (true for modern Epic / Cerner Millennium / Allscripts / Oracle Health deployments) | Hospitals with on-prem-only FHIR need the optional Site-to-Site VPN mode (§7.6 Mode 2) |
-| Hospital uses SharePoint Online (via Microsoft Graph) rather than SharePoint Server on-prem | On-prem SharePoint needs the optional VPN mode |
+| Clinicians access the assistant over public Internet (TLS 1.3 + IDaaS JWT + WAF + per-tenant IP allow-list) or inside the EHR iframe (SMART App Launch v2) | Standalone clinical UI still works without EHR; public Internet is standard SaaS pattern |
+| Hospital EHR exposes an Internet-reachable FHIR R4 endpoint with SMART App Launch v2 (true for modern Epic / Cerner Millennium / Allscripts / Oracle Health deployments) | On-prem-only FHIR endpoint is reached via the data-plane IPsec VPN instead of a public gateway |
+| Hospital uses SharePoint Online (Microsoft Graph) or any other Internet-reachable document source (Google Drive, Confluence Cloud) | On-prem SharePoint Server / legacy SMB is pulled over the data-plane IPsec VPN |
+| Hospital firewall can (a) allow outbound HTTPS to Nova's published IP range + domain for clinician traffic, and (b) terminate a Site-to-Site IPsec tunnel for backend PHI transfer | Hospital without either capability is not a candidate tenant |
 | WHO ICD-11 API rate limits are acceptable (no official published limit; Nova has a registered [OAuth2 client](https://icd.who.int/icdapi)) | Rate-limit hits would require upstream caching and slower incremental ingests |
 | PubMed E-utilities free tier (3 req/s) is sufficient without an [API key](https://support.nlm.nih.gov/knowledgebase/article/KA-05317/en-us) for the agent-tool volume | Register for API key → 10 req/s |
 | Hospital IdP supports SAML 2.0 or OIDC | Non-standard IdP requires a broker |
@@ -176,80 +180,85 @@ ASCII equivalent (for text-only renderers):
 
 ```
               ┌──────────────────────────────────────────────────────────────┐
-              │   Hospital network (clinician workstations + EHR + SharePoint)│
+              │   Hospital network                                            │
+              │   ├── Clinician workstations + EHR iframe                     │
+              │   │     egress firewall whitelists:                           │
+              │   │       • api.nova-health.sg (Nova API domain)              │
+              │   │       • Nova published IP range (CDN + API Gateway)       │
+              │   │                                                            │
+              │   └── Backend data plane                                       │
+              │         ├── On-prem EHR FHIR (if not Internet-reachable)      │
+              │         ├── SharePoint Server / SMB / NFS trial shares        │
+              │         └── Customer Gateway (IPsec endpoint)                 │
               └──┬──────────────────────────────────────────────┬────────────┘
                  │                                              │
-         AI chat │ HTTPS + IDaaS JWT     EHR FHIR / Graph / SMB │ HTTPS
-                 │ (SMART on FHIR        (public APIs for modern│  (public)
-                 │  iframe OR stand-     SaaS onboarding)       │
-                 │  alone web app)                              │  optional
-                 │                                              │  IPsec VPN
-                 │                                              │  if on-prem
-                 ▼                                              ▼  only
-     ┌──────────────────────┐                      ┌──────────────────────────┐
-     │ Anti-DDoS + WAF +    │                      │ VPN Gateway (optional,    │
-     │ Alibaba CDN +        │                      │  Mode 2 only — §7.6)      │
-     │ per-tenant IP        │                      │ or direct public API call │
-     │ allow-list (opt)     │                      └──────────┬───────────────┘
-     └──────┬───────────────┘                                 │
-            │                                                 │
-     ┌──────▼──────────┐                                      │
-     │ API Gateway     │                                      │
-     │  + RAM / IDaaS  │                                      │
-     │    authorizer   │                                      │
-     └──────┬──────────┘                                      ▼
-            │                                       ┌──────────────────────┐
-            │                                       │ Private SLB + IDaaS  │
-            │                                       │ OIDC/SAML ← hospital │
-            │                                       │   IdP (EntraID etc.) │
-            │                                       │                      │
-            │                                       │ SAE container:       │
-            │                                       │  Upload Portal       │
-            │                                       │  (behind IDaaS,      │
-            │                                       │  public HTTPS or VPN)│
-            │                                       └──────────┬───────────┘
-            │                                                  │
-            ▼                                                  ▼
-   ┌──────────────────────────────┐                   ┌──────────────────────────┐
-   │ Function Compute /chat (VPC) │                   │ OSS raw bucket           │
-   │  0. RAM/IDaaS token check    │◄─── sem cache ───┤ /raw/scheduled/...       │
-   │  1. PHI mask (DataWorks SDDP) │    hit returns   │ /raw/manual/...          │
-   │  2. if/else on emergency      │    early         │ /raw/icd11/...           │
-   │     toggle (pure, no LLM)     │                  │ /raw/who/...             │
-   │  3. Model Studio Agent /      │                  └──────────┬───────────────┘
-   │     Workflow app invoke       │                             │ ObjectCreated
-   │  4. ground-check + audit      │                             ▼
-   └─────┬──────────────┬──────────┘                   ┌──────────────────────────┐
-         │              │                              │ Function Workflow         │
- Layer 1 │    Layer 2   │  Generation                  │  DocMind parse → chunk →  │
- Tair    │    Qwen      │  (Model Studio + PAI-EAS):   │  embed → KB + graph sync  │
- +Tair   │    Context   │   FAST LANE (emergency):     │                           │
- Vector  │    Cache     │     Qwen3.5-Flash            │ + Security Center scan    │
- semantic│  (implicit + │   COMPLEX LANE:              │ + SDDP PHI scan           │
- cache   │   explicit)  │     Qwen3.5-Plus teacher (40%│                           │
-         │              │       of complex traffic)    │                           │
-         │              │     Qwen3-8B student on      │                           │
-         │              │       PAI-EAS (60% — committed│                           │
-         │              │       day one; DR fallback   │                           │
-         │              │       for emergency lane)    │                           │
-         │              │     Qwen3-VL-Plus (Radiology)│                           │
-         │              │   ROUTER:                    │                           │
-         │              │     Qwen3.5-Flash JSON mode  │                           │
-         │              │   + Content Moderation 2.0   │                           │
-         │              │                              └──────────┬───────────────┘
-         │              │                                         ▼
-         │              │                         ┌────────────────────────────┐
-         │              │                         │ Model Studio Knowledge Base│
-         │              │                         │  kb-who-guidelines         │
-         │              │                         │  kb-internal-trials        │
-         │              │                         │  kb-treatment-protocols    │
-         │              │                         │  kb-icd11                  │
-         │              │                         │  on OpenSearch Vector      │
-         │              │                         │  Search Edition (HA)       │
-         │              │                         ├────────────────────────────┤
-         │              │                         │ AnalyticDB PG GraphRAG     │
-         │              │                         │  (4-core 32GB, 3 zones)    │
-         │              │                         └────────────────────────────┘
+   CONTROL PLANE │ HTTPS + IDaaS JWT             DATA PLANE     │ Site-to-Site
+   (clinician    │ public Internet               (backend       │ IPsec VPN
+    chat, EHR    │ TLS 1.3 + WAF + IP allow-list  PHI transfer, │ IKEv2
+    iframe)      │                                SharePoint +  │ AES-256-GCM
+                 │                                FHIR + uploads)│ dual-tunnel
+                 ▼                                              ▼
+     ┌──────────────────────────────────────────┐    ┌────────────────────────┐
+     │ Nova edge: CDN + Anti-DDoS + WAF         │    │ VPN Gateway            │
+     │  · per-tenant WAF IP allow-list          │    │  (private side of VPC)  │
+     │  · OWASP + rate-limit rules              │    └───────────┬────────────┘
+     └──────┬───────────────────────────────────┘                │
+            │                                                    │
+     ┌──────▼──────────┐                                         │
+     │ API Gateway     │                                         │
+     │  + RAM / IDaaS  │                                         │
+     │    authorizer   │                                         │
+     └──────┬──────────┘                                         ▼
+            │                                    ┌───────────────────────────┐
+            │                                    │ Private SLB + IDaaS        │
+            │                                    │  OIDC/SAML ← hospital IdP  │
+            │                                    │                            │
+            │                                    │ SAE container:             │
+            │                                    │  Upload Portal (over VPN)  │
+            │                                    └───────────┬────────────────┘
+            │                                                │
+            ▼                                                ▼
+   ┌──────────────────────────────┐            ┌──────────────────────────────┐
+   │ Function Compute /chat (VPC) │            │ OSS raw bucket               │
+   │  0. RAM/IDaaS token check    │◄─ sem cch─┤ /raw/scheduled/...           │
+   │  1. PHI mask (DataWorks SDDP) │  hit ret   │ /raw/manual/...              │
+   │  2. if/else on emergency      │  early     │ /raw/icd11/...               │
+   │     toggle (pure, no LLM)     │            │ /raw/who/...                 │
+   │  3. Model Studio Agent /      │            └──────────┬───────────────────┘
+   │     Workflow app invoke       │                       │ ObjectCreated
+   │  4. ground-check + audit      │                       ▼
+   └─────┬──────────────┬──────────┘          ┌──────────────────────────────┐
+         │              │                     │ Function Workflow             │
+ Layer 1 │    Layer 2   │  Generation         │  DocMind parse → chunk →      │
+ Tair    │    Qwen      │  (Model Studio +    │  embed → KB + graph sync      │
+ +Tair   │    Context   │   PAI-EAS):         │                               │
+ Vector  │    Cache     │   FAST LANE         │ + Security Center scan        │
+ semantic│  (implicit + │     Qwen3.5-Flash   │ + SDDP PHI scan               │
+ cache   │   explicit)  │   COMPLEX LANE      │                               │
+         │              │     Qwen3.5-Plus    │                               │
+         │              │       teacher (40%) │                               │
+         │              │     Qwen3-8B student│                               │
+         │              │       PAI-EAS (60%) │                               │
+         │              │     Qwen3-VL-Plus   │                               │
+         │              │       (Radiology)   │                               │
+         │              │   ROUTER:           │                               │
+         │              │     Qwen3.5-Flash   │                               │
+         │              │       JSON mode     │                               │
+         │              │   + Content Mod 2.0 │                               │
+         │              │                     └──────────┬────────────────────┘
+         │              │                                ▼
+         │              │                ┌────────────────────────────┐
+         │              │                │ Model Studio Knowledge Base│
+         │              │                │  kb-who-guidelines         │
+         │              │                │  kb-internal-trials        │
+         │              │                │  kb-treatment-protocols    │
+         │              │                │  kb-icd11                  │
+         │              │                │  on OpenSearch Vector      │
+         │              │                │  Search Edition (HA)       │
+         │              │                ├────────────────────────────┤
+         │              │                │ AnalyticDB PG GraphRAG     │
+         │              │                │  (4-core 32GB, 3 zones)    │
+         │              │                └────────────────────────────┘
          ▼              ▼
   All traffic → ActionTrail → SLS → OSS (WORM, 6-year retention)
 ```
@@ -288,7 +297,7 @@ ASCII equivalent (for text-only renderers):
 | Identity (clinicians) | [IDaaS EIAM 2.0](https://www.alibabacloud.com/help/en/idaas/) Premium+ | SG |
 | Identity (staff) | [Cloud SSO + RAM](https://www.alibabacloud.com/product/ram) | Global |
 | Secrets | [KMS](https://www.alibabacloud.com/product/kms) + [Credentials Manager](https://www.alibabacloud.com/help/en/kms/user-guide/secrets-manager-overview) | SG |
-| Network | [VPC](https://www.alibabacloud.com/product/vpc) + [VPN Gateway (IPsec-VPN)](https://www.alibabacloud.com/help/en/vpn-gateway) + [PrivateLink](https://www.alibabacloud.com/product/privatelink) | SG |
+| Network | [VPC](https://www.alibabacloud.com/product/vpc) + [VPN Gateway (IPsec-VPN, data plane)](https://www.alibabacloud.com/help/en/vpn-gateway) + [PrivateLink](https://www.alibabacloud.com/product/privatelink) | SG |
 | Audit | [ActionTrail](https://www.alibabacloud.com/product/actiontrail) + [SLS](https://www.alibabacloud.com/product/log-service) + OSS WORM | SG |
 | Observability | [ARMS LLM Trace Explorer](https://www.alibabacloud.com/help/en/arms/application-monitoring/user-guide/llm-trace-explorer) | SG |
 | Orchestration framework | [Model Studio Agent + Workflow Applications](https://www.alibabacloud.com/help/en/model-studio/application-introduction) | SG Intl |
@@ -306,12 +315,12 @@ Shared design in [`../rag_and_pipelines.md`](../rag_and_pipelines.md). This sect
 
 | Source | Access method | Structure | Volume | Freshness need |
 |---|---|---|---|---|
-| **Internal clinical trial reports** | SharePoint Online via [Microsoft Graph webhook](https://learn.microsoft.com/en-us/graph/api/subscription-post-subscriptions) (Mode 1) · SharePoint Server over Site-to-Site VPN (Mode 2) | Legacy PDFs, inconsistent tagging, 10–200 pages each | Hundreds of documents per hospital tenant | Weekly reconciliation + webhook on change |
+| **Internal clinical trial reports** | Data plane — SharePoint Online via [Microsoft Graph webhook](https://learn.microsoft.com/en-us/graph/api/subscription-post-subscriptions) or SharePoint Server / SMB pull, both traversing Site-to-Site IPsec VPN ([§7.6.2](#762-data-plane--bulk-phi-transfer-site-to-site-ipsec-vpn-baseline)) | Legacy PDFs, inconsistent tagging, 10–200 pages each | Hundreds of documents per hospital tenant | Weekly reconciliation + webhook on change |
 | **Internal treatment protocols** | Same as above | PDFs + DOCX; often include horizontal/vertical tables and text-based flowcharts | Dozens per tenant | Same |
 | **[WHO guidelines](https://www.who.int/publications)** | HTTP download from WHO publications index; RSS webhook for living guidelines | 100+ page PDFs with dense tables and figures | ~300 guideline corpus | Monthly day 1 + RSS webhook |
 | **[WHO ICD-11 API](https://id.who.int/swagger/index.html)** | [Registered OAuth2 client](https://icd.who.int/icdapi) | Structured JSON | ~100k classification entities | Daily delta pull |
 | **[PubMed E-utilities](https://www.ncbi.nlm.nih.gov/books/NBK25500/)** | Runtime tool call from the Agent | XML → JSON | On-demand (agentic RAG tool) | Real-time (no ingest) |
-| **Manual upload** ([Upload Portal](#45-data-refresh-and-synchronization)) | Curator uploads via internal portal — public HTTPS + IDaaS + optional IP allow-list (Mode 1) or over VPN (Mode 2) | Any format | Ad-hoc | Immediate |
+| **Manual upload** ([Upload Portal](#45-data-refresh-and-synchronization)) | Curator uploads via internal portal over Site-to-Site IPsec VPN (data plane, §7.6.2); OIDC via hospital IdP | Any format | Ad-hoc | Immediate |
 | **EHR data (runtime only, not indexed)** | [SMART App Launch v2](http://docs.smarthealthit.org/) + FHIR R4 | Structured FHIR resources | Per patient per session | Runtime fetch |
 
 **Inventory source of truth**: every document's provenance is tracked via `document_id = hash(source + URI)` and `revision = hash(bytes)`. See §4.6.
@@ -392,7 +401,7 @@ When a child chunk matches the query, the parent is retrieved — this gives the
 | WHO guideline PDFs | Monthly day 1 02:30 SGT + RSS webhook | Cron + API Gateway webhook | FC + DocMind |
 | Internal trials (SharePoint) | Weekly Sun 03:00 SGT + [Graph subscription](https://learn.microsoft.com/en-us/graph/api/subscription-post-subscriptions) | Cron + API Gateway | FC |
 | Treatment protocols | Same as internal trials | Same | Same |
-| Manual upload | Any time | Upload Portal (public HTTPS + IDaaS, optional IP allow-list) — or via VPN if Mode 2 | SAE container → OSS |
+| Manual upload | Any time | Upload Portal over Site-to-Site IPsec VPN; OIDC via hospital IdP | SAE container → OSS |
 | Monthly full reconciliation | Day 1 04:00 SGT | Cron | Function Workflow |
 
 **WHO monthly-update path in detail**:
@@ -812,7 +821,7 @@ Subscriptions renew automatically via lifecycle job. `clientState` validated on 
 **Other document sources**:
 - **Google Drive** — same pattern via [`files.watch`](https://developers.google.com/drive/api/v3/reference/files/watch) push notifications
 - **Confluence Cloud** — [webhooks](https://developer.atlassian.com/cloud/confluence/webhooks/) on `page_created`, `page_updated`
-- **On-prem NFS / SMB share** — scheduled puller container in SAE pulls over Site-to-Site VPN weekly (Mode 2 only — for hospitals without SharePoint Online)
+- **On-prem NFS / SMB share** — scheduled puller container in SAE pulls over Site-to-Site VPN weekly (data plane)
 
 ### 7.5 External API integration (WHO, PubMed)
 
@@ -831,13 +840,13 @@ Subscriptions renew automatically via lifecycle job. `clientState` validated on 
 
 **WHO guideline PDFs** — no official API; scheduled downloader pulls from WHO publications index monthly + RSS webhook for living guidelines.
 
-### 7.6 Hospital connectivity — SaaS-default with optional VPN
+### 7.6 Hospital connectivity — two-plane model
 
-Nova is a SaaS vendor, not an enterprise integration. Most modern hospitals already consume cloud SaaS (Epic's MyChart portal, Microsoft 365, Salesforce) over public Internet — Nova follows the same pattern. **VPN is not the default**; it exists for hospitals whose EHR, SharePoint, or file shares are still on-prem-only.
+Hospital traffic splits into two planes with different security requirements. Both are part of the baseline deployment — not mode-switchable.
 
-#### 7.6.1 Mode 1 — SaaS default (public Internet, no VPN)
+#### 7.6.1 Control plane — clinician traffic (public HTTPS, no VPN)
 
-The onboarding path for most hospitals. Every control stays at the application layer:
+The clinician's chat UI, the EHR SMART-on-FHIR iframe, and Upload Portal authentication all use **public HTTPS**. This is the standard SaaS pattern every modern healthcare SaaS uses (Epic cloud, Cerner CommunityWorks, Salesforce Health Cloud, Google Healthcare API).
 
 | Control | Mechanism |
 |---|---|
@@ -845,103 +854,94 @@ The onboarding path for most hospitals. Every control stays at the application l
 | Authentication | [IDaaS EIAM 2.0](https://www.alibabacloud.com/help/en/idaas/) Premium+ federates to the hospital IdP via SAML 2.0 or OIDC; MFA enforced at the IdP |
 | Authorization | JWT scopes (`chat:clinical`, `curator:upload`, etc.) checked at API Gateway + FC |
 | Edge protection | Alibaba CDN + WAF + Anti-DDoS; per-tenant rate limits |
-| **Per-tenant IP allow-list (optional)** | If the hospital asks, Nova pins the tenant's API access to the hospital's egress IP range via WAF rule — equivalent network-boundary control to VPN without the firewall-coordination cost |
+| **Per-tenant WAF IP allow-list** | Nova pins the tenant's API access to the hospital's egress IP range; hospital whitelists Nova's published IP range + domain on their egress firewall |
 | PHI handling | DataWorks SDDP on every inbound message → reversible KMS-backed tokenization before any model call |
 | Audit | Every request logged to ActionTrail → SLS → OSS WORM (6-year) |
 
-**What uses public HTTPS in Mode 1**:
+**What uses public HTTPS (control plane)**:
 
-- Clinician chat (SMART on FHIR iframe or standalone web app)
-- Upload Portal (document curators) — behind IDaaS + optional IP allow-list
-- EHR FHIR R4 callback — calls the hospital's Internet-reachable FHIR endpoint using its OAuth2 credentials
-- SharePoint ingest — Microsoft Graph API with `Sites.Selected` scope (no VPN needed)
-- WHO ICD-11, PubMed, Microsoft Graph subscriptions — all already public APIs
+- Clinician chat UI — embedded in EHR iframe via SMART App Launch v2, or standalone Nova web app
+- EHR FHIR R4 callback — when hospital EHR exposes an Internet-reachable FHIR endpoint (modern Epic / Cerner Millennium / Allscripts deployments)
+- SharePoint Online ingest — [Microsoft Graph](https://learn.microsoft.com/en-us/graph/api/subscription-post-subscriptions) change-notification subscriptions with `Sites.Selected`
+- External APIs — WHO ICD-11, PubMed, Microsoft Graph (all already public)
 
-**Why this is enough for PDPA + HCSA + HIPAA**:
+**Why public HTTPS is sufficient here**:
 
-- PDPA regulates *where data lands*, not the transit path. Data lands in Singapore (the Nova VPC). Transit is TLS 1.3.
-- HIPAA Transmission Security (§164.312(e)) requires encryption + integrity — TLS 1.3 satisfies both.
-- Singapore HCSA does not require dedicated-line connectivity; it regulates clinical governance, not network topology.
-- Every major US-BAA SaaS vendor (Epic's own cloud, Cerner CommunityWorks, Allscripts, Salesforce Health Cloud, Google Healthcare API) onboards hospitals over public HTTPS with MFA + audit — this is the industry norm.
+- PDPA regulates *where data lands*, not the transit path. Data lands in Singapore (Nova VPC). Transit is TLS 1.3.
+- HIPAA §164.312(e) Transmission Security requires encryption + integrity — TLS 1.3 satisfies both.
+- Clinician prompts are SDDP-masked at FC preflight before they reach the LLM, so even if the transit somehow leaked, the model never saw raw PHI.
+- Singapore HCSA regulates clinical governance, not network topology.
 
-#### 7.6.2 Mode 2 — Optional Site-to-Site IPsec-VPN
+#### 7.6.2 Data plane — bulk PHI transfer (Site-to-Site IPsec-VPN, baseline)
 
-Available when a hospital has one or more of:
+Backend system-to-system flows that carry **raw PHI in bulk** (patient names, MRN, NRIC, full medical history inside FHIR resources, entire trial reports) run over **Site-to-Site IPsec-VPN** on [**Alibaba VPN Gateway**](https://www.alibabacloud.com/help/en/vpn-gateway).
 
-- EHR without an Internet-reachable FHIR endpoint (on-prem-only Epic Community Connect, legacy Cerner Powerchart)
-- SharePoint Server on-prem (not SharePoint Online) or legacy SMB / NFS shares with trial reports
-- Internal policy mandating "no-Internet-touch" for clinical data despite TLS
-- Regulatory ask (rare in PDPA / HIPAA; more common in certain national health systems)
-
-When activated, Mode 2 uses Alibaba's [**VPN Gateway**](https://www.alibabacloud.com/help/en/vpn-gateway) with the [IPsec-VPN feature](https://www.alibabacloud.com/help/en/vpn/sub-product-ipsec-vpn/product-overview/product-overview/):
+**Rationale**: even with TLS, pushing thousands of unmasked PHI-bearing documents across the public Internet is not the right answer for a clinical product. The encrypted tunnel is the industry-standard belt-and-braces for bulk PHI transit. Clinician chat prompts are small + de-identified and fine on public HTTPS; bulk document transfer is not.
 
 | Attribute | Value |
 |---|---|
-| Alibaba product | **VPN Gateway** with IPsec-VPN feature |
+| Alibaba product | [**VPN Gateway**](https://www.alibabacloud.com/help/en/vpn-gateway) with [IPsec-VPN feature](https://www.alibabacloud.com/help/en/vpn/sub-product-ipsec-vpn/product-overview/product-overview/) |
 | Tunnel type | Site-to-Site IPsec-VPN |
 | Crypto | IKEv2 + AES-256-GCM + SHA-2, PFS group 14 |
 | HA | Dual-tunnel (two public IPs per gateway) with BGP dynamic routing |
 | Throughput tiers | 5 / 10 / 20 / 50 / 100 / 200 / 500 / 1000 Mbps (resizable) |
-| Baseline tier | 100 Mbps per tenant (Mode 2 clients only) |
+| Baseline tier | 100 Mbps per tenant |
 | Transport | Public Internet (encrypted) — not a dedicated line |
 | SLA | 99.95% (Alibaba-published) |
 | Region | Singapore International — VPN Gateway is per-VPC |
 
+**What traverses the VPN (data plane)**:
+
+- Internal clinical trial reports (SharePoint Server on-prem or SharePoint Online — either way, bulk PHI-bearing content flows this path)
+- Treatment protocols with patient data references
+- On-prem EHR FHIR callback (when hospital's FHIR sits behind the firewall)
+- Legacy SMB / NFS trial shares (scheduled puller in SAE reads over VPN)
+- Upload Portal traffic — curators submitting PHI-bearing documents through the private SLB
+
 **Hospital side** ([supported third-party firewalls in Alibaba docs](https://www.alibabacloud.com/help/en/vpn/sub-product-ipsec-vpn/user-guide/enable-ipsec-vpn)):
 
 - Existing firewall/router as the Customer Gateway (Cisco ASA, Juniper SRX, Fortinet, Palo Alto, Huawei, H3C, [strongSwan](https://www.alibabacloud.com/help/en/vpn-gateway/latest/configure-strongswan), vyOS)
-- Hospital supplies: static public IP (or DDNS), the pre-shared key (sent via PGP-encrypted envelope), on-prem subnet CIDR
+- Hospital supplies: static public IP (or DDNS), pre-shared key (sent via PGP-encrypted envelope), on-prem subnet CIDR
 
-**Connection-setup (Mode 2)**:
+**Connection setup**:
 
 ```
 1. Nova architect provisions VPN Gateway in SG VPC
    → receives 2 public IPs (tunnel A, tunnel B)
-2. PSK generated; stored in Credentials Manager
+2. PSK generated; stored in Credentials Manager (auto-rotated every 90 days)
 3. Nova shares PSK with hospital network team via PGP-encrypted envelope
 4. Hospital configures firewall:
    - Phase 1: AES-256-GCM / SHA-2 / DH group 14 / IKEv2
    - Phase 2: AES-256-GCM / ESP / PFS group 14
    - Peer IPs: two Alibaba tunnel public IPs
-5. Tunnels establish; BGP peering brings up routes
+5. Tunnels establish; BGP peering brings up dynamic routes
 6. Smoke test: Upload Portal reachable from hospital test workstation
 ```
 
-**What traverses the VPN (Mode 2 only)** — typically only the flows that public APIs can't handle:
+**Ballpark cost**: VPN Gateway 100 Mbps ≈ $110–150/mo per tenant (Alibaba list).
 
-- On-prem EHR → FHIR callback (when EHR isn't Internet-reachable)
-- SharePoint Server / SMB / NFS trial-report pull (when not SharePoint Online)
-- Upload Portal (if the hospital requires it over private network)
+#### 7.6.3 Why not only public HTTPS for data plane too?
 
-**What still goes over public HTTPS even in Mode 2**: the clinician's chat UI. The VPN is for backend system-to-system flows, not clinician traffic.
+A reasonable question. Three reasons we keep the IPsec tunnel for bulk PHI:
 
-**Ballpark cost**: VPN Gateway 100 Mbps ≈ $110–150/mo per tenant (Alibaba list), configurable on client contract.
+1. **Defense in depth.** Clinical trial reports and FHIR bundles contain raw PHI that hasn't yet passed through SDDP. Even if TLS is strong, the encrypted tunnel removes the "someone on the path sees the TLS handshake SNI / timing" class of concerns. Auditors for HIPAA / HITRUST expect to see a VPN on bulk-PHI paths.
+2. **Hospital IT expectations.** Hospital compliance teams are trained to look for "VPN to vendor" as a control. Shipping bulk PHI over plain-Internet SaaS APIs, even with TLS, is a harder sell in procurement than the two-plane model where clinician traffic is SaaS-style and bulk-transfer is VPN-style.
+3. **Bidirectional flow.** The data plane includes on-prem → cloud (trial reports) *and* cloud → on-prem (EHR FHIR callback when the hospital FHIR is private). The VPN makes this symmetric without any hospital-side public-API exposure of internal systems.
 
-#### 7.6.3 Optional turnkey alternative — [Smart Access Gateway (SAG)](https://www.alibabacloud.com/product/smart-access-gateway)
+#### 7.6.4 Optional turnkey alternative — [Smart Access Gateway (SAG)](https://www.alibabacloud.com/product/smart-access-gateway)
 
-For Mode-2 hospitals that don't want to configure their own firewall:
+For small / mid-size clinics that don't want to configure their own firewall for IPsec:
 
-- Alibaba ships a SAG-100WM or SAG-1000 hardware appliance
+- Alibaba ships a SAG-100WM / SAG-1000 hardware appliance
 - Hospital plugs it into their LAN; it auto-establishes an encrypted tunnel to the Alibaba backbone
-- Same encryption + VPC termination as a DIY IPsec config
-- Trade-off: faster setup (no firewall work on hospital side), rental ~$50–150/mo depending on model
-- Appropriate for small clinics without a dedicated network team
+- Same encryption + VPC termination as a DIY IPsec config on the data plane
+- Trade-off: faster setup (no firewall work on hospital side), hardware rental ~$50–150/mo
 
-#### 7.6.4 Optional dedicated line — [Express Connect](https://www.alibabacloud.com/product/express-connect)
+#### 7.6.5 Multi-region future — [Cloud Enterprise Network (CEN)](https://www.alibabacloud.com/product/cen)
 
-Alibaba's equivalent of AWS Direct Connect. **Not baseline, not Mode-2 default either** — only offered when:
+Not required for baseline (single-region SG) but the path is prepared:
 
-- Hospital has sustained multi-Gbps document-upload volume (rare in healthcare)
-- Regulator explicitly forbids any Internet transit (uncommon for PDPA / HIPAA; more common in certain PRC provinces — out of Version C scope anyway)
-- Hospital already has a Physical Connection at an Alibaba-partnered data center
-
-Express Connect pricing is $1,500–5,000+/mo plus physical-circuit fees from a carrier; setup is 6–12 weeks.
-
-#### 7.6.5 Future multi-region — [Cloud Enterprise Network (CEN)](https://www.alibabacloud.com/product/cen)
-
-Not required for baseline (single-region) but the path is prepared:
-
-- All Nova VPCs are attached to a single CEN instance from day one, even with one VPC
+- All Nova VPCs attached to a single CEN instance from day one, even with one VPC
 - Adding a DR region or a second tenant-specific region is a CEN attachment + route-policy change, not a re-architecture
 - Alibaba's equivalent of AWS Transit Gateway
 
@@ -950,22 +950,22 @@ Not required for baseline (single-region) but the path is prepared:
 | Service | Why not |
 |---|---|
 | **[Apsara Stack](https://www.alibabacloud.com/product/apsara-stack)** (on-prem Alibaba) | 6+ months of onboarding; adds ops burden for a SaaS model. Only on explicit contract request. |
-| **[Express Connect](https://www.alibabacloud.com/product/express-connect)** as default | Hospital Internet latency to SG is ~5–15 ms; dedicated line saves single-digit ms at 10× the cost |
-| **SSL-VPN (client-level)** | Clinician-level access goes through IDaaS federation, not a personal VPN tunnel |
-| **Mandatory Site-to-Site VPN for every hospital** | Mismatched to the SaaS model; delays onboarding by weeks; the security story (TLS 1.3 + IDaaS + PHI masking + audit) is already compliant without it |
+| **[Express Connect](https://www.alibabacloud.com/product/express-connect)** (dedicated line) | Hospital Internet latency to SG is ~5–15 ms; dedicated line saves single-digit ms at $1,500–5,000+/mo vs ~$110 VPN cost |
+| **SSL-VPN (client-level)** | Clinician access goes through IDaaS federation, not a personal VPN tunnel |
+| **VPN for clinician chat traffic** | Chat prompts are small and SDDP-masked; public HTTPS + IDaaS + WAF is the right control — forcing VPN here would delay onboarding by weeks for no security gain |
 
 #### 7.6.7 Connectivity comparison — Version C vs Version A/B
 
 | Need | Version C (Alibaba) | Version A/B (AWS) |
 |---|---|---|
-| Baseline (SaaS default) | Public HTTPS + TLS 1.3 + IDaaS + WAF + optional IP allow-list | Public HTTPS + TLS 1.3 + Cognito + WAF + optional IP allow-list |
-| Mode 2 site-to-site | [VPN Gateway (IPsec-VPN)](https://www.alibabacloud.com/help/en/vpn-gateway) | [AWS Site-to-Site VPN](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) |
-| Turnkey appliance | [Smart Access Gateway (SAG)](https://www.alibabacloud.com/product/smart-access-gateway) | — (third-party appliances) |
-| Dedicated line | [Express Connect](https://www.alibabacloud.com/product/express-connect) (not baseline) | [AWS Direct Connect](https://aws.amazon.com/directconnect/) (not baseline) |
+| Control plane (clinician chat) | Public HTTPS + TLS 1.3 + IDaaS + WAF + IP allow-list | Public HTTPS + TLS 1.3 + Cognito + WAF + IP allow-list |
+| Data plane (bulk PHI) | [VPN Gateway (IPsec-VPN)](https://www.alibabacloud.com/help/en/vpn-gateway) | [AWS Site-to-Site VPN](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) |
+| Turnkey VPN appliance | [Smart Access Gateway (SAG)](https://www.alibabacloud.com/product/smart-access-gateway) | — (third-party appliances) |
+| Dedicated line (not baseline) | [Express Connect](https://www.alibabacloud.com/product/express-connect) | [AWS Direct Connect](https://aws.amazon.com/directconnect/) |
 | Multi-VPC / multi-region mesh | [Cloud Enterprise Network (CEN)](https://www.alibabacloud.com/product/cen) | [AWS Transit Gateway](https://aws.amazon.com/transit-gateway/) |
-| On-prem cloud | [Apsara Stack](https://www.alibabacloud.com/product/apsara-stack) (not baseline) | [AWS Outposts](https://aws.amazon.com/outposts/) (not baseline) |
+| On-prem cloud (not baseline) | [Apsara Stack](https://www.alibabacloud.com/product/apsara-stack) | [AWS Outposts](https://aws.amazon.com/outposts/) |
 
-**Baseline for all three versions**: SaaS-default public HTTPS with TLS 1.3 + IdP federation + optional IP allow-list. Site-to-Site IPsec VPN is an opt-in Mode 2 for hospitals with on-prem-only upstream systems.
+**Baseline for all three versions**: two-plane model — public HTTPS for the clinician control plane, Site-to-Site IPsec VPN for the bulk-PHI data plane.
 
 ---
 
@@ -1919,7 +1919,7 @@ All capabilities from §14.1 are running. Student is NOT optional — it's part 
 | Function Compute + API Gateway + CDN + WAF | serverless | ~$90 |
 | OSS + ActionTrail + SLS WORM | 6-year retention | ~$70 |
 | Tair (Redis OSS-compatible) | clustered | ~$60 |
-| IPsec VPN Gateway (Mode-2 tenants only) | per Mode-2 tenant | ~$60 |
+| IPsec VPN Gateway (data plane, per tenant) | 100 Mbps tier | ~$110–150 |
 | **Launch-day monthly total** | | **~$2,280–3,060** |
 
 **Why a range, not a single number**:
@@ -1981,7 +1981,7 @@ Cheapest retrain cadence of the three versions. Monthly DPO + quarterly SFT fit 
 | Qwen PTU 1 unit for emergency peak (not day-one default) | +$150–300 |
 | Drop `tongyi-embedding-vision-plus`, text-only retrieval | −$50 |
 | Add 2,000 physician tenant (4× volume) | roughly +$2,500–3,500 |
-| Mode-2 tenant (VPN Gateway per tenant) | +$60 per Mode-2 tenant |
+| Add a second tenant (data-plane VPN scales per-tenant) | +$110–150 per new tenant |
 
 "Student off" is shown as a sensitivity only because reviewers ask about it. **The launch configuration includes the student.** A client that contractually removes the student would see roughly $60–840 savings depending on where A10 pricing lands, at the cost of tone inconsistency, upstream model-version dependency, slower retrain cadence, and losing the emergency DR fallback.
 

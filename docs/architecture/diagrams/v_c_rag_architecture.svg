@@ -33,7 +33,7 @@
   <text x="150" y="184" text-anchor="middle" class="lbl-sm">Trials + protocols (weekly)</text>
 
   <rect x="50" y="200" width="200" height="50" class="box box-in"/>
-  <text x="150" y="220" text-anchor="middle" class="lbl-sm">Upload Portal (VPN)</text>
+  <text x="150" y="220" text-anchor="middle" class="lbl-sm">Upload Portal (data plane VPN)</text>
   <text x="150" y="236" text-anchor="middle" class="lbl-sm">Microsoft Graph webhook</text>
 
   <rect x="270" y="110" width="170" height="140" class="box box-data"/>

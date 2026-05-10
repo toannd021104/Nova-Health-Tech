@@ -87,13 +87,13 @@ Bedrock, S3, Lambda, API Gateway, CloudFront, Cognito, OpenSearch Serverless, El
 
 ISO 27001 / 27017 / 27018 / 27701 / 22301, SOC 1 / 2 / 3, PCI DSS, PDPA alignment, GDPR-ready, HIPAA-ready (BAA coverage is region-specific — confirm with account team before processing US PHI). See [Alibaba Cloud Trust Center](https://www.alibabacloud.com/en/trust-center).
 
-## 6. Hospital connectivity — SaaS-default with optional VPN
+## 6. Hospital connectivity — two-plane model
 
-**Mode 1 (default)**: hospital accesses Nova over public HTTPS with TLS 1.3 + IdP federation + WAF + Anti-DDoS + optional per-tenant IP allow-list. PDPA regulates where data lands (Singapore, ≤ our Nova VPC); HIPAA §164.312(e) requires TLS-strength transmission security, which TLS 1.3 satisfies. No VPN required for modern hospitals whose FHIR + SharePoint are Internet-reachable.
+**Control plane (clinician chat)** — public HTTPS + TLS 1.3 + IdP federation + WAF + Anti-DDoS + per-tenant WAF IP allow-list. Hospital egress firewall whitelists Nova's API IP range + domain. Standard SaaS pattern; chat prompts are SDDP-masked before reaching the LLM.
 
-**Mode 2 (opt-in)**: Site-to-Site IPsec VPN for hospitals with on-prem-only EHR or file shares. [AWS Site-to-Site VPN](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) or [Alibaba VPN Gateway](https://www.alibabacloud.com/help/en/vpn-gateway) — AES-256-GCM, IKEv2, dual-tunnel HA. Carries only backend system-to-system flows (SharePoint pull, on-prem FHIR callback, Upload Portal if required). Clinician chat uses public HTTPS in both modes.
+**Data plane (bulk PHI transfer)** — Site-to-Site IPsec VPN ([AWS S2S VPN](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) / [Alibaba VPN Gateway](https://www.alibabacloud.com/help/en/vpn-gateway)): IKEv2 + AES-256-GCM + SHA-2, dual-tunnel HA. Carries SharePoint / SMB trial-report pull, on-prem EHR FHIR callback, and Upload Portal traffic. PDPA regulates where data lands (Singapore); the encrypted tunnel is the industry-standard belt-and-braces for bulk PHI transit even though TLS 1.3 would technically meet HIPAA §164.312(e).
 
-Full design in [`rag_and_pipelines.md` §Hospital connectivity](rag_and_pipelines.md#7-hospital-connectivity) (shared) and [`proposals/version_c_alibaba_qwen.md` §7.6](proposals/version_c_alibaba_qwen.md#76-hospital-connectivity--saas-default-with-optional-vpn) (Version C specifics).
+Full design in [`rag_and_pipelines.md` §Hospital connectivity](rag_and_pipelines.md#7-hospital-connectivity) (shared) and [`proposals/version_c_alibaba_qwen.md` §7.6](proposals/version_c_alibaba_qwen.md#76-hospital-connectivity--two-plane-model) (Version C specifics).
 
 ## 7. AI-specific medical compliance
 

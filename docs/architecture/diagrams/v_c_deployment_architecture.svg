@@ -22,8 +22,8 @@
     </style>
   </defs>
 
-  <text x="680" y="28" text-anchor="middle" font-size="17" class="title">Deployment Architecture — Single Region, Multi-AZ, Serverless-First, SaaS-default (§9)</text>
-  <text x="680" y="48" text-anchor="middle" class="lbl-sm">Hospitals onboard via public HTTPS (Mode 1 baseline) · Site-to-Site IPsec VPN is Mode 2 opt-in for on-prem-only EHR/file shares · No Outposts/Direct Connect/Apsara Stack</text>
+  <text x="680" y="28" text-anchor="middle" font-size="17" class="title">Deployment Architecture — Single Region, Multi-AZ, Serverless-First, Two-Plane Connectivity (§9)</text>
+  <text x="680" y="48" text-anchor="middle" class="lbl-sm">Control plane (clinician chat) = public HTTPS + WAF IP allow-list · Data plane (bulk PHI) = Site-to-Site IPsec VPN · No Outposts/Direct Connect/Apsara Stack</text>
 
   <!-- HOSPITAL side -->
   <rect x="20" y="80" width="240" height="460" class="group"/>
@@ -50,12 +50,12 @@
   <text x="140" y="414" text-anchor="middle" class="lbl-sm">Sites.Selected scope</text>
 
   <rect x="40" y="440" width="200" height="60" class="box"/>
-  <text x="140" y="462" text-anchor="middle" class="title">Mode 2 — Customer Gateway</text>
-  <text x="140" y="480" text-anchor="middle" class="lbl-sm">Optional: existing firewall</text>
-  <text x="140" y="494" text-anchor="middle" class="lbl-sm">for on-prem-only EHR/SharePoint</text>
+  <text x="140" y="462" text-anchor="middle" class="title">Customer Gateway</text>
+  <text x="140" y="480" text-anchor="middle" class="lbl-sm">Existing hospital firewall —</text>
+  <text x="140" y="494" text-anchor="middle" class="lbl-sm">IPsec endpoint (data plane)</text>
 
-  <text x="140" y="525" text-anchor="middle" class="lbl-sm">↑ Mode 1 (baseline): public HTTPS,</text>
-  <text x="140" y="538" text-anchor="middle" class="lbl-sm">   no Nova-specific install on-prem</text>
+  <text x="140" y="525" text-anchor="middle" class="lbl-sm">↑ Control plane: egress firewall</text>
+  <text x="140" y="538" text-anchor="middle" class="lbl-sm">   whitelists Nova IP/domain</text>
 
   <!-- ALIBABA CLOUD region block -->
   <rect x="280" y="80" width="820" height="680" class="region"/>
@@ -65,7 +65,7 @@
   <!-- Edge tier -->
   <rect x="300" y="130" width="780" height="60" class="box box-ali"/>
   <text x="320" y="150" class="title">Edge tier</text>
-  <text x="320" y="170" class="lbl-sm">CDN · Anti-DDoS · WAF (TLS 1.3) · API Gateway · IDaaS EIAM 2.0 (hospital-IdP SAML/OIDC federation) · optional per-tenant IP allow-list</text>
+  <text x="320" y="170" class="lbl-sm">Control plane: CDN · Anti-DDoS · WAF (TLS 1.3 + per-tenant IP allow-list) · API Gateway · IDaaS EIAM 2.0 (SAML/OIDC fed.) · Data plane: VPN Gateway IPsec</text>
 
   <!-- Compute tier -->
   <rect x="300" y="200" width="780" height="110" class="box box-svc"/>
@@ -193,9 +193,9 @@
   <path d="M1140 610 L1080 580" class="edge-dr" marker-end="url(#arr)"/>
   <text x="1080" y="570" text-anchor="end" class="lbl-sm" fill="#dc2626">rollback path</text>
 
-  <!-- Footer: SaaS-default + VPN optional -->
+  <!-- Footer: two-plane connectivity -->
   <rect x="20" y="780" width="1340" height="70" class="group"/>
   <text x="40" y="802" class="title">Deployment principles (§9.1, §9.4, §7.6)</text>
-  <text x="40" y="822" class="lbl-sm">• Mode 1 (SaaS default): public HTTPS + TLS 1.3 + IDaaS + WAF + optional IP allow-list — covers most hospitals with Internet-reachable FHIR/SharePoint</text>
-  <text x="40" y="840" class="lbl-sm">• Mode 2 (opt-in): VPN Gateway IPsec-VPN for on-prem-only EHR/file shares · Smart Access Gateway turnkey alternative · no Apsara Stack/Express Connect in baseline · serverless by default · ACK only on contract</text>
+  <text x="40" y="822" class="lbl-sm">• Two-plane connectivity: control plane (clinician chat) over public HTTPS + IDaaS + WAF IP allow-list · data plane (bulk PHI, SharePoint/SMB/on-prem FHIR/Upload Portal) over Site-to-Site IPsec VPN</text>
+  <text x="40" y="840" class="lbl-sm">• Serverless-first (FC + Function Workflow + SAE) · ACK only on client contract · no Apsara Stack, Express Connect only on explicit regulatory request · 40-dept topology at $90/mo serverless vs $400–600 on ACK</text>
 </svg>

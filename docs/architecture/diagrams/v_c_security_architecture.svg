@@ -178,10 +178,10 @@
 
   <!-- Hospital connectivity block -->
   <rect x="20" y="600" width="420" height="90" class="group"/>
-  <text x="40" y="622" class="title">Hospital connectivity (§7.6)</text>
-  <text x="40" y="642" class="lbl-sm">Mode 1 (baseline): public HTTPS + TLS 1.3 + IDaaS + WAF + optional IP allow-list</text>
-  <text x="40" y="658" class="lbl-sm">Mode 2 (opt-in): Site-to-Site IPsec-VPN on Alibaba VPN Gateway</text>
-  <text x="40" y="674" class="lbl-sm">IKEv2 · AES-256-GCM · SHA-2 · dual-tunnel HA — for on-prem-only EHR/shares</text>
+  <text x="40" y="622" class="title">Hospital connectivity (§7.6) — two-plane</text>
+  <text x="40" y="642" class="lbl-sm">Control plane: public HTTPS + TLS 1.3 + IDaaS + WAF IP allow-list</text>
+  <text x="40" y="658" class="lbl-sm">Data plane: Site-to-Site IPsec VPN (Alibaba VPN Gateway)</text>
+  <text x="40" y="674" class="lbl-sm">IKEv2 · AES-256-GCM · SHA-2 · dual-tunnel HA (bulk PHI transit)</text>
 
   <!-- ARROWS: PHI path -->
   <path d="M410 140 L480 185" class="edge-phi" marker-end="url(#arr-phi)"/>

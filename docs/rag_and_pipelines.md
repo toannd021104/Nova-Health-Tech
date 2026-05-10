@@ -71,7 +71,7 @@ Self-hosted fallback ([Microsoft GraphRAG](https://microsoft.github.io/graphrag/
 | WHO guideline PDFs | Monthly day 1 02:30 SGT + RSS webhook for urgent living guidelines | Cron + API Gateway webhook | Diff on the WHO publications index | Matches "monthly protocol updates" requirement |
 | Internal clinical trial reports (SharePoint) | Weekly Sun 03:00 SGT + Microsoft Graph webhook | Cron + [Graph subscription](https://learn.microsoft.com/en-us/graph/api/subscription-post-subscriptions?view=graph-rest-1.0) | Weekly batch + webhook on change | Weekly is the reconciliation safety net; webhook keeps current within minutes |
 | Internal treatment protocols | Same as above | Same | Same | |
-| Manual override (any source) | Any time | [Upload portal](#upload-portal-for-manual-ingestion) | Direct PUT behind VPN + IdP | Urgent additions that can't wait |
+| Manual override (any source) | Any time | [Upload portal](#upload-portal-for-manual-ingestion) | Direct PUT behind VPN (data plane) + IdP | Urgent additions that can't wait |
 | Monthly full reconciliation | Day 1 04:00 SGT | Cron | Full diff + re-index of changed docs | Catches anything incremental paths missed |
 
 All jobs write to one raw bucket; a single [Step Functions](https://aws.amazon.com/step-functions/) / [Function Workflow](https://www.alibabacloud.com/help/en/functioncompute/developer-reference/function-workflow) picks up `ObjectCreated` and runs: parse → chunk → embed → upsert. One pipeline, many triggers.
@@ -85,7 +85,7 @@ All jobs write to one raw bucket; a single [Step Functions](https://aws.amazon.c
 
 ### Upload portal for manual ingestion
 
-Small internal web app in a private subnet, reachable only via [Site-to-Site VPN](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) to the hospital network. Authenticated via hospital IdP (EntraID / Okta / Keycloak). Role-gated: `nova-rag-curator` uploads, `nova-rag-admin` deletes.
+Small internal web app behind a private SLB in the Nova VPC, reachable only via the data-plane [Site-to-Site VPN](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) (AWS) / [Alibaba VPN Gateway](https://www.alibabacloud.com/help/en/vpn-gateway) tunnel from the hospital network. Authenticated via hospital IdP (EntraID / Okta / Keycloak). Role-gated: `nova-rag-curator` uploads, `nova-rag-admin` deletes.
 
 Upload flow:
 
@@ -352,18 +352,22 @@ Sessions: 60 min clinicians, 15 min admins. Step-up MFA required for `admin:*` a
 
 ---
 
-## 7. Hospital connectivity
+## 7. Hospital connectivity — two-plane model
 
-**SaaS default (Mode 1, baseline)** — public HTTPS over TLS 1.3 with hospital-IdP federation (Cognito/IDaaS + SAML/OIDC) + WAF + Anti-DDoS + optional per-tenant IP allow-list. Most modern hospitals with Internet-reachable FHIR + SharePoint Online onboard this way.
+Two distinct network planes for hospital integration. Both are part of the baseline deployment.
 
-**Site-to-Site VPN (Mode 2, optional)** — for hospitals with on-prem-only EHR, SharePoint Server, or legacy SMB/NFS shares:
+**Control plane (clinician traffic)** — public HTTPS + TLS 1.3 + hospital-IdP federation (Cognito/IDaaS + SAML/OIDC) + WAF + Anti-DDoS + per-tenant WAF IP allow-list. Hospital egress firewall whitelists Nova's published IP range and API domain. Standard SaaS pattern (Epic cloud, Cerner CommunityWorks, Salesforce Health Cloud all onboard this way). Clinician prompts are SDDP-masked at FC preflight before they reach any LLM.
+
+**Data plane (bulk PHI transfer)** — Site-to-Site IPsec VPN:
 
 - **AWS**: [AWS Site-to-Site VPN](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) to Virtual Private Gateway. IKEv2 + AES-256-GCM + SHA-2, dual-tunnel HA, BGP for failover.
-- **Alibaba**: [IPsec-VPN on VPN Gateway](https://www.alibabacloud.com/help/en/vpn-gateway). Same cipher profile + dual tunnel. [Smart Access Gateway (SAG)](https://www.alibabacloud.com/product/smart-access-gateway) is a turnkey appliance alternative. [Express Connect](https://www.alibabacloud.com/product/express-connect) (Alibaba equivalent of AWS Direct Connect) is the dedicated-line option, only used on explicit client request — not baseline.
+- **Alibaba**: [IPsec-VPN on VPN Gateway](https://www.alibabacloud.com/help/en/vpn-gateway). Same cipher profile + dual tunnel. [Smart Access Gateway (SAG)](https://www.alibabacloud.com/product/smart-access-gateway) is a turnkey appliance alternative. [Express Connect](https://www.alibabacloud.com/product/express-connect) is the dedicated-line option (Alibaba equivalent of AWS Direct Connect), only used on explicit client request — not baseline.
 
 **No Outposts, Direct Connect, or Apsara Stack in baseline.** Dedicated-line options exist for specific regulatory requirements but add 6–12 weeks of onboarding and $1,500+/mo vs single-digit-millisecond latency gains.
 
-In Mode 2, the VPN carries only the backend system-to-system flows (SharePoint / SMB pull, on-prem EHR FHIR callback, Upload Portal if required). Clinician chat always uses public HTTPS — the VPN never sits on the 2-second critical path.
+The data-plane VPN carries the backend system-to-system flows that move raw PHI in bulk: SharePoint / SMB trial-report pull, on-prem EHR FHIR callback, Upload Portal traffic from curators. The clinician's chat UI always uses the control-plane public HTTPS path — the VPN is never on the 2-second emergency critical path.
+
+**Why a VPN for the data plane despite TLS 1.3 being technically sufficient**: clinical trial reports and FHIR bundles contain raw PHI that hasn't passed SDDP yet. Auditors for HIPAA / HITRUST / hospital procurement expect to see a VPN on bulk-PHI paths. The small monthly cost (~$110–150/mo) buys the defense-in-depth and the procurement story.
 
 ---
 

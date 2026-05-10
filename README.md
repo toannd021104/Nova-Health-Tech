@@ -83,7 +83,7 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 |---|---|---|
 | **Region** | `ap-southeast-1` (Singapore); Qwen falls back to Sydney `ap-southeast-2` | Singapore International (SG-native) |
 | **Cross-region hops at query time** | 2 (Tokyo embed+rerank) for A · 2–3 (Sydney chat + Tokyo) for B | **0** |
-| **Hospital integration** | AWS Site-to-Site VPN (IKEv2) — no Outposts / Direct Connect | Alibaba VPN Gateway IPsec — no Apsara Stack |
+| **Hospital integration** | Two-plane: public HTTPS + WAF IP allow-list (control plane, clinician chat) + AWS Site-to-Site VPN IKEv2 (data plane, bulk PHI) · no Outposts / Direct Connect | Two-plane: public HTTPS + WAF IP allow-list + Alibaba VPN Gateway IPsec · no Apsara Stack / Express Connect |
 | **AI framework** | Bedrock Agents + Knowledge Bases | Model Studio Agent + Workflow Applications |
 | **Fast-lane model** | Claude Haiku 4.5 or Amazon Nova Micro (A) · Qwen3 Next 80B A3B MoE (B) | Qwen3.5-Flash |
 | **Complex-lane model** | Claude Sonnet 4.5 or Amazon Nova Pro (A) · Qwen3 VL 235B A22B (B) | Qwen3.5-Plus |
