@@ -42,7 +42,7 @@ One-page visual: [`../architecture/diagrams/v_c_cover_summary.svg`](../architect
 11. [Observability & Compliance Monitoring](#11-observability--compliance-monitoring)
 12. [Use Case Walkthroughs](#12-use-case-walkthroughs)
 13. [Risks & Mitigations](#13-risks--mitigations)
-14. [Delivery & Continuous Operations](#14-delivery--continuous-operations)
+14. [Implementation Roadmap](#14-implementation-roadmap)
 15. [Budget & Cost Model](#15-budget--cost-model)
 16. [Appendices](#16-appendices)
 
@@ -1319,11 +1319,13 @@ Every clinician interaction is audit-traceable end-to-end. A clinical safety off
 
 ## 12. Use Case Walkthroughs
 
-Three scenarios that show the architecture end-to-end. Useful for non-technical executive reviewers.
+Four scenarios drawn from the brief's required capabilities. These show the architecture end-to-end — useful for non-technical executive reviewers and for evaluating which clinical moments the assistant is designed to win.
 
-### 12.1 Emergency: chest pain triage at 3 am
+### 12.1 Emergency care query (2-second path)
 
-**Scenario**: A night-shift cardiology resident gets a patient with sudden chest pain. They open Epic, pull up the chart, click "Ask Nova". The emergency toggle is ON by default in the acute-care module.
+**Scenario**: A night-shift cardiology resident gets a 40-year-old male with sudden crushing chest pain. They open Epic, pull up the chart, click "Ask Nova". The emergency toggle is ON by default in the acute-care module.
+
+**What matters**: speed (≤ 2 s p95), deterministic routing, grounded answer with citation.
 
 ```
 T+0     ms  Resident types: "40yo M, crushing chest pain 30 min, no prior hx.
@@ -1349,70 +1351,233 @@ T+1,535 ms  Resident reads answer, orders ECG + troponin, calls cath lab
 
 **Second clinician** asks a similar question 4 minutes later: cache hits at Layer 1, answer returns in ~150 ms.
 
-### 12.2 Complex differential: elderly patient with multiple comorbidities
+**Architecture surfaces exercised**: emergency if/else router (§6), Workflow Application path (§6.4), Qwen3.5-Flash + Qwen Context Cache L2 (§10.2), hybrid retrieval (§5.2), citation validator (§5.4), Content Moderation 2.0 (§6.5).
 
-**Scenario**: Internal medicine attending asks: *"72F with stage 3 CKD, poorly controlled DM2 on metformin + empagliflozin, now with worsening HF symptoms. Safe to add SGLT2 inhibitor? What about GFR monitoring cadence?"*
+### 12.2 WHO protocol update propagation
 
-Emergency toggle OFF. Router classifies: primary = `endocrinology` (diabetes meds are main question), secondary = `cardiology-internal` + `nephrology` + `pharmacy` (Clinical Pharmacy auto-invoked on prescribing).
+**Scenario**: WHO publishes a revised "Acute coronary syndromes initial management" guideline on day 1 of the month. The update changes the recommended aspirin dose for a specific contraindication profile.
+
+**What matters**: the change reaches every clinician's next answer within 24 hours; prior cached answers referencing the old guideline are invalidated; the audit trail preserves which clinicians saw what version.
+
+**Timeline**:
+
+```
+Day 1, 02:30 SGT   CloudOps Scheduler cron triggers the monthly WHO refresh Workflow
+02:30:15           FC downloads WHO publications index, diffs against prior state
+                    → identifies 1 new revision (document_id = hash(source+URI),
+                      new revision = hash(bytes))
+02:30:40           New PDF downloaded to OSS /raw/who/<document_id>/<revision>.pdf
+                    → ObjectCreated event
+02:31              Ingestion Workflow fires:
+                   a. Security Center malware scan — pass
+                   b. DataWorks SDDP PHI scan — no PHI (public WHO content)
+                   c. DocMind parse → 127 sections (tables + flowchart on p12 → Qwen-VL-Max)
+                   d. Hierarchical chunker → 342 chunks
+                   e. text-embedding-v4 (text) + tongyi-embedding-vision-plus (figures)
+02:33              Upsert into OpenSearch Vector Search
+                    → revision comparison: 318 chunks unchanged (skip),
+                                            24 new/changed (embed + index)
+02:34              adbpg_graphrag.upload on the 24 changed chunks
+                    → re-extracts entities/relations for the revised content
+02:35              Tair semantic cache flush: all keys tagged source:who-acs-2025
+                    → next clinician query that would have hit stale cache
+                      now gets a fresh generation against the new chunks
+02:36              ActionTrail audit entry: {ingest_run_id, document_id, revision,
+                                             chunk_delta: 24, graph_extraction_ms: 4300}
+02:36              ARMS alert sent to on-call: "Monthly WHO refresh OK, 24 chunks changed"
+```
+
+**Next clinician query that would have used the stale chunk** (any time after 02:35):
+
+```
+Clinician asks an ACS triage question
+FC /chat → Tair lookup → miss (flushed)
+→ Hybrid retrieval returns the new revision's chunk
+→ LLM generates answer citing the new [WHO ACS 2025, page 14, revision sha256:cd34...]
+→ Audit record pins chunk_id.revision = new hash
+```
+
+**Audit traceability answer**: "Which clinicians got answers that referenced the *old* revision between June and this month's refresh?" →
+
+```sql
+SELECT DISTINCT user_id, session_id, ts
+FROM sls_audit
+WHERE retrieved_chunk_ids CONTAINS 'chunk-<old-revision-hash>'
+  AND ts BETWEEN '<old-publish-date>' AND '<new-publish-date>'
+```
+
+If an answer is now considered materially incorrect, a notification workflow pages affected clinicians with the updated guidance.
+
+**Living WHO guidelines** (e.g. COVID-19 therapeutics) take an event-driven path instead of monthly cron: RSS webhook → API Gateway → FC → same ingestion Workflow → index within 10 minutes of publication.
+
+**Architecture surfaces exercised**: scheduled ingestion (§4.2, §4.5), DocMind + Qwen-VL-Max parsing (§4.3), idempotent upsert (§4.2), AnalyticDB PG GraphRAG re-extraction (§5.2), Tair semantic-cache invalidation (§10.2), ActionTrail audit (§8.6, §11.3).
+
+### 12.3 Internal clinical trial query with patient-sensitive data
+
+**Scenario**: Oncology attending asks *"Has our ward's 2024 trastuzumab-deruxtecan trial shown cardiac events in patients with baseline LVEF < 50%? Here's my patient: 58F, NRIC S1234567X, MRN 892345, HER2+ breast, LVEF 48%."*
+
+**What matters**: patient identifiers never reach the LLM; internal trial content is retrieved (cross-tenant isolation holds); answer cites the right trial and page; full audit reconstruction is possible later without exposing PHI.
+
+**Flow**:
+
+```
+T+0     ms  Attending submits the question with PHI inline (NRIC, MRN)
+T+25    ms  CDN → API Gateway → FC /chat (emergency=false)
+T+100   ms  IDaaS token validated (role=clinical-lead; tenant=hospital-xyz)
+T+180   ms  DataWorks SDDP runtime scan detects:
+             - NRIC S1234567X     → <NRIC_0>
+             - MRN 892345         → <MRN_0>
+             - Female patient 58y → <NAME_0>, age preserved (clinical signal)
+            Reversible KMS-tokenized; decryption key kept in session only.
+            SLS audit line logs the DETECTION but not the raw value.
+
+T+220   ms  Tair semantic cache lookup — miss (patient-specific)
+T+280   ms  Router agent (Qwen3.5-Flash, response_format=json_object):
+             {"department": "oncology-chemo",
+              "secondary": ["cardiology-internal", "pharmacy"],
+              "confidence": 0.93,
+              "reason": "hormonal therapy with known cardiotoxicity; LVEF cutoff"}
+
+T+450   ms  Oncology-chemo agent fires tools in parallel:
+             kb_retrieve(topic="trastuzumab deruxtecan LVEF cardiac",
+                         source="internal-trials",
+                         tenant_id=hospital-xyz)  ← tenant filter critical
+             graph_retrieve(entity="trastuzumab-deruxtecan",
+                            relation="causes",
+                            hops=2)
+
+T+1,300 ms  kb_retrieve returns 4 chunks from internal trial NCT-0xxx (2024):
+             - p8: inclusion/exclusion criteria (LVEF ≥ 50%)
+             - p17: 2 cardiac events in n=47 enrolled patients
+             - p22: cardiotoxicity monitoring schedule
+             - p31: authors' recommendation for LVEF 45–49% subgroup (requires ECHO q3w)
+
+T+2,100 ms  graph_retrieve returns:
+             trastuzumab-deruxtecan → causes → LV dysfunction (grade 3, 4%)
+                                   → contraindicates → LVEF < 40%
+                                   → warns → prior anthracyclines
+
+T+2,800 ms  Clinical Pharmacy side-channel runs in parallel:
+             drug-interaction check against patient's current meds (via FHIR)
+
+T+4,300 ms  Qwen3.5-Plus synthesizes, seeing ONLY the tokenized patient slice:
+             "<NAME_0> (58F, HER2+ BC, LVEF 48%) is outside the enrollment
+              criteria of internal trial NCT-0xxx (inclusion required LVEF ≥ 50%)
+              [1]. The trial recorded 2 cardiac events at 6-month follow-up [2].
+              For patients with LVEF 45–49%, the trial authors recommended ECHO
+              every 3 weeks [3]. Clinical Pharmacy notes no DDI in current meds [4]."
+
+T+4,450 ms  Content Moderation 2.0 pass; citation validator pass
+T+4,500 ms  FC de-tokenizes <NAME_0> back to the real patient name in the UI only
+            (using the session-held decryption key)
+T+4,500 ms  UI renders answer with real patient name + PHI-free audit log
+
+[Audit record stored]
+{
+  "ts": "...",
+  "user_id": "sha256(clinician-id)",
+  "tenant_id": "hospital-xyz",
+  "question_hash": "sha256(tokenized-message-post-SDDP)",
+  "phi_detected": ["NRIC", "MRN"],
+  "phi_token_count": 2,
+  "retrieved_chunk_ids": ["trial-0xxx-p8", "trial-0xxx-p17", "trial-0xxx-p22", "trial-0xxx-p31"],
+  "graph_path": "trastuzumab-deruxtecan → LV dysfunction",
+  "tools_invoked": ["kb_retrieve", "graph_retrieve", "pharmacy_check"],
+  "model_version": "qwen3-plus-2025-02",
+  "answer_hash": "sha256(tokenized-answer)",
+  "guardrail_verdict": "pass"
+}
+```
+
+**What PHI does NOT go to**:
+- LLM prompt: no raw NRIC/MRN/name
+- Model Studio logs: Alibaba sees only tokens
+- Audit log: only tokenized-hash + PHI-type counts
+- Tair cache: tokenized form only (session-scoped decryption)
+
+**Cross-tenant isolation**: the `tenant_id=hospital-xyz` filter on `kb_retrieve` is enforced at the OpenSearch query layer. A request from Hospital-ABC cannot retrieve Hospital-XYZ's internal trial chunks even by random luck — the filter is mandatory and the Agent cannot override it.
+
+**Training-data safety**: this conversation will NEVER reach a fine-tuning dataset as-is. If the question is later used as a training seed, it's pulled from the SDDP-masked form (tokens, not PHI) and re-scanned with the stricter pre-training ruleset.
+
+**Architecture surfaces exercised**: DataWorks SDDP PHI mask (§8.2), KMS-backed tokenization (§8.2), IDaaS tenant scoping (§7.2), cross-tenant RBAC (§8.4), agentic retrieval (§6), GraphRAG traversal (§5.2), Clinical Pharmacy side-channel (§6 multi-agent), audit log without PHI (§8.6, §11.3).
+
+### 12.4 Routine diagnostic question with source citation
+
+**Scenario**: An internal-medicine attending on rounds asks *"What's the first-line empiric antibiotic for community-acquired pneumonia in a previously healthy 45-year-old adult, outpatient treatment?"*
+
+**What matters**: grounded in current guidelines (WHO + internal protocol), every claim cites a source the clinician can click to verify, delivered fast but not emergency-fast.
+
+**Flow**:
 
 ```
 T+0     ms  Question submitted; emergency=false
-T+200   ms  Router (Qwen3.5-Flash JSON): {"department": "endocrinology",
-                                           "secondary": ["cardiology-internal",
-                                                         "nephrology",
-                                                         "pharmacy"],
-                                           "confidence": 0.91}
-T+250   ms  Endocrinology agent starts; tools available:
-             kb_retrieve, graph_retrieve, icd11_lookup, pubmed_search
-T+900   ms  Agent calls kb_retrieve("SGLT2 CKD stage 3 heart failure")
-             → 7 chunks from WHO + internal trials + KDIGO guidance
-T+2,100 ms  Agent calls graph_retrieve("empagliflozin",
-                                        relation="contraindicates",
-                                        hops=2)
-             → graph traversal: empagliflozin → CKD → GFR thresholds;
-                               empagliflozin → HF → evidence class I recommendation
-T+2,800 ms  Clinical Pharmacy side-channel runs in parallel:
-             drug-interaction check on metformin + empagliflozin + (proposed addition)
-T+4,100 ms  Qwen3.5-Plus synthesizes:
-             "Empagliflozin is indicated for HF with reduced ejection fraction
-              even in CKD stage 3 (GFR 30–59) [1][2]. KDIGO recommends monitoring
-              eGFR every 3 months [3]. Clinical Pharmacy flags: metformin should
-              be held if GFR drops below 30 [4]..."
-T+4,300 ms  Content Moderation 2.0 + citation validator pass
-T+4,350 ms  Audit record written with all 4 tools invoked + 7 chunks + graph path
+T+30    ms  CDN → API Gateway → FC /chat
+T+110   ms  IDaaS token validated (role=clinician)
+T+165   ms  DataWorks SDDP runtime scan — no PHI in this question
+T+200   ms  Tair semantic cache lookup — HIT at Layer 1
+            (similar question answered 40 minutes ago; similarity 0.97)
+T+205   ms  Cache payload decrypted; citations rehydrated
+T+220   ms  Audit log written (cache_hit=layer1)
+T+220   ms  Response streamed back to the clinician
 ```
 
-**Total p95: ~4,500 ms**. The attending gets an answer that would have required cross-referencing 4 sources manually, with full citations and the pharmacy check they might have forgotten.
+**Total: 220 ms**. The cache hit isn't because medicine is one-answer-fits-all — it's because the *prior* asker's question was about the same clinical scenario with the same constraint set (outpatient, immunocompetent, adult, CAP). The 0.95 threshold guards against merging subtly different questions.
 
-### 12.3 Radiology image interpretation
-
-**Scenario**: ER resident photographs a chest X-ray from the PACS, uploads via the Nova chat UI: *"Is this pneumothorax or artifact?"*
-
-The image attachment triggers the router's forced-Radiology rule.
+**If this had been a cache miss**, the flow looks like:
 
 ```
-T+0     ms  Image + text submitted; emergency=false
-T+100   ms  IDaaS + SDDP pass (no PHI in image metadata — hospital strips DICOM tags)
-T+120   ms  Router sees has_image=true → forces Radiology agent on Qwen3-VL-Plus
-T+250   ms  Radiology agent starts; vision input to Qwen3-VL-Plus
-T+300   ms  Retrieval: kb-radiology + radiology-specific figure-heavy corpus
-             (tongyi-embedding-vision-plus retrieves chest-X-ray reference cases)
-T+3,500 ms  Qwen3-VL-Plus stream:
-             "Findings: hyperlucency in the right upper lung field with a visible
-              visceral pleural line [1]. No tracking on expiratory film would
-              confirm. Top differential: small apical pneumothorax vs. skin
-              fold artifact.
+T+200   ms  Cache miss
+T+380   ms  Router → {"department": "infectious-disease",
+                       "secondary": ["pulmonology", "pharmacy"], "confidence": 0.95}
 
-              Note: Final interpretation requires a certified radiologist.
+T+440   ms  Infectious Disease agent:
+             kb_retrieve(topic="community-acquired pneumonia empiric",
+                         source="WHO,internal-protocols",
+                         max_age_days=730)
+             icd11_lookup(term="community-acquired pneumonia")
+               → J15.9 (Bacterial pneumonia, unspecified)
 
-              Recommended next steps: (1) expiratory chest X-ray [2]; (2) lateral
-              decubitus if expiratory inconclusive [3]; (3) CT chest if high
-              clinical suspicion [4]."
-T+3,700 ms  Citation validator pass; mandatory radiologist disclaimer present
-T+3,750 ms  Audit record includes image hash (not image itself; kept in tenant OSS)
+T+1,400 ms  Returned chunks:
+             [1] WHO "Pneumonia management in adults" 2025, p. 22
+                  First-line empiric outpatient: amoxicillin 1 g PO TID × 5 days
+                  (Grade A evidence) if no comorbidity
+             [2] Internal hospital antibiogram 2025, p. 4
+                  Local S. pneumoniae susceptibility: 96% amoxicillin, 82% macrolides
+             [3] Nova pharmacy side-channel flags no interactions
+
+T+3,200 ms  Qwen3.5-Plus generates:
+             "For a previously healthy 45-year-old adult with outpatient CAP, the
+              first-line empiric antibiotic is amoxicillin 1 g orally three times
+              daily for 5 days [1]. Your hospital's 2025 antibiogram shows 96%
+              local S. pneumoniae susceptibility to amoxicillin [2]. Macrolides
+              are an alternative for penicillin-allergic patients [1].
+
+              Reminders:
+              - ICD-11 code for documentation: J15.9
+              - Re-evaluate at 48–72 hours; escalate if not improving
+              - Clinician review required before prescribing [Clinical Pharmacy]"
+
+T+3,350 ms  Content Moderation 2.0 pass; citation validator: 3/3 citations resolve
+T+3,400 ms  Stream ends; audit written
 ```
 
-**Value**: not a replacement for the radiologist, but gives the ER resident a structured reading to escalate with.
+**Citation payload returned to the UI**:
+
+```json
+{
+  "citations": [
+    {"n": 1, "source": "WHO Pneumonia Management 2025", "page": 22,
+     "revision": "sha256:ab12...", "url": "https://who.int/publications/..."},
+    {"n": 2, "source": "Hospital XYZ antibiogram 2025", "page": 4,
+     "revision": "sha256:cd34...", "internal": true},
+    {"n": 3, "source": "Nova Clinical Pharmacy check", "tool_run_id": "..."}
+  ]
+}
+```
+
+The UI renders `[1]` / `[2]` / `[3]` as hoverable inline chips. Clicking `[1]` opens the WHO PDF at page 22. Clicking `[2]` opens a gated preview of the internal antibiogram (requires `curator:read` scope or explicit tenant grant). Clicking `[3]` expands the pharmacy tool trace.
+
+**Architecture surfaces exercised**: Tair semantic cache hit path (§10.2), router classification (§6.2), hybrid retrieval + icd11_lookup (§5.2), citation validator + UI traceability (§5.4), Clinical Pharmacy side-channel (§6), ICD-11 code in output (§4.1).
 
 ---
 
@@ -1465,49 +1630,104 @@ T+3,750 ms  Audit record includes image hash (not image itself; kept in tenant O
 
 ---
 
-## 14. Delivery & Continuous Operations
+## 14. Implementation Roadmap
 
-**Single product, no phases.** All capabilities activate on day one. Pre-launch build runs for 6–10 weeks; after cut-over, operations shifts to a continuous retraining + observation cadence.
+**One product, no phases.** Every capability in this document is **active on day one**. What the roadmap describes is a **pre-launch build window** that finishes before cut-over, plus the **continuous-operations cadence** after. "Phase 1 / 2 / 3" language is intentionally not used — the assistant is not released half-featured, then hardened, then tuned. Security hardening, fine-tuning, and performance work all complete before clinical traffic.
 
 ### 14.1 Pre-launch build (before cut-over)
 
-| Week | Activity |
-|---|---|
-| 1–2 | Provision Singapore tenant (VPC, KMS, IDaaS, subscriptions); ingest WHO + ICD-11 snapshot; run DocMind + embed + graph extraction |
-| 3–4 | Train the Qwen3-8B student via PAI Model Gallery (SFT + LoRA, optional DPO); eval harness green; promote to PAI-EAS |
-| 5–6 | EHR integration (SMART on FHIR sandboxes per hospital); SharePoint Graph subscriptions; IDaaS federation per hospital; Upload Portal deploy |
-| 7–8 | Red team 200+ adversarial prompts; tune Content Moderation 2.0 allow-list; Qwen PTU sizing; load test to 200 qpm |
-| 9–10 | Clinical pilot with a small clinician cohort (internal read-only); final sign-off; production traffic cut-over |
+Six- to ten-week window with parallel workstreams. Weeks are indicative; actual duration depends on the hospital tenant's IdP + FHIR readiness.
+
+| Workstream | Weeks | Key deliverables |
+|---|---|---|
+| **Foundation** | 1–2 | SG tenant provisioned (VPC, KMS, IDaaS, subscriptions); OSS raw bucket + Object Lock; OpenSearch HA + AnalyticDB PG (verify engine ≥ 7.2.1.4) + Tair; CloudOps Scheduler crons |
+| **Data pipeline + RAG** | 1–4 | WHO monthly + ICD-11 daily ingestion live; DocMind + Qwen-VL-Max parsing tuned; initial embed pass (text-embedding-v4 + tongyi-embedding-vision-plus); OpenSearch hybrid index; AnalyticDB PG graph extraction (`adbpg_graphrag.initialize` + `upload`); internal trial bucket + Upload Portal; Microsoft Graph webhooks registered on tenant SharePoint |
+| **Model + fine-tuning** | 3–5 | Qwen3-8B student SFT + LoRA run on PAI Model Gallery (hyperparameters per §6.2); optional DPO micro-run on Nova-approved pairs; eval harness (Qwen3.5-Plus as LLM-judge on accuracy/citation/PHI/tone); promote to PAI-EAS behind feature flag |
+| **Orchestration + multi-agent** | 3–6 | 40 Model Studio Agent applications + 1 emergency Workflow application; router prompt + JSON schema tuned; 4 agent tools implemented (kb_retrieve / graph_retrieve / icd11_lookup / pubmed_search); Radiology vision-force rule + Clinical Pharmacy side-channel wired; system prompts + safety template in Git |
+| **Clinical embedding + security hardening** | 5–7 | EHR integration per tenant (Epic / Cerner / Allscripts FHIR R4 sandbox); IDaaS EIAM Premium+ federation (SAML/OIDC) to each hospital IdP; Site-to-Site IPsec VPN + Customer Gateway config; Cognito scopes tested; DataWorks SDDP medical-PHI rule pack activated; Content Moderation 2.0 medical vocabulary allow-list pre-approved by Alibaba account team; KMS BYOK keys rotated into place |
+| **Performance tuning + compliance** | 6–9 | Red-team run of 200+ adversarial prompts; Bedrock-style guardrail policies tightened; Qwen PTU sized against load-test peak TPM; cache hit-rate tuning; DR game-day (failover drill); audit-pipeline attestation (ActionTrail → SLS → OSS WORM 6-year verified); compliance review against PDPA + HCSA + any tenant-specific HIPAA BAA |
+| **Clinical pilot + cut-over** | 9–10 | Read-only pilot with small clinician cohort at one tenant (internal trial-mode answers, production otherwise); final sign-off by the clinical safety officer + hospital compliance officer; full production traffic cut-over; Nova on-call rotation activated |
+
+**Launch gate (all must be green)**:
+
+- Emergency-lane p95 ≤ 2,000 ms on a 10,000-query load test
+- Complex-lane p95 ≤ 6,000 ms
+- Guardrail block rate < 3% on the 200-prompt red-team set
+- Zero PHI leaks in 500-sample output audit
+- Grounding score p50 ≥ 0.82 on eval-harness holdout
+- Student model ≥ 95% of teacher on clinical-question holdout
+- All runbooks tested at least once (DR, model rollback, cache flush)
+- Tenant clinical safety officer + compliance officer sign-off
 
 ### 14.2 Continuous operations (post-launch)
 
-| Cadence | Action |
+What runs permanently after launch. Not a "phase" — a standing cadence.
+
+| Cadence | Activity |
 |---|---|
-| Real-time | Monitor SLOs (§11.2); on-call pager on breach |
+| Real-time | SLO monitoring (§11.2); on-call pager on breach; WAF + Anti-DDoS + rate-limit enforcement |
+| Hourly | Ingestion-pipeline health check; any failed webhook re-queued |
 | Daily 02:00 SGT | WHO ICD-11 delta ingest; Tair cache invalidation for `source:icd11` |
-| Weekly Sunday | SharePoint reconciliation; embedding drift KL divergence check |
-| Monthly day 1 02:30 SGT | WHO guideline PDF refresh + incremental AnalyticDB PG graph re-index |
-| Monthly | DPO micro-run on clinician preference pairs (~$15–40 per run); 5% canary |
-| Monthly | Compliance reports to hospital (§11.4); access review |
-| Quarterly | Full Qwen3-8B student retrain (SFT + LoRA); re-qualify on eval harness; 5% canary 72 hours |
+| Weekly Sunday 03:00 SGT | SharePoint reconciliation (safety net for missed Graph webhooks); embedding-drift KL-divergence check |
+| Monthly day 1 02:30 SGT | WHO guideline PDF refresh + incremental AnalyticDB PG graph re-index; living-guideline RSS catch-up if any missed |
+| Monthly | DPO micro-run on clinician preference pairs collected during the prior month (~$15–40 per run); 5% canary before promotion |
+| Monthly | Compliance reports to hospital (§11.4); access-review report; break-glass event audit |
+| Quarterly | Full Qwen3-8B student retrain (SFT + LoRA); re-qualify on eval harness; 5% canary for 72 hours before full ramp |
 | Quarterly | Red-team re-run on updated adversarial set; Content Moderation allow-list review |
-| Quarterly | DR game-day (runbook walkthrough + actual failover drill) |
-| Quarterly | Cost review + right-size (OpenSearch OCU, AnalyticDB PG, Qwen PTU) |
-| Event-driven | Retrain on new adversarial examples after any guardrail incident |
-| Annually | Third-party penetration test; compliance recertification |
+| Quarterly | DR game-day (runbook walkthrough + actual failover drill in staging); cost right-size review (OpenSearch OCU, AnalyticDB PG, Qwen PTU) |
+| Event-driven | Retrain student on new adversarial examples after any guardrail incident; emergency model-rollback if regression detected |
+| Annually | Third-party penetration test; compliance recertification (PDPA + HIPAA BAA + ISO 27001 if applicable to tenant); annual clinical-safety review |
 
-### 14.3 Team structure and RACI
+### 14.3 Milestone dependencies
 
-| Function | Who | R / A / C / I |
+```
+Foundation ─────────┬─────────┐
+                    │         │
+                    ▼         ▼
+Data pipeline ──► Model + fine-tuning ──► Orchestration + multi-agent ──┐
+                                                                        │
+                                                                        ▼
+Clinical embedding + Security hardening ──► Performance tuning ──► Pilot ──► Launch
+```
+
+- **Foundation** must precede all other workstreams.
+- **Data pipeline** must precede **Model + fine-tuning** (teacher needs grounded context to generate training data).
+- **Orchestration** depends on both data pipeline (retrieval tools) and model (endpoints to call).
+- **Clinical embedding** depends on the hospital's FHIR/IdP readiness and is often the critical path.
+- **Performance tuning + compliance** can start as soon as the end-to-end chat works end-to-end against staging data (around week 5–6).
+
+### 14.4 Go / no-go decision points
+
+Two explicit gates during the pre-launch build:
+
+1. **Mid-build gate (around week 5)** — end-to-end chat works in staging against real WHO + internal-trial data, with all 40 agents routable. If this slips more than 2 weeks, replan the second half.
+2. **Pre-launch gate (around week 9)** — Launch-gate criteria met (§14.1). Clinical safety officer sign-off. If any criterion is red, the fix lands before production traffic; there is no "ship with a known gap and patch in phase 2" path.
+
+### 14.5 Team structure and RACI
+
+| Function | Owner | R / A / C / I |
 |---|---|---|
-| Product decisions | Nova product owner | A |
-| Clinical accuracy / safety | Hospital clinical safety officer + Nova clinical lead | R/A |
+| Product + clinical decisions | Nova product owner + hospital clinical lead | A |
+| Clinical accuracy + safety | Hospital clinical safety officer + Nova clinical lead | R/A |
 | Architecture evolution | Nova architect | R/A |
-| Day-to-day ops / on-call | Nova SRE team (2 engineers on rotation) | R |
+| Day-to-day ops + on-call | Nova SRE team (2 engineers on rotation) | R |
 | Compliance reporting | Nova compliance lead | R |
 | Incident response | SRE on-call + architect + clinical-safety backup | R |
-| Vendor management (Alibaba) | Nova architect + TAM | R |
+| Vendor management (Alibaba TAM) | Nova architect + TAM | R |
 | EHR integration per tenant | Nova integrations engineer | R |
+
+### 14.6 Roll-back strategy
+
+Every mutable production change has a defined roll-back path:
+
+- **Code**: previous Git SHA re-deployed via the CI/CD pipeline (~10 min)
+- **Prompt**: previous prompt version file re-referenced; Tair full flush (~5 min)
+- **Model**: PAI-EAS has 30-day retention of prior model version; flip the feature flag (~2 min)
+- **Index**: OpenSearch upsert is idempotent — re-running a prior revision restores the prior chunk set (~15 min for a WHO guideline)
+- **Graph**: `adbpg_graphrag` re-ingest with prior revision hash (~5 min per document)
+- **Guardrail policy**: version-controlled; revert via PR merge + deploy (~10 min)
+
+**Who approves**: SEV-1 rollbacks are SRE-led, notify-architect-after. SEV-2+ rollbacks require architect + clinical-safety sign-off.
 
 ---
 
