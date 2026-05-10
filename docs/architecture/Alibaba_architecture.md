@@ -6,7 +6,8 @@ Parallel production design using Qwen and Alibaba Cloud managed services in the 
 
 - Qwen3 / Qwen3.5 / Qwen3.6 models are open-weight and natively fine-tunable on PAI (SFT + LoRA + QLoRA + DPO + GRPO — confirmed in `askAli_AI_Assistant.txt`).
 - Qwen is available natively in the **Singapore** Model Studio region.
-- `qwen3-vl-embedding` (multimodal, fused) is the recommended embedding for the WHO PDFs mixing text, tables, and figures — per `askAli_AI_Assistant.txt`.
+- For figure-bearing WHO PDFs, the **Singapore International** endpoint exposes `tongyi-embedding-vision-plus` (1152-dim, text + image + video) as the multimodal embedding of choice. Note: `qwen3-vl-embedding` is **Chinese Mainland only** — see `docs/architecture/regional_availability.md` §Alibaba and the note at the top of `askAli_AI_Assistant.txt`.
+- Reranking in Singapore International uses `qwen3-rerank` (text-only, $0.1/1M tokens, 500-doc cap). The `qwen3-vl-rerank` multimodal variant is Chinese Mainland only.
 - Qwen pricing is 5–10× cheaper per token than Claude; at Nova's volume the monthly inference bill is materially smaller.
 - Alibaba Singapore holds ISO 27001 / 27017 / 27018 / 27701, SOC 1/2/3, and aligns with PDPA obligations for a data-intermediary role.
 
@@ -74,7 +75,9 @@ Parallel production design using Qwen and Alibaba Cloud managed services in the 
          │              │                             │  on OpenSearch Vector      │
          │              │                             │  Search Edition            │
          │              │                             │  + text-embedding-v4       │
-         │              │                             │  + qwen3-vl-embedding      │
+         │              │                             │  + tongyi-embedding-       │
+         │              │                             │    vision-plus (SG Intl)   │
+         │              │                             │  + qwen3-rerank            │
          │              │                             └────────────────────────────┘
          ▼              ▼
   All traffic logged → ActionTrail → SLS → OSS (WORM, 6-yr retention)
@@ -86,9 +89,10 @@ See `docs/architecture/rag_strategy.md`. Summary for Alibaba:
 
 - **Parser**: DocMind handles general PDFs; PAI pipeline invokes **Qwen-VL-Max** on pages flagged as complex (multi-page tables, flowcharts).
 - **Chunking**: hierarchical 1500/300 tokens, 15% overlap, section-aware — same as AWS side.
-- **Embeddings**: `text-embedding-v4` for text chunks; `qwen3-vl-embedding` with `enable_fusion=True` (2560-dim) for figure-bearing chunks.
+- **Embeddings**: `text-embedding-v4` for text chunks (`$0.07 / 1M tokens`, dims 64–2048, 8192-token context); `tongyi-embedding-vision-plus` for figure-bearing chunks (1152-dim; Singapore International list price `$0.09 / 1M tokens` for text input plus per-media charges for image/video inputs). `qwen3-vl-embedding` would give a single fused vector but is **not available in Singapore International** — see `docs/architecture/regional_availability.md`.
+- **Reranker**: `qwen3-rerank` ($0.1 / 1M tokens, 500-doc cap) on the top-20 recall set before generation. `qwen3-vl-rerank` would extend reranking to cross-modal scoring but is Chinese Mainland only.
 - **Vector store**: **OpenSearch Vector Search Edition**; Model Studio embedding plugin handles re-vectorization on upload.
-- **Retrieval**: hybrid kNN + BM25, metadata pre-filter, `gte-rerank` for reranking before generation.
+- **Retrieval**: hybrid kNN + BM25, metadata pre-filter, `qwen3-rerank` for reranking before generation.
 
 ## 5. Model orchestration
 

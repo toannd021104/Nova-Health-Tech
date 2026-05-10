@@ -91,8 +91,9 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 | **Fast-lane model (emergency, ≤ 2 s)** | Claude Haiku 4.5 (+ Nova Lite fine-tuned student from phase 3) | Qwen3.5-Flash (+ Qwen3-8B PAI-EAS student from phase 3) |
 | **Complex-lane / teacher model** | Claude Sonnet 4.6 | Qwen-Max (Qwen3-Max) |
 | **Claude Opus** | Not used (overkill, price hard to justify) | N/A |
-| **Text embeddings** | Titan Embed Text v2 | text-embedding-v4 |
-| **Multimodal embeddings (figures)** | Amazon Nova Multimodal Embeddings | qwen3-vl-embedding with `enable_fusion=True` |
+| **Text embeddings** | Titan Embed Text v2 | text-embedding-v4 ($0.07/1M) |
+| **Multimodal embeddings (figures)** | Amazon Nova Multimodal Embeddings | tongyi-embedding-vision-plus (SG International, 1152-dim). `qwen3-vl-embedding` with `enable_fusion=True` is Chinese Mainland only. |
+| **Reranker (Alibaba)** | Cohere Rerank 3.5 on Bedrock | qwen3-rerank ($0.10/1M, 500-doc cap) |
 | **Vector store** | OpenSearch Serverless (hybrid kNN + BM25) | OpenSearch Vector Search Edition |
 | **PDF parsing** | Bedrock Data Automation (advanced parsing) | DocMind + Qwen-VL-Max for complex pages |
 | **Semantic cache (Layer 1)** | ElastiCache Valkey + RediSearch, LangChain `RedisSemanticCache` | Tair + TairVector, same LangChain pattern |

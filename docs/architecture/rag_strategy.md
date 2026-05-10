@@ -28,7 +28,7 @@ Strengths: cheapest per page, tunable per-doc-type (different chunker for a drug
 
 Weaknesses: you own ops; each parser has weaknesses; keeping quality high across hundreds of heterogeneous PDFs takes engineering time; compliance review must cover your parser stack too.
 
-### Strategy C — Multimodal embeddings of page-images (Amazon Nova Multimodal Embeddings; qwen3-vl-embedding with `enable_fusion=True`)
+### Strategy C — Multimodal embeddings of page-images (Amazon Nova Multimodal Embeddings on AWS; `tongyi-embedding-vision-plus` on Alibaba Singapore International, or `qwen3-vl-embedding` with `enable_fusion=True` if deploying in Chinese Mainland)
 
 Skip parsing entirely. Render each PDF page to an image, embed the image + any extracted text together into a single vector. At query time, retrieve top-k pages as images and pass them directly to a vision-capable LLM (Claude Sonnet on AWS, Qwen-VL on Ali).
 
@@ -61,9 +61,10 @@ Reasoning:
 
 - **Parser**: DocMind for general PDFs; Qwen-VL-Max as a fallback on pages with complex tables or figures.
 - **Chunking**: same hierarchical strategy (1500 / 300 tokens, 15% overlap), implemented in Function Compute.
-- **Embeddings**: `text-embedding-v4` for text; `qwen3-vl-embedding` with `enable_fusion=True` (confirmed in `askAli_AI_Assistant.txt`) for figure-bearing chunks.
+- **Embeddings**: `text-embedding-v4` for text ($0.07 / 1M tokens, dims 64–2048). For figure-bearing chunks, `tongyi-embedding-vision-plus` (1152-dim; text + image + video; text priced at $0.09 / 1M tokens, media metered per input). Note: `qwen3-vl-embedding` with `enable_fusion=True` that `askAli_AI_Assistant.txt` originally recommended is **Chinese Mainland only** — it is not exposed on the Singapore International endpoint. Picking `tongyi-embedding-vision-plus` keeps the Singapore data-residency posture intact at the cost of text and image modalities being embedded into separate vectors rather than one fused vector.
+- **Reranker**: `qwen3-rerank` ($0.1 / 1M tokens, 500-doc cap) before generation. `qwen3-vl-rerank` (multimodal) and `gte-rerank-v2` are not available on Singapore International.
 - **Vector store**: OpenSearch Vector Search Edition — native integration with Model Studio embedding plugin handles re-vectorization on document upload.
-- **Retrieval**: Model Studio RAG Application for retrieval; ranker node calls the reranking model (`gte-rerank`) before generation.
+- **Retrieval**: Model Studio RAG Application for retrieval; ranker node calls `qwen3-rerank` before generation.
 - **Freshness**: CloudOps Scheduler cron (day 1) → Function Workflow → same refresh job → OSS upsert → Model Studio RAG re-index.
 
 ## ICD-11 API is a first-class source (not a single download)

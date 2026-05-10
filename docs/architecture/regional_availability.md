@@ -139,7 +139,46 @@ The **cheapest SG-native option is actually Version A with Nova Micro** for the 
 
 Done in the cost doc update following this file.
 
-## 8. Next actions
+## 8. Alibaba Model Studio (Singapore International) — embedding & reranker availability
+
+Verified against the Alibaba Cloud Model Studio pricing page (Singapore International endpoint `https://dashscope-intl.aliyuncs.com`) on 10 May 2026. "Chinese Mainland only" entries are listed on the pricing page's mainland tab but do not appear on the International tab.
+
+### Text embeddings — available in Singapore International
+
+| Model | Price (per 1M tokens) | Dims | Max input | Batch size | Notes |
+|---|---|---|---|---|---|
+| `text-embedding-v4` | $0.07 | 64–2048 | 8,192 tokens | 10 | Qwen3-Embedding series — our primary choice |
+| `text-embedding-v3` | $0.07 | 512–1024 | — | — | Older; no reason to prefer v3 over v4 |
+
+### Multimodal embeddings — what the SG International endpoint actually exposes
+
+| Model | Availability | Text price | Image / Video price | Dim | Note |
+|---|---|---|---|---|---|
+| `tongyi-embedding-vision-plus` | ✅ SG International | $0.09 / 1M | metered per input | 1152 | **Chosen for Version C figure-bearing chunks.** Generates separate text / image / video vectors; no single-vector fusion. |
+| `tongyi-embedding-vision-flash` | ✅ SG International | $0.09 / 1M text · $0.03 image-video | metered | 768 | Cheaper faster option; lower dim. |
+| `qwen3-vl-embedding` | ❌ Chinese Mainland only | $0.10 / 1M text | $0.258 image/video | 256–2560, fused | Supports `enable_fusion=True` (a single combined vector). **Not available in Singapore International.** The vendor chatbot recommended it in `askAli_AI_Assistant.txt`, but that recommendation implicitly assumed Chinese Mainland deployment. |
+| `multimodal-embedding-v1` | Chinese Mainland only | — | — | — | Legacy. |
+
+### Rerankers — what the SG International endpoint actually exposes
+
+| Model | Availability | Price | Doc cap | Note |
+|---|---|---|---|---|
+| `qwen3-rerank` | ✅ SG International | $0.10 / 1M tokens | 500 docs | **Chosen for Version C reranking.** Text-only. |
+| `qwen3-vl-rerank` | ❌ Chinese Mainland only | $0.10 text · $0.258 image | — | Cross-modal reranker (rerank by both text and image). Not available in Singapore International. |
+| `gte-rerank-v2` | ❌ Chinese Mainland only | $0.115 / 1M | — | Alibaba's general-purpose reranker. Not in International. |
+
+### Trade-off
+
+Picking `tongyi-embedding-vision-plus` instead of `qwen3-vl-embedding` means text and images embed into **separate** vectors rather than a single fused one. Retrieval still works — the RAG application performs two parallel searches (text-vector kNN + image-vector kNN) and merges results — but for queries that deeply depend on text-image semantic fusion (e.g. "find the page where the flowchart arrow goes from the 'sepsis+' node to the 'vasopressor' node"), we lose some recall versus a fused multimodal index.
+
+To get fused-vector retrieval on Qwen, Nova would need to:
+
+- deploy Version C in **Chinese Mainland** (loses Singapore residency — PDPA-prohibitive for SG hospital data), or
+- self-host Qwen3-VL-Embedding on PAI-EAS in Singapore (open weights on HuggingFace) — adds ~$700–1,000/mo of A10 GPU hosting and operational burden.
+
+For the Nova pilot we keep `tongyi-embedding-vision-plus` + `qwen3-rerank` and re-evaluate only if retrieval evaluation shows the fused-vector gap is meaningful for our corpus.
+
+## 9. Next actions
 
 1. **Benchmark Nova Micro + RAG** against Haiku 4.5 + RAG on the isolated AWS-with-Claude environment — same corpus, same 30–50 clinical questions. Measure p50/p95 latency, citation coverage, tone consistency.
 2. If Nova Micro passes, switch the running demo's fast lane from Haiku 4.5 to Nova Micro. One-line change in `graph.py`.

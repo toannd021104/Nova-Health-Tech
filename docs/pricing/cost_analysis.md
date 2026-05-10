@@ -20,12 +20,12 @@ This changes the verdict: **Version A with Nova Micro on the fast lane is the ch
 | **Complex-lane model options** | Sonnet 4.5 OR Nova Pro | **Qwen3 VL 235B A22B** (Sydney; with vision) OR Qwen3 235B A22B 2507 (text-only, cheaper) | **Qwen3.5-Plus** (newer Feb-2026 release, replaces Qwen-Max) |
 | **Customization** | Bedrock Model Distillation (Sonnet → Nova Lite, ~$2k/run) | **Bedrock Reinforcement Fine-Tuning on Qwen3 32B** (us-west-2, $80/hr ≈ $640/run) OR SageMaker GRPO on Qwen3-4B (~$100/run) | PAI SFT+LoRA on Qwen3-8B (~$15–40/run) |
 | **Singapore data residency** | ✅ | ⚠️ Bedrock Qwen is Sydney; PDPA contract-mitigable | ✅ |
-| **Monthly pilot total (500 physicians, base)** | **~$2,755 / mo (A1+: Nova Micro + Nova Pro)** or ~$7,095 / mo (A2: Haiku 4.5 + Sonnet 4.5) | **~$2,767 / mo** (Bedrock-only, no SageMaker) | **~$1,880 / mo (Qwen3.5-Flash + Qwen3.5-Plus)** |
-| **Post-customization total** | ~$5,570 / mo (A2 after Nova Lite distillation) | **~$3,040 / mo** (after Bedrock RFT on Qwen3 32B) | ~$1,940 / mo (after SFT+LoRA on PAI) |
+| **Monthly pilot total (500 physicians, base)** | **~$2,755 / mo (A1+: Nova Micro + Nova Pro)** or ~$7,095 / mo (A2: Haiku 4.5 + Sonnet 4.5) | **~$2,767 / mo** (Bedrock-only, no SageMaker) | **~$1,920 / mo (Qwen3.5-Flash + Qwen3.5-Plus, SG-native embed/rerank)** |
+| **Post-customization total** | ~$5,570 / mo (A2 after Nova Lite distillation) | **~$3,040 / mo** (after Bedrock RFT on Qwen3 32B) | ~$1,980 / mo (after SFT+LoRA on PAI) |
 | **Data-residency posture** | Singapore, PDPA-native | Sydney Bedrock (PDPA-mitigable); SG only if SageMaker path | Singapore, PDPA-native |
 
 **Headline (re-ranked)**:
-1. **Version C (~$1,880/mo)** — cheapest SG-native, Qwen3.5-Plus replaced Qwen-Max for 3× savings on complex lane.
+1. **Version C (~$1,920/mo)** — cheapest SG-native, Qwen3.5-Plus replaced Qwen-Max for 3× savings on complex lane. Embeddings use `text-embedding-v4` + `tongyi-embedding-vision-plus` (SG International); reranker is `qwen3-rerank`.
 2. **Version A1+ (~$2,755/mo)** — cheapest fully AWS-BAA-covered SG-native, pending Nova Micro/Pro clinical quality benchmark.
 3. **Version B (~$2,767/mo)** — now simpler: pure Bedrock, no SageMaker needed in phase 1. Qwen3 Next 80B A3B + Qwen3 VL 235B. Sydney residency.
 4. **Version A2 (~$7,095/mo)** — running demo today (Haiku 4.5 + Sonnet 4.5). Quality-first baseline.
@@ -117,8 +117,9 @@ Choose SageMaker only when (a) the student must physically live in Singapore for
 | **Qwen3.5-Plus** | **$0.40** (0–256K) | **$2.40** (0–256K) | **Complex lane + distillation teacher** (newer than Qwen-Max, ~3× cheaper input, ~2.5× cheaper output, 1M context, multimodal) |
 | Qwen3-Max | $1.20 | $6.00 | Older — kept as fallback for visual-reasoning-heavy questions |
 | Qwen3-8B on PAI-EAS | $1.0–$2.0/hr (A10 small GPU) | — | Fine-tuned student, serve full-time |
-| text-embedding-v4 | ~$0.07 per 1 M | — | Text embeddings |
-| qwen3-vl-embedding | token+image metered | — | Figure-bearing chunks |
+| text-embedding-v4 | $0.07 per 1M | — | Text embeddings (Qwen3-Embedding series; dims 64–2048; 8192-token context) |
+| tongyi-embedding-vision-plus | $0.09 per 1M text · metered per image/video | — | Multimodal embeddings for figure-bearing chunks (SG International; 1152-dim). `qwen3-vl-embedding` is **Chinese Mainland only**, not SG. |
+| qwen3-rerank | $0.10 per 1M | — | Reranker (500-doc cap). `qwen3-vl-rerank` and `gte-rerank-v2` are not on SG International. |
 
 **Qwen3.6-27B (released 22 Apr 2026) — NOT chosen for Nova.** It's a coding-specialized dense model; SWE-bench leader but **lower general-knowledge scores than Qwen3.5-27B** (MMLU-Pro 86.2 vs 86.1 similar, but knowledge tasks favor Qwen3.5-397B's 87.8). Clinical triage needs knowledge + reasoning, not code synthesis. Also not yet listed in Model Studio pricing — open weights on HuggingFace only. Re-evaluate when Alibaba publishes an API endpoint.
 
@@ -268,8 +269,9 @@ Post-Qwen3.5 update: complex lane now uses **Qwen3.5-Plus** (Feb 2026 release) i
 |---|---|---|
 | Fast lane — Qwen3.5-Flash | 180 k × 65 % × $0.0004 (3k in + 350 out @ tier 1) | ~$47 |
 | Complex lane — **Qwen3.5-Plus** (vs Qwen-Max) | 420 k × $0.0026 (3k in + 600 out @ tier 1) | **~$1,105** (was $2,520 on Qwen-Max) |
-| text-embedding-v4 | ~500 M tokens | ~$35 |
-| qwen3-vl-embedding (figures) | metered | ~$60 |
+| text-embedding-v4 | ~500 M tokens × $0.07 / 1M | ~$35 |
+| tongyi-embedding-vision-plus (figure-bearing chunks) | ~5 M text tokens × $0.09 + ~50 k image inputs metered | ~$50 |
+| qwen3-rerank (top-20 set, 10% of complex calls) | ~500 M tokens amortized | ~$50 |
 | Content Moderation 2.0 | per call | ~$50 |
 | OpenSearch Vector Search (small cluster) | | ~$180 |
 | DataWorks SDDP PHI masking | | ~$120 |
@@ -277,11 +279,11 @@ Post-Qwen3.5 update: complex lane now uses **Qwen3.5-Plus** (Feb 2026 release) i
 | OSS + ActionTrail + SLS WORM | | ~$70 |
 | Tair (Redis-compatible) | | ~$60 |
 | IPsec VPN Gateway | | ~$60 |
-| **Base monthly (Qwen3.5-Plus)** | | **~$1,880** |
+| **Base monthly (Qwen3.5-Plus)** | | **~$1,920** |
 | Phase-3 SFT+LoRA training (Qwen3-8B) | 2–4 GPU-hr × $1–2 on PAI | ~$15–40 per run |
 | PAI-EAS hosting fine-tuned Qwen3-8B (A10 GPU, always-on) | | ~$720–1,500 |
 | Replace Qwen3.5-Plus with student on 60 % of complex lane | | **−$660** |
-| **With custom student always-on** | | **~$1,940–2,720** |
+| **With custom student always-on** | | **~$1,980–2,760** |
 
 Alibaba's advantage is now even stronger: Qwen3-8B on PAI-EAS fits on a single A10 **and** Qwen3.5-Plus complex-lane pricing is cheaper than the Bedrock Qwen3-235B in Sydney.
 

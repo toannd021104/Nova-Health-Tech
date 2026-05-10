@@ -1,4 +1,24 @@
-Can we fine-tuning Qwen. If so, which model can we do?
+=== NOVA ARCHITECTURE TEAM CORRECTION (added 10 May 2026) ===
+The vendor chatbot below recommended `qwen3-vl-embedding` (with enable_fusion=True) and cited
+the DashScope API. That recommendation is correct only for deployments against the **Chinese
+Mainland** DashScope endpoint (`dashscope.aliyuncs.com`).
+
+Nova Health Tech's deployment target is **Alibaba Cloud Singapore International**
+(`dashscope-intl.aliyuncs.com`). On this endpoint `qwen3-vl-embedding` and `qwen3-vl-rerank`
+are NOT available. The Singapore International model lineup, verified 10 May 2026, is:
+
+  - Text embedding: `text-embedding-v4` ($0.07/1M, dims 64-2048)
+  - Multimodal embedding: `tongyi-embedding-vision-plus` ($0.09/1M text, 1152-dim,
+    separate text/image/video vectors - no fusion)
+  - Reranker: `qwen3-rerank` ($0.1/1M, 500-doc cap)
+
+See `docs/architecture/regional_availability.md` section 8 for the full availability matrix
+and `docs/architecture/Alibaba_architecture.md` section 4 for how we apply these in
+Version C (Alibaba + Qwen, Singapore).
+=== END NOVA CORRECTION ===
+
+
+
 6 pages read ：
 1
 Quick start: Deploy, fine-tune, and evaluate Qwen3 models | Platform For AI
