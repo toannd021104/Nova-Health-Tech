@@ -1139,147 +1139,102 @@ Citations render as hoverable chips: clicking `[1]` opens the WHO PDF at the cit
 
 | Risk | Probability | Impact | Mitigation |
 |---|---|---|---|
-| AnalyticDB PG `adbpg_graphrag` extension unavailable on target minor version | Low | High (GraphRAG broken) | Verify minor ≥ 7.2.1.4 at deploy; avoid 7.3.0.0 and 7.3.1.0; console Basic Information check in deploy runbook |
-| Model Studio RPM throttle under load | Medium | Medium (user-visible errors) | Qwen PTU on emergency lane; rate-limit at API Gateway; quota uplift via account team pre-launch |
-| PAI-EAS student endpoint cold start | Low | Medium | Single-A10 always-on; pre-warm on deploy; on-demand fallback to Qwen3.5-Flash via circuit breaker |
-| Fine-tuned student quality regression on retrain | Medium | High | Eval harness gate + 5% canary for 72 hours; automatic rollback to previous version; 30-day retention of prior model |
-| Tair cache corruption after a Redis version upgrade | Low | Medium | Semantic cache is derivative: flush-and-rebuild costs at most 30 min of first-cold queries; backup not required |
-| OpenSearch HNSW recall drift as corpus grows past 5M chunks | Medium | Medium | Periodic efSearch tuning; shard at 10M; consider Quantized Clustering (alternative algorithm) at scale |
-| `tongyi-embedding-vision-plus` billing surprise on large image upload | Medium | Low | Per-image cost tracking in audit log; admin alert if > 1000 image embeds in a day |
-| Content Moderation 2.0 over-blocks legitimate medical content | Medium | Medium | Medical vocabulary allow-list pre-approved with Alibaba account team; weekly false-block review |
-| DocMind parser fails on a malformed legacy PDF | Medium | Low (single-doc) | Quarantine + manual re-ingest; Qwen-VL-Max fallback for stubborn pages; clinical curator can submit a structured markdown replacement |
-| `bailian`/`dashscope-intl` endpoint outage | Low | High | Alibaba-managed HA (their SLA is 99.9%+); Qwen3-8B PAI-EAS student can serve emergency as fallback via circuit breaker |
-| WHO ICD-11 API outage | Medium | Low | Daily-snapshot KB is the fallback; runtime `icd11_lookup` degrades to the cached snapshot with staleness banner |
+| AnalyticDB PG `adbpg_graphrag` extension unavailable on target minor version | Low | High | Verify minor >= 7.2.1.4 at deploy; avoid 7.3.0.0 and 7.3.1.0 |
+| WHO ICD-11 API outage | Medium | Low | Daily snapshot KB is the fallback; `icd11_lookup` degrades with staleness banner |
 
 ### 13.2 Compliance risks
 
 | Risk | Probability | Impact | Mitigation |
 |---|---|---|---|
-| Alibaba inadvertently routes SG Intl request through CN Mainland | Very Low | Very High (PDPA breach) | Contract clause with Alibaba; Intl mode documented to exclude CN Mainland compute; ActionTrail audit lets us detect region drift |
-| SDDP fails to detect novel PHI format (e.g. rare ID format) | Low | High | Defense in depth: FC runtime mask + model-never-sees-raw + output DLP; plus `qwen3-rerank` safety classifier on outputs; periodic red-team |
-| Audit pipeline drops log records under extreme load | Very Low | High | Synchronous ActionTrail write; SLS ingest backed by 7-day replay buffer; reconciliation job compares expected vs ingested counts |
-| Retention requirement beyond 6 years for specific document classes | Low | Low | 6-year default; tenant-configurable longer retention available per contract |
-| Regulator audit requests specific audit format | Medium | Low | SLS export to regulator-specific format via scheduled report job; collaborate with tenant on pre-approved templates |
-| WHO ICD-11 license terms change | Very Low | Medium | Registered OAuth2 client subject to WHO terms; changes tracked; worst case: snapshot-only mode with staleness banner |
-| GDPR DSAR (if applicable) timeline missed | Low | Medium | Tenant-scoped DSAR runbook tested monthly; `tenant_id` + `user_id` indexed in SLS for fast retrieval |
-| Hospital client cannot accept Singapore residency | Medium | Hybrid to Apsara Stack offered; or pivot to Alibaba Frankfurt / Virginia Intl region with client's PDPA/GDPR assessment |
+| Hospital cannot accept the selected residency zone | Medium | Varies | Hybrid to Apsara Stack offered; or pivot to an alternate Alibaba Intl region subject to tenant assessment |
 
 ### 13.3 Operational risks
 
 | Risk | Probability | Impact | Mitigation |
 |---|---|---|---|
-| Clinician adopts faster than quota allows (usage spike) | High (desirable!) | Medium | Over-provision Qwen PTU + OpenSearch OCU for first 30 days; weekly utilization review; quota uplift path with Alibaba |
-| Nova engineer accidentally deletes production state | Low | High | OSS WORM (audit): cannot be deleted even by admin; AnalyticDB PG + OpenSearch daily snapshots; two-admin approval for destructive operations |
-| Key rotation fails and service drops | Low | High | Rotation FC tested monthly; blue/green key strategy (old + new both valid for 24 hr during rotation); alert on rotation failure |
-| On-call engineer can't reach a SEV-1 | Low | High | Two-person on-call rotation; escalation to Alibaba TAM within 15 min if internal team unreachable |
-| Model fine-tune run picks up bad training data | Medium | Medium | SDDP scan on training set (stricter than runtime); eval harness + 5% canary; 30-day retention of prior model version |
-| Unexpected cost spike from chatty agent loop | Medium | Low | FC per-invocation budget alarm; agent max-steps cap at 8 tool calls; usage dashboards alert on > 2× historical median per clinician |
-| Breaking API change in WHO ICD-11 or Microsoft Graph | Low | Medium | Pinned SDK versions; integration tests catch format changes; monthly canary request to each external API |
-| Hospital's IdP SAML metadata expires | Medium | Medium | SAML metadata renewal tracker + 30-day pre-expiry notification to hospital admin |
-| Departure of a key Nova engineer | Medium | Medium | Runbooks in Git; pair rotations; quarterly game-day exercises; no "hero knowledge" |
+| Clinician adoption outpaces quota | High | Medium | Over-provision Qwen PTU + OpenSearch OCU for first 30 days; weekly utilization review |
+| Engineer accidentally deletes production state | Low | High | OSS WORM on audit; AnalyticDB PG + OpenSearch daily snapshots; two-admin approval for destructive ops |
+| Key rotation fails and service drops | Low | High | Monthly rotation test; blue/green keys valid for 24 hr during rotation; alerting |
+| On-call unreachable on SEV-1 | Low | High | Two-person rotation; escalation to Alibaba TAM within 15 min |
+| Fine-tune run ingests bad training data | Medium | Medium | SDDP strict scan on training set; eval harness + 5% canary; 30-day prior-model retention |
+| Cost spike from chatty agent loop | Medium | Low | FC budget alarm; agent max-steps cap at 8; dashboards alert on > 2x median per clinician |
+| Breaking API change (WHO ICD-11, Microsoft Graph) | Low | Medium | Pinned SDK versions; integration tests; monthly canary request |
+| Hospital IdP SAML metadata expires | Medium | Medium | Renewal tracker + 30-day pre-expiry notification |
+| Departure of a key engineer | Medium | Medium | Runbooks in Git; pair rotations; quarterly game-days |
 
-**Risk acceptance**: the residual risk after mitigation on every item above is LOW or VERY LOW. Nothing in this list blocks go-live.
+Residual risk after mitigation on every item is LOW or VERY LOW; nothing blocks go-live.
 
 ---
 
 ## 14. Implementation Roadmap
 
-**One product, no phases.** Every capability in this document is **active on day one**. What the roadmap describes is a **pre-launch build window** that finishes before cut-over, plus the **continuous-operations cadence** after. "Phase 1 / 2 / 3" language is intentionally not used: the assistant is not released half-featured, then hardened, then tuned. Security hardening, fine-tuning, and performance work all complete before clinical traffic.
+One product, no phases. Every capability is active on day one. The roadmap describes a pre-launch build window that finishes before cut-over, plus the continuous-operations cadence after.
 
-### 14.1 Pre-launch build (before cut-over)
+### 14.1 Pre-launch build
 
-Six- to ten-week window with parallel workstreams. Weeks are indicative; actual duration depends on the hospital tenant's IdP + FHIR readiness.
+Six- to ten-week window with parallel workstreams. Actual duration depends on the tenant's IdP and FHIR readiness.
 
 | Workstream | Weeks | Key deliverables |
 |---|---|---|
-| **Foundation** | 1–2 | SG tenant provisioned (VPC, KMS, IDaaS, subscriptions); OSS raw bucket + Object Lock; OpenSearch HA + AnalyticDB PG (verify engine ≥ 7.2.1.4) + Tair; CloudOps Scheduler crons |
-| **Data pipeline + RAG** | 1–4 | WHO monthly + ICD-11 daily ingestion live; DocMind + Qwen-VL-Max parsing tuned; initial embed pass (text-embedding-v4 + tongyi-embedding-vision-plus); OpenSearch hybrid index; AnalyticDB PG graph extraction (`adbpg_graphrag.initialize` + `upload`); internal trial bucket + Upload Portal; Microsoft Graph webhooks registered on tenant SharePoint |
-| **Model + fine-tuning** | 3–5 | Qwen3-8B student SFT + LoRA run on PAI Model Gallery (hyperparameters per §6.2); optional DPO micro-run on Nova-approved pairs; eval harness (Qwen3.5-Plus as LLM-judge on accuracy/citation/PHI/tone); promote to PAI-EAS behind feature flag |
-| **Orchestration + multi-agent** | 3–6 | 40 Model Studio Agent applications + 1 emergency Workflow application; router prompt + JSON schema tuned; 4 agent tools implemented (kb_retrieve / graph_retrieve / icd11_lookup / pubmed_search); Radiology vision-force rule + Clinical Pharmacy side-channel wired; system prompts + safety template in Git |
-| **Clinical embedding + security hardening** | 5–7 | EHR integration per tenant (Epic / Cerner / Allscripts FHIR R4 sandbox); IDaaS EIAM Premium+ federation (SAML/OIDC) to each hospital IdP; Site-to-Site IPsec VPN + Customer Gateway config; Cognito scopes tested; DataWorks SDDP medical-PHI rule pack activated; Content Moderation 2.0 medical vocabulary allow-list pre-approved by Alibaba account team; KMS BYOK keys rotated into place |
-| **Performance tuning + compliance** | 6–9 | Red-team run of 200+ adversarial prompts; Bedrock-style guardrail policies tightened; Qwen PTU sized against load-test peak TPM; cache hit-rate tuning; DR game-day (failover drill); audit-pipeline attestation (ActionTrail to SLS to OSS WORM 6-year verified); compliance review against PDPA + HCSA + any tenant-specific HIPAA BAA |
-| **Clinical pilot + cut-over** | 9–10 | Read-only pilot with small clinician cohort at one tenant (internal trial-mode answers, production otherwise); final sign-off by the clinical safety officer + hospital compliance officer; full production traffic cut-over; Nova on-call rotation activated |
+| Foundation | 1 to 2 | Tenant provisioned (VPC, KMS, IDaaS, subscriptions); OSS raw bucket with Object Lock; OpenSearch HA; AnalyticDB PG (engine >= 7.2.1.4); Tair; CloudOps Scheduler |
+| Data pipeline + RAG | 1 to 4 | WHO monthly and ICD-11 daily ingestion live; DocMind + Qwen-VL-Max parsing; embed pass; OpenSearch hybrid index; `adbpg_graphrag.initialize` + `upload`; Upload Portal; Microsoft Graph webhooks on tenant SharePoint |
+| Model + fine-tuning | 3 to 5 | Qwen3-8B student SFT + LoRA on PAI Model Gallery; optional DPO micro-run; eval harness (Qwen3.5-Plus judge on accuracy, citation, PHI, tone); PAI-EAS deploy behind feature flag |
+| Orchestration + multi-agent | 3 to 6 | 40 Agent applications + 1 emergency Workflow; router prompt; 4 tools (`kb_retrieve`, `graph_retrieve`, `icd11_lookup`, `pubmed_search`); Radiology vision-force rule; Clinical Pharmacy side-channel |
+| Clinical embedding + security | 5 to 7 | EHR integration (Epic, Cerner, Allscripts FHIR R4); IDaaS EIAM Premium+ federation to hospital IdP; data-pipeline IPsec VPN and Customer Gateway; SDDP medical-PHI rule pack; Content Moderation allow-list pre-approved; KMS BYOK keys rotated in |
+| Performance + compliance | 6 to 9 | 200+ adversarial-prompt red-team; guardrail policy tightening; Qwen PTU sized to load-test peak; cache hit-rate tuning; DR game-day; audit-pipeline attestation (ActionTrail to SLS to OSS WORM 6-year) |
+| Clinical pilot + cut-over | 9 to 10 | Read-only pilot with small clinician cohort; sign-off by clinical safety officer + compliance officer; full production cut-over; Nova on-call activated |
 
-**Launch gate (all must be green)**:
-
-- Emergency-lane p95 ≤ 2,000 ms on a 10,000-query load test
-- Complex-lane p95 ≤ 6,000 ms
-- Guardrail block rate < 3% on the 200-prompt red-team set
-- Zero PHI leaks in 500-sample output audit
-- Grounding score p50 ≥ 0.82 on eval-harness holdout
-- Student model ≥ 95% of teacher on clinical-question holdout
-- All runbooks tested at least once (DR, model rollback, cache flush)
-- Tenant clinical safety officer + compliance officer sign-off
+Launch gate (all must be green): emergency p95 <= 2,000 ms on a 10,000-query load test; complex p95 <= 6,000 ms; guardrail block rate < 3% on the red-team set; zero PHI leaks in 500-sample output audit; grounding p50 >= 0.82 on eval-harness holdout; student model >= 95% of teacher on clinical-question holdout; all runbooks rehearsed; tenant sign-off.
 
 ### 14.2 Continuous operations (post-launch)
 
-What runs permanently after launch. Not a "phase": a standing cadence.
-
 | Cadence | Activity |
 |---|---|
-| Real-time | SLO monitoring (§11.2); on-call pager on breach; WAF + Anti-DDoS + rate-limit enforcement |
-| Hourly | Ingestion-pipeline health check; any failed webhook re-queued |
-| Daily 02:00 SGT | WHO ICD-11 delta ingest; Tair cache invalidation for `source:icd11` |
-| Weekly Sunday 03:00 SGT | SharePoint reconciliation (safety net for missed Graph webhooks); embedding-drift KL-divergence check |
-| Monthly day 1 02:30 SGT | WHO guideline PDF refresh + incremental AnalyticDB PG graph re-index; living-guideline RSS catch-up if any missed |
-| Monthly | DPO micro-run on clinician preference pairs collected during the prior month (~$15–40 per run); 5% canary before promotion |
-| Monthly | Compliance reports to hospital (§11.4); access-review report; break-glass event audit |
-| Quarterly | Full Qwen3-8B student retrain (SFT + LoRA); re-qualify on eval harness; 5% canary for 72 hours before full ramp |
-| Quarterly | Red-team re-run on updated adversarial set; Content Moderation allow-list review |
-| Quarterly | DR game-day (runbook walkthrough + actual failover drill in staging); cost right-size review (OpenSearch OCU, AnalyticDB PG, Qwen PTU) |
-| Event-driven | Retrain student on new adversarial examples after any guardrail incident; emergency model-rollback if regression detected |
-| Annually | Third-party penetration test; compliance recertification (PDPA + HIPAA BAA + ISO 27001 if applicable to tenant); annual clinical-safety review |
+| Real-time | SLO monitoring (§11.2); on-call pager on breach; WAF + Anti-DDoS + rate-limit |
+| Hourly | Ingestion health check; failed webhooks re-queued |
+| Daily 02:00 SGT | WHO ICD-11 delta ingest; Tair invalidates `source:icd11` |
+| Weekly | SharePoint reconciliation; embedding-drift KL-divergence check |
+| Monthly day 1 02:30 SGT | WHO guideline PDF refresh; incremental `adbpg_graphrag.upload`; living-guideline RSS catch-up |
+| Monthly | DPO micro-run on clinician preference pairs; 5% canary before promotion |
+| Monthly | Compliance reports to tenant; access and break-glass audit |
+| Quarterly | Full Qwen3-8B student retrain; 5% canary 72 hours before ramp; red-team re-run; DR game-day; cost right-size review |
+| Event-driven | Retrain student on adversarial examples after guardrail incidents; emergency rollback on regression |
+| Annually | Third-party penetration test; compliance recertification; clinical-safety review |
 
 ### 14.3 Milestone dependencies
 
-```
-Foundation ─────────┬─────────┐
-                    │         │
-                    ▼         ▼
-Data pipeline ──► Model + fine-tuning ──► Orchestration + multi-agent ──┐
-                                                                        │
-                                                                        ▼
-Clinical embedding + Security hardening ──► Performance tuning ──► Pilot ──► Launch
-```
+Foundation precedes all other workstreams. Data pipeline must precede model fine-tuning (teacher needs grounded context to generate training data). Orchestration depends on both. Clinical embedding depends on the tenant's FHIR and IdP readiness and is usually the critical path. Performance and compliance tuning starts once end-to-end chat works in staging (around week 5 to 6).
 
-- **Foundation** must precede all other workstreams.
-- **Data pipeline** must precede **Model + fine-tuning** (teacher needs grounded context to generate training data).
-- **Orchestration** depends on both data pipeline (retrieval tools) and model (endpoints to call).
-- **Clinical embedding** depends on the hospital's FHIR/IdP readiness and is often the critical path.
-- **Performance tuning + compliance** can start as soon as the end-to-end chat works end-to-end against staging data (around week 5–6).
+### 14.4 Go / no-go gates
 
-### 14.4 Go / no-go decision points
+Mid-build (~week 5): end-to-end chat in staging against real data, 40 agents routable. If slipped > 2 weeks, replan.
+Pre-launch (~week 9): launch-gate criteria met; clinical safety officer sign-off. Any red criterion is fixed before production traffic.
 
-Two explicit gates during the pre-launch build:
+### 14.5 Team structure
 
-1. **Mid-build gate (around week 5)**: end-to-end chat works in staging against real WHO + internal-trial data, with all 40 agents routable. If this slips more than 2 weeks, replan the second half.
-2. **Pre-launch gate (around week 9)**: Launch-gate criteria met (§14.1). Clinical safety officer sign-off. If any criterion is red, the fix lands before production traffic; there is no "ship with a known gap and patch in phase 2" path.
-
-### 14.5 Team structure and RACI
-
-| Function | Owner | R / A / C / I |
-|---|---|---|
-| Product + clinical decisions | Nova product owner + hospital clinical lead | A |
-| Clinical accuracy + safety | Hospital clinical safety officer + Nova clinical lead | R/A |
-| Architecture evolution | Nova architect | R/A |
-| Day-to-day ops + on-call | Nova SRE team (2 engineers on rotation) | R |
-| Compliance reporting | Nova compliance lead | R |
-| Incident response | SRE on-call + architect + clinical-safety backup | R |
-| Vendor management (Alibaba TAM) | Nova architect + TAM | R |
-| EHR integration per tenant | Nova integrations engineer | R |
+| Function | Owner |
+|---|---|
+| Product and clinical decisions | Nova product owner + hospital clinical lead |
+| Clinical accuracy and safety | Hospital safety officer + Nova clinical lead |
+| Architecture | Nova architect |
+| Day-to-day ops and on-call | Nova SRE (2 engineers on rotation) |
+| Compliance reporting | Nova compliance lead |
+| Incident response | SRE on-call + architect + clinical-safety backup |
+| Vendor management (Alibaba TAM) | Nova architect + TAM |
+| EHR integration per tenant | Nova integrations engineer |
 
 ### 14.6 Roll-back strategy
 
-Every mutable production change has a defined roll-back path:
+| Change type | Mechanism | Window |
+|---|---|---|
+| Code | Previous Git SHA re-deployed via CI/CD | ~10 min |
+| Prompt | Previous prompt version re-referenced; Tair full flush | ~5 min |
+| Model | PAI-EAS keeps 30-day prior version; flip feature flag | ~2 min |
+| Index | OpenSearch idempotent upsert of prior revision | ~15 min per WHO doc |
+| Graph | `adbpg_graphrag` re-ingest of prior revision hash | ~5 min per document |
+| Guardrail policy | Version-controlled revert via PR + deploy | ~10 min |
 
-- **Code**: previous Git SHA re-deployed via the CI/CD pipeline (~10 min)
-- **Prompt**: previous prompt version file re-referenced; Tair full flush (~5 min)
-- **Model**: PAI-EAS has 30-day retention of prior model version; flip the feature flag (~2 min)
-- **Index**: OpenSearch upsert is idempotent: re-running a prior revision restores the prior chunk set (~15 min for a WHO guideline)
-- **Graph**: `adbpg_graphrag` re-ingest with prior revision hash (~5 min per document)
-- **Guardrail policy**: version-controlled; revert via PR merge + deploy (~10 min)
-
-**Who approves**: SEV-1 rollbacks are SRE-led, notify-architect-after. SEV-2+ rollbacks require architect + clinical-safety sign-off.
+SEV-1 rollbacks are SRE-led, architect notified after. SEV-2+ rollbacks require architect + clinical-safety sign-off.
 
 ---
 
