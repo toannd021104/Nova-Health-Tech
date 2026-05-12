@@ -1,0 +1,291 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 960" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <marker id="av" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/>
+    </marker>
+    <marker id="ax" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/>
+    </marker>
+    <marker id="ae" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0891b2"/>
+    </marker>
+    <style>
+      .box   { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.2; rx:8; ry:8; }
+      .svc   { fill:#eff6ff; stroke:#60a5fa; }
+      .aws   { fill:#fff7ed; stroke:#fb923c; }
+      .data  { fill:#fefce8; stroke:#facc15; }
+      .usr   { fill:#f0fdf4; stroke:#4ade80; }
+      .ext   { fill:#faf5ff; stroke:#c084fc; }
+      .az    { fill:#ecfeff; stroke:#06b6d4; }
+      .em    { fill:#fef2f2; stroke:#dc2626; stroke-width:1.6; }
+      .ft    { fill:#fdf4ff; stroke:#a855f7; stroke-width:1.4; stroke-dasharray:3 3; }
+      .obs   { fill:#f1f5f9; stroke:#64748b; }
+      .grp-onprem { fill:#f0fdf4; stroke:#16a34a; stroke-width:1.5; stroke-dasharray:4 3; rx:14; ry:14; }
+      .grp-aws    { fill:#fff7ed; stroke:#ea580c; stroke-width:1.6; stroke-dasharray:4 3; rx:14; ry:14; }
+      .grp-ext    { fill:#faf5ff; stroke:#9333ea; stroke-width:1.4; stroke-dasharray:4 3; rx:14; ry:14; }
+      .grp-az     { fill:#ecfeff; stroke:#0891b2; stroke-width:1.4; stroke-dasharray:4 3; rx:14; ry:14; }
+      .ttl   { font-weight:700; fill:#0f172a; }
+      .sm    { fill:#334155; font-size:10.5px; }
+      .xs    { fill:#64748b; font-size:10px; }
+      .edge  { stroke:#64748b; stroke-width:1.3; fill:none; }
+      .edge-vpn { stroke:#1d4ed8; stroke-width:1.8; fill:none; }
+      .edge-ext { stroke:#7c3aed; stroke-width:1.4; fill:none; stroke-dasharray:6 3; }
+      .edge-az  { stroke:#0891b2; stroke-width:1.4; fill:none; stroke-dasharray:6 3; }
+      .bolt  { fill:#eab308; stroke:#a16207; stroke-width:0.6; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text x="750" y="32" text-anchor="middle" font-size="19" class="ttl">Technical Architecture Overview</text>
+  <text x="750" y="54" text-anchor="middle" font-size="13" fill="#475569">Nova Health Tech GenAI Clinical Assistant, AWS with Claude, Singapore ap-southeast-1</text>
+
+  <!-- ===================== On-prem group ===================== -->
+  <rect x="20" y="80" width="260" height="860" class="grp-onprem"/>
+  <text x="40" y="104" class="ttl" font-size="14">On-prem site</text>
+
+  <rect x="35" y="122" width="230" height="58" class="box usr"/>
+  <text x="150" y="144" text-anchor="middle" class="ttl">Clinician browser</text>
+  <text x="150" y="162" text-anchor="middle" class="sm">Chat UI over HTTPS</text>
+
+  <rect x="35" y="194" width="230" height="58" class="box usr"/>
+  <text x="150" y="216" text-anchor="middle" class="ttl">Admin workstation</text>
+  <text x="150" y="234" text-anchor="middle" class="sm">Upload portal, over VPN</text>
+
+  <rect x="35" y="266" width="230" height="62" class="box usr"/>
+  <text x="150" y="288" text-anchor="middle" class="ttl">On-prem gateway</text>
+  <text x="150" y="306" text-anchor="middle" class="sm">IPsec device for site-to-site VPN</text>
+  <text x="150" y="322" text-anchor="middle" class="xs">(peer for AWS Customer Gateway)</text>
+
+  <rect x="35" y="342" width="230" height="56" class="box usr"/>
+  <text x="150" y="364" text-anchor="middle" class="ttl">Internal data store</text>
+  <text x="150" y="382" text-anchor="middle" class="sm">Trial reports, manual uploads</text>
+
+  <rect x="35" y="412" width="230" height="56" class="box usr"/>
+  <text x="150" y="434" text-anchor="middle" class="ttl">Hospital SIEM</text>
+  <text x="150" y="452" text-anchor="middle" class="sm">Splunk, Sentinel, QRadar</text>
+
+  <!-- ===================== External group ===================== -->
+  <rect x="300" y="80" width="430" height="150" class="grp-ext"/>
+  <text x="320" y="104" class="ttl" font-size="14">External</text>
+
+  <rect x="315" y="120" width="195" height="48" class="box ext"/>
+  <text x="412" y="140" text-anchor="middle" class="ttl">EHR Systems</text>
+  <text x="412" y="158" text-anchor="middle" class="sm">Epic, Cerner, Allscripts, FHIR R4</text>
+
+  <rect x="520" y="120" width="195" height="48" class="box ext"/>
+  <text x="617" y="140" text-anchor="middle" class="ttl">WHO API</text>
+  <text x="617" y="158" text-anchor="middle" class="sm">Guidelines, ICD-11</text>
+
+  <rect x="315" y="176" width="195" height="48" class="box ext"/>
+  <text x="412" y="196" text-anchor="middle" class="ttl">PubMed</text>
+  <text x="412" y="214" text-anchor="middle" class="sm">NCBI E-utilities</text>
+
+  <rect x="520" y="176" width="195" height="48" class="box ext"/>
+  <text x="617" y="196" text-anchor="middle" class="ttl">Other public sources</text>
+  <text x="617" y="214" text-anchor="middle" class="sm">Guideline registries, journals</text>
+
+  <!-- ===================== Azure group ===================== -->
+  <rect x="750" y="80" width="320" height="150" class="grp-az"/>
+  <text x="770" y="104" class="ttl" font-size="14">Azure</text>
+
+  <rect x="765" y="120" width="290" height="48" class="box az"/>
+  <text x="910" y="140" text-anchor="middle" class="ttl">Microsoft Entra ID</text>
+  <text x="910" y="158" text-anchor="middle" class="sm">SAML, OIDC federation to Cognito</text>
+
+  <rect x="765" y="176" width="290" height="48" class="box az"/>
+  <text x="910" y="196" text-anchor="middle" class="ttl">SharePoint, OneDrive, Teams</text>
+  <text x="910" y="214" text-anchor="middle" class="sm">Graph subscriptions, CDS deep links</text>
+
+  <!-- ===================== AWS group ===================== -->
+  <rect x="300" y="250" width="1180" height="690" class="grp-aws"/>
+  <text x="320" y="276" class="ttl" font-size="14">AWS (Singapore ap-southeast-1)</text>
+
+  <!-- Fine-tuning icon (standalone, no arrows) -->
+  <rect x="1260" y="262" width="200" height="56" class="box ft"/>
+  <text x="1360" y="278" text-anchor="middle" class="ttl">&#9881; Bedrock Model Distillation</text>
+  <text x="1360" y="294" text-anchor="middle" class="sm">Sonnet 4.5 teacher, Nova Lite student</text>
+  <text x="1360" y="310" text-anchor="middle" class="xs">quarterly run, serves blended complex traffic</text>
+
+  <!-- Layer 1: Edge and entry -->
+  <rect x="320" y="296" width="260" height="60" class="box svc"/>
+  <text x="450" y="316" text-anchor="middle" class="ttl">CloudFront, AWS WAF</text>
+  <text x="450" y="334" text-anchor="middle" class="sm">IP and domain allow-list, TLS 1.3</text>
+
+  <rect x="600" y="296" width="220" height="60" class="box svc"/>
+  <text x="710" y="316" text-anchor="middle" class="ttl">API Gateway</text>
+  <text x="710" y="334" text-anchor="middle" class="sm">REST, JWT authorizer</text>
+
+  <rect x="840" y="296" width="220" height="60" class="box aws"/>
+  <text x="950" y="316" text-anchor="middle" class="ttl">Amazon Cognito</text>
+  <text x="950" y="334" text-anchor="middle" class="sm">Per-tenant user pool</text>
+
+  <rect x="1080" y="296" width="170" height="60" class="box aws"/>
+  <text x="1165" y="316" text-anchor="middle" class="ttl">AWS VPN Gateway</text>
+  <text x="1165" y="334" text-anchor="middle" class="sm">Virtual Private Gateway</text>
+
+  <!-- Layer 2: Chat runtime -->
+  <rect x="320" y="380" width="300" height="64" class="box svc"/>
+  <text x="470" y="402" text-anchor="middle" class="ttl">Lambda /chat</text>
+  <text x="470" y="420" text-anchor="middle" class="sm">Auth, routing, streaming response</text>
+  <text x="470" y="436" text-anchor="middle" class="xs">Session memory, trace emit</text>
+
+  <rect x="640" y="380" width="220" height="64" class="box svc"/>
+  <text x="750" y="402" text-anchor="middle" class="ttl">Comprehend Medical</text>
+  <text x="750" y="420" text-anchor="middle" class="sm">DetectPHI, tokenization</text>
+  <text x="750" y="436" text-anchor="middle" class="xs">Executed on every inbound call</text>
+
+  <rect x="880" y="380" width="220" height="64" class="box data"/>
+  <text x="990" y="402" text-anchor="middle" class="ttl">ElastiCache Redis OSS</text>
+  <text x="990" y="420" text-anchor="middle" class="sm">Semantic cache, session state</text>
+
+  <rect x="1120" y="380" width="230" height="64" class="box svc"/>
+  <text x="1235" y="402" text-anchor="middle" class="ttl">ECS Fargate</text>
+  <text x="1235" y="420" text-anchor="middle" class="sm">Upload portal over VPN</text>
+  <text x="1235" y="436" text-anchor="middle" class="xs">Bulk ingest endpoint</text>
+
+  <!-- Layer 3: Fork into two agent branches -->
+  <!-- Emergency Agent with bolt icon -->
+  <rect x="340" y="476" width="280" height="96" class="box em"/>
+  <polygon class="bolt" points="382,490 362,528 378,528 370,556 400,514 382,514"/>
+  <text x="460" y="500" text-anchor="middle" class="ttl">Emergency Agent</text>
+  <text x="460" y="520" text-anchor="middle" class="sm">Claude Haiku 4.5</text>
+  <text x="460" y="538" text-anchor="middle" class="xs">Streamed response with Prompt Cache</text>
+  <text x="460" y="556" text-anchor="middle" class="xs">Bedrock Reserved Tier capacity</text>
+
+  <!-- Router + Specialty + Vision -->
+  <rect x="680" y="476" width="600" height="96" class="box svc"/>
+  <text x="980" y="496" text-anchor="middle" class="ttl">Router Agent and 40 Specialty Agents</text>
+  <text x="980" y="514" text-anchor="middle" class="sm">Claude Sonnet 4.5, Nova Lite student on blended share</text>
+  <text x="980" y="532" text-anchor="middle" class="sm">Oncology, Cardiology, Neurology, Radiology (vision), Clinical Pharmacy, and more</text>
+  <text x="980" y="552" text-anchor="middle" class="xs">Bedrock Agents, tool calling, multi-turn memory</text>
+
+  <!-- Layer 4: Knowledge and safety -->
+  <rect x="320" y="606" width="300" height="60" class="box aws"/>
+  <text x="470" y="626" text-anchor="middle" class="ttl">Bedrock Agents and Knowledge Bases</text>
+  <text x="470" y="644" text-anchor="middle" class="sm">Managed retrieval and tool orchestration</text>
+
+  <rect x="640" y="606" width="220" height="60" class="box data"/>
+  <text x="750" y="626" text-anchor="middle" class="ttl">OpenSearch Serverless</text>
+  <text x="750" y="644" text-anchor="middle" class="sm">Hybrid vector and BM25</text>
+
+  <rect x="880" y="606" width="220" height="60" class="box data"/>
+  <text x="990" y="626" text-anchor="middle" class="ttl">Neptune Analytics</text>
+  <text x="990" y="644" text-anchor="middle" class="sm">Managed GraphRAG</text>
+
+  <rect x="1120" y="606" width="230" height="60" class="box svc"/>
+  <text x="1235" y="626" text-anchor="middle" class="ttl">Bedrock Guardrails</text>
+  <text x="1235" y="644" text-anchor="middle" class="sm">Grounding, PHI, topic policy</text>
+
+  <!-- Layer 5: Data and audit -->
+  <rect x="320" y="690" width="300" height="60" class="box aws"/>
+  <text x="470" y="710" text-anchor="middle" class="ttl">S3 Object Lock</text>
+  <text x="470" y="728" text-anchor="middle" class="sm">WORM audit bucket, 6-year retention</text>
+
+  <rect x="640" y="690" width="220" height="60" class="box aws"/>
+  <text x="750" y="710" text-anchor="middle" class="ttl">CloudTrail</text>
+  <text x="750" y="728" text-anchor="middle" class="sm">Management and data events</text>
+
+  <rect x="880" y="690" width="220" height="60" class="box aws"/>
+  <text x="990" y="710" text-anchor="middle" class="ttl">DynamoDB chat_trace</text>
+  <text x="990" y="728" text-anchor="middle" class="sm">Per-answer explainability record</text>
+
+  <rect x="1120" y="690" width="230" height="60" class="box aws"/>
+  <text x="1235" y="710" text-anchor="middle" class="ttl">KMS customer-managed CMK</text>
+  <text x="1235" y="728" text-anchor="middle" class="sm">Per-tenant key, automatic rotation</text>
+
+  <!-- Layer 6: Observability -->
+  <rect x="320" y="774" width="300" height="60" class="box obs"/>
+  <text x="470" y="794" text-anchor="middle" class="ttl">CloudWatch, X-Ray</text>
+  <text x="470" y="812" text-anchor="middle" class="sm">Metrics, logs, distributed traces</text>
+
+  <rect x="640" y="774" width="220" height="60" class="box obs"/>
+  <text x="750" y="794" text-anchor="middle" class="ttl">Security Hub</text>
+  <text x="750" y="812" text-anchor="middle" class="sm">Continuous CIS and FSBP checks</text>
+
+  <rect x="880" y="774" width="220" height="60" class="box obs"/>
+  <text x="990" y="794" text-anchor="middle" class="ttl">GuardDuty, Macie</text>
+  <text x="990" y="812" text-anchor="middle" class="sm">Threat, malware, PHI scan</text>
+
+  <rect x="1120" y="774" width="230" height="60" class="box obs"/>
+  <text x="1235" y="794" text-anchor="middle" class="ttl">Security Lake</text>
+  <text x="1235" y="812" text-anchor="middle" class="sm">OCSF aggregation, SIEM export</text>
+
+  <!-- ===================== Connections ===================== -->
+  <!-- Clinician browser to CloudFront (web, IP allow-list) -->
+  <path d="M270 152 L300 152 L300 200 L400 200 L400 296" class="edge" marker-end="url(#a)"/>
+  <text x="310" y="195" class="xs">HTTPS, IP and domain allow-list</text>
+
+  <!-- On-prem gateway to AWS VPN Gateway (site-to-site VPN) -->
+  <path d="M270 297 L1165 297 L1165 296" class="edge-vpn" marker-end="url(#av)"/>
+  <text x="720" y="291" text-anchor="middle" class="xs" fill="#1d4ed8">Site-to-Site VPN, IPsec IKEv2</text>
+
+  <!-- Internal data store and Admin workstation reach Upload Portal via VPN -->
+  <path d="M270 370 L1165 356 L1235 380" class="edge-vpn" marker-end="url(#av)"/>
+
+  <!-- Hospital SIEM pulls audit from S3 Object Lock via cross-account role -->
+  <path d="M270 440 L320 700" class="edge" stroke-dasharray="4 3" marker-end="url(#a)"/>
+  <text x="285" y="600" class="xs">SIEM export</text>
+
+  <!-- Azure Entra ID to Cognito (federation) -->
+  <path d="M910 168 L910 260 L950 296" class="edge-az" marker-end="url(#ae)"/>
+  <text x="960" y="260" class="xs" fill="#0891b2">SAML, OIDC</text>
+
+  <!-- Azure SharePoint to API Gateway (webhook) -->
+  <path d="M900 224 L820 280 L750 296" class="edge-az" marker-end="url(#ae)"/>
+  <text x="860" y="258" class="xs" fill="#0891b2">Graph webhook</text>
+
+  <!-- External EHR, WHO, PubMed from AWS (egress) -->
+  <path d="M510 224 L510 260 L470 296" class="edge-ext" marker-end="url(#ax)"/>
+  <text x="380" y="260" class="xs" fill="#7c3aed">OAuth, HTTPS, egress allow-list</text>
+
+  <!-- CloudFront to API Gateway to Lambda -->
+  <path d="M580 326 L600 326" class="edge" marker-end="url(#a)"/>
+  <path d="M710 356 L470 380" class="edge" marker-end="url(#a)"/>
+
+  <!-- Cognito to Lambda (JWT check) -->
+  <path d="M950 356 L520 380" class="edge" stroke-dasharray="4 3" marker-end="url(#a)"/>
+
+  <!-- VPN Gateway to Fargate -->
+  <path d="M1165 356 L1235 380" class="edge-vpn" marker-end="url(#av)"/>
+
+  <!-- Lambda to Comprehend Medical -->
+  <path d="M620 412 L640 412" class="edge" marker-end="url(#a)"/>
+
+  <!-- Lambda to ElastiCache -->
+  <path d="M620 432 L880 432" class="edge" marker-end="url(#a)"/>
+
+  <!-- Lambda to Emergency Agent -->
+  <path d="M470 444 L460 476" class="edge" marker-end="url(#a)"/>
+
+  <!-- Lambda to Router + Specialty -->
+  <path d="M560 444 L780 476" class="edge" marker-end="url(#a)"/>
+
+  <!-- Emergency Agent to Bedrock KB -->
+  <path d="M460 572 L470 606" class="edge" marker-end="url(#a)"/>
+
+  <!-- Router + Specialty to Bedrock KB -->
+  <path d="M800 572 L560 606" class="edge" marker-end="url(#a)"/>
+
+  <!-- Bedrock KB to OpenSearch -->
+  <path d="M620 636 L640 636" class="edge" marker-end="url(#a)"/>
+
+  <!-- Bedrock KB to Neptune -->
+  <path d="M620 650 L880 650" class="edge" marker-end="url(#a)"/>
+
+  <!-- Bedrock KB and Agents to Guardrails -->
+  <path d="M620 626 L1120 626" class="edge" marker-end="url(#a)"/>
+
+  <!-- All to CloudTrail + S3 Object Lock (dashed audit lines) -->
+  <path d="M470 444 L470 690" class="edge" stroke-dasharray="4 3" marker-end="url(#a)"/>
+  <path d="M750 572 L750 690" class="edge" stroke-dasharray="4 3" marker-end="url(#a)"/>
+  <path d="M1235 442 L1235 690" class="edge" stroke-dasharray="4 3" marker-end="url(#a)"/>
+
+  <!-- Observability pulls from everywhere (implicit, draw a dashed umbrella) -->
+  <path d="M470 750 L470 774" class="edge" stroke-dasharray="3 2" marker-end="url(#a)"/>
+  <path d="M750 750 L750 774" class="edge" stroke-dasharray="3 2" marker-end="url(#a)"/>
+  <path d="M990 750 L990 774" class="edge" stroke-dasharray="3 2" marker-end="url(#a)"/>
+  <path d="M1235 750 L1235 774" class="edge" stroke-dasharray="3 2" marker-end="url(#a)"/>
+</svg>

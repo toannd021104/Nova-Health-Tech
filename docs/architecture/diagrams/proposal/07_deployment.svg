@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 660" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <style>
+      .box  { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.2; rx:8; ry:8; }
+      .svc  { fill:#eff6ff; stroke:#60a5fa; }
+      .aws  { fill:#fff7ed; stroke:#fb923c; }
+      .data { fill:#fefce8; stroke:#facc15; }
+      .usr  { fill:#f0fdf4; stroke:#4ade80; }
+      .grp  { fill:#f8fafc; stroke:#94a3b8; stroke-dasharray:4 3; rx:12; ry:12; }
+      .prod { fill:#fff1f2; stroke:#dc2626; stroke-width:1.5; rx:12; ry:12; }
+      .stg  { fill:#ecfdf5; stroke:#16a34a; stroke-width:1.3; rx:12; ry:12; }
+      .ttl  { font-weight:700; }
+      .sm   { fill:#64748b; font-size:10.5px; }
+      .edge { stroke:#64748b; stroke-width:1.3; fill:none; }
+    </style>
+  </defs>
+
+  <text x="640" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">
+    Deployment &amp; CI/CD — public-cloud primary (Singapore) · no on-prem · Site-to-Site VPN for internal data
+  </text>
+  <text x="640" y="44" text-anchor="middle" font-size="12" fill="#64748b">
+    3 AWS Organizations accounts (dev / staging / prod) · infra-as-code · canary + auto-rollback
+  </text>
+
+  <!-- Source -->
+  <rect x="20" y="70" width="230" height="520" class="grp"/>
+  <text x="30" y="92" class="ttl">Developer + source</text>
+
+  <rect x="30" y="108" width="210" height="60" class="box usr"/>
+  <text x="135" y="128" text-anchor="middle" class="ttl">GitHub (toannd021104)</text>
+  <text x="135" y="144" text-anchor="middle" class="sm">monorepo: infra · lambdas · agents</text>
+  <text x="135" y="160" text-anchor="middle" class="sm">branch protection + CODEOWNERS</text>
+
+  <rect x="30" y="178" width="210" height="60" class="box usr"/>
+  <text x="135" y="198" text-anchor="middle" class="ttl">PR checks</text>
+  <text x="135" y="214" text-anchor="middle" class="sm">unit tests · bandit · semgrep</text>
+  <text x="135" y="230" text-anchor="middle" class="sm">tfsec · checkov on Terraform</text>
+
+  <rect x="30" y="248" width="210" height="60" class="box usr"/>
+  <text x="135" y="268" text-anchor="middle" class="ttl">Model eval in CI</text>
+  <text x="135" y="284" text-anchor="middle" class="sm">regression suite on holdout</text>
+  <text x="135" y="300" text-anchor="middle" class="sm">hallucination + citation gates</text>
+
+  <rect x="30" y="318" width="210" height="60" class="box usr"/>
+  <text x="135" y="338" text-anchor="middle" class="ttl">Terraform modules</text>
+  <text x="135" y="354" text-anchor="middle" class="sm">VPC · Cognito · Bedrock · KB</text>
+  <text x="135" y="370" text-anchor="middle" class="sm">per-tenant module instance</text>
+
+  <rect x="30" y="388" width="210" height="60" class="box usr"/>
+  <text x="135" y="408" text-anchor="middle" class="ttl">SAM / CDK for Lambdas</text>
+  <text x="135" y="424" text-anchor="middle" class="sm">Lambda container images · ECR</text>
+  <text x="135" y="440" text-anchor="middle" class="sm">SBOM + signed digests</text>
+
+  <rect x="30" y="458" width="210" height="60" class="box usr"/>
+  <text x="135" y="478" text-anchor="middle" class="ttl">Model artifact registry</text>
+  <text x="135" y="494" text-anchor="middle" class="sm">Bedrock custom-model IDs</text>
+  <text x="135" y="510" text-anchor="middle" class="sm">pinned per environment</text>
+
+  <rect x="30" y="528" width="210" height="60" class="box usr"/>
+  <text x="135" y="548" text-anchor="middle" class="ttl">GitHub Actions OIDC → AWS</text>
+  <text x="135" y="564" text-anchor="middle" class="sm">no long-lived AWS keys</text>
+  <text x="135" y="580" text-anchor="middle" class="sm">role-chained per environment</text>
+
+  <!-- Dev env -->
+  <rect x="280" y="70" width="200" height="520" class="stg"/>
+  <text x="290" y="92" class="ttl">Dev account</text>
+  <rect x="290" y="108" width="180" height="80" class="box svc"/>
+  <text x="380" y="128" text-anchor="middle" class="ttl">ap-southeast-1</text>
+  <text x="380" y="146" text-anchor="middle" class="sm">synthetic PHI only</text>
+  <text x="380" y="162" text-anchor="middle" class="sm">small Bedrock quotas</text>
+  <text x="380" y="178" text-anchor="middle" class="sm">per-PR preview stack</text>
+
+  <rect x="290" y="198" width="180" height="80" class="box data"/>
+  <text x="380" y="218" text-anchor="middle" class="ttl">OpenSearch dev</text>
+  <text x="380" y="236" text-anchor="middle" class="sm">1 OCU</text>
+  <text x="380" y="252" text-anchor="middle" class="sm">synthetic docs</text>
+  <text x="380" y="268" text-anchor="middle" class="sm">ephemeral indexes</text>
+
+  <rect x="290" y="288" width="180" height="100" class="box aws"/>
+  <text x="380" y="308" text-anchor="middle" class="ttl">Bedrock Agents dev</text>
+  <text x="380" y="326" text-anchor="middle" class="sm">dev aliases</text>
+  <text x="380" y="342" text-anchor="middle" class="sm">Guardrails test profile</text>
+  <text x="380" y="358" text-anchor="middle" class="sm">promoted to staging on green CI</text>
+
+  <rect x="290" y="398" width="180" height="80" class="box svc"/>
+  <text x="380" y="418" text-anchor="middle" class="ttl">Integration tests</text>
+  <text x="380" y="436" text-anchor="middle" class="sm">end-to-end smoke suite</text>
+  <text x="380" y="452" text-anchor="middle" class="sm">FHIR sandbox · Graph sandbox</text>
+
+  <!-- Staging -->
+  <rect x="500" y="70" width="200" height="520" class="stg"/>
+  <text x="510" y="92" class="ttl">Staging account</text>
+  <rect x="510" y="108" width="180" height="80" class="box svc"/>
+  <text x="600" y="128" text-anchor="middle" class="ttl">prod-parity stack</text>
+  <text x="600" y="146" text-anchor="middle" class="sm">masked prod data subset</text>
+  <text x="600" y="162" text-anchor="middle" class="sm">full Bedrock quotas × 0.3</text>
+  <text x="600" y="178" text-anchor="middle" class="sm">daily sync from prod (masked)</text>
+
+  <rect x="510" y="198" width="180" height="80" class="box data"/>
+  <text x="600" y="218" text-anchor="middle" class="ttl">Load test</text>
+  <text x="600" y="236" text-anchor="middle" class="sm">k6 + Locust</text>
+  <text x="600" y="252" text-anchor="middle" class="sm">replay 100k prod queries</text>
+  <text x="600" y="268" text-anchor="middle" class="sm">latency budget gate</text>
+
+  <rect x="510" y="288" width="180" height="100" class="box aws"/>
+  <text x="600" y="308" text-anchor="middle" class="ttl">Clinical UAT</text>
+  <text x="600" y="326" text-anchor="middle" class="sm">review board · 100 prompts</text>
+  <text x="600" y="342" text-anchor="middle" class="sm">clinician sign-off required</text>
+  <text x="600" y="358" text-anchor="middle" class="sm">blocks prod promote</text>
+
+  <rect x="510" y="398" width="180" height="80" class="box svc"/>
+  <text x="600" y="418" text-anchor="middle" class="ttl">Red team</text>
+  <text x="600" y="436" text-anchor="middle" class="sm">200+ adversarial prompts</text>
+  <text x="600" y="452" text-anchor="middle" class="sm">guardrail tuning</text>
+
+  <!-- Prod -->
+  <rect x="720" y="70" width="540" height="520" class="prod"/>
+  <text x="730" y="92" class="ttl">Production account — ap-southeast-1 (multi-AZ)</text>
+
+  <rect x="730" y="108" width="260" height="80" class="box svc"/>
+  <text x="860" y="128" text-anchor="middle" class="ttl">API GW + Lambda /chat</text>
+  <text x="860" y="146" text-anchor="middle" class="sm">aliases with weighted routing</text>
+  <text x="860" y="162" text-anchor="middle" class="sm">5% canary on every deploy</text>
+  <text x="860" y="178" text-anchor="middle" class="sm">auto-rollback on SLO breach</text>
+
+  <rect x="1000" y="108" width="250" height="80" class="box aws"/>
+  <text x="1125" y="128" text-anchor="middle" class="ttl">Bedrock Agents prod</text>
+  <text x="1125" y="146" text-anchor="middle" class="sm">aliases per tenant</text>
+  <text x="1125" y="162" text-anchor="middle" class="sm">Reserved Tier on emergency lane</text>
+  <text x="1125" y="178" text-anchor="middle" class="sm">Prompt cache warm</text>
+
+  <rect x="730" y="198" width="260" height="80" class="box data"/>
+  <text x="860" y="218" text-anchor="middle" class="ttl">OpenSearch Serverless</text>
+  <text x="860" y="236" text-anchor="middle" class="sm">2 index OCU + 1 search OCU</text>
+  <text x="860" y="252" text-anchor="middle" class="sm">multi-AZ · auto-scale</text>
+  <text x="860" y="268" text-anchor="middle" class="sm">read replica for eval queries</text>
+
+  <rect x="1000" y="198" width="250" height="80" class="box data"/>
+  <text x="1125" y="218" text-anchor="middle" class="ttl">Neptune Analytics</text>
+  <text x="1125" y="236" text-anchor="middle" class="sm">1–2 m-NCU</text>
+  <text x="1125" y="252" text-anchor="middle" class="sm">snapshots KMS CMK</text>
+  <text x="1125" y="268" text-anchor="middle" class="sm">restore tested quarterly</text>
+
+  <rect x="730" y="288" width="260" height="80" class="box aws"/>
+  <text x="860" y="308" text-anchor="middle" class="ttl">ElastiCache Redis OSS</text>
+  <text x="860" y="326" text-anchor="middle" class="sm">cache.t4g.small · 2-AZ replication</text>
+  <text x="860" y="342" text-anchor="middle" class="sm">TLS + encrypted at rest</text>
+  <text x="860" y="358" text-anchor="middle" class="sm">semantic cache + session scratch</text>
+
+  <rect x="1000" y="288" width="250" height="80" class="box aws"/>
+  <text x="1125" y="308" text-anchor="middle" class="ttl">S3 Object Lock</text>
+  <text x="1125" y="326" text-anchor="middle" class="sm">audit · processed · raw</text>
+  <text x="1125" y="342" text-anchor="middle" class="sm">versioned · cross-Region replicate (roadmap)</text>
+
+  <rect x="730" y="378" width="520" height="90" class="box svc"/>
+  <text x="990" y="398" text-anchor="middle" class="ttl">Release + rollout</text>
+  <text x="990" y="416" text-anchor="middle" class="sm">GitHub Actions → assume role → Terraform plan/apply to prod · manual approval for prod plan</text>
+  <text x="990" y="432" text-anchor="middle" class="sm">Lambda alias shift: 0% → 5% canary (72 h) → 25% → 100% if error rate &amp; latency green</text>
+  <text x="990" y="448" text-anchor="middle" class="sm">Bedrock Agent alias: staging → prod gated on UAT + red team · model ID pinned</text>
+
+  <rect x="730" y="478" width="520" height="110" class="box usr"/>
+  <text x="990" y="498" text-anchor="middle" class="ttl">DR &amp; BCP</text>
+  <text x="990" y="516" text-anchor="middle" class="sm">RPO 15 min · RTO 60 min within ap-southeast-1 (multi-AZ)</text>
+  <text x="990" y="532" text-anchor="middle" class="sm">Warm standby in Tokyo (ap-northeast-1) on roadmap after PDPA transfer assessment</text>
+  <text x="990" y="548" text-anchor="middle" class="sm">Bedrock custom-model ID is global · Neptune snapshot restore runbook quarterly</text>
+  <text x="990" y="564" text-anchor="middle" class="sm">Game-day: simulated AZ loss · semantic cache flush · Reserved Tier throttle failover</text>
+  <text x="990" y="580" text-anchor="middle" class="sm">Backup Vault Lock (immutable) cross-account copy for audit bucket</text>
+
+  <!-- Edges -->
+  <path d="M245 138 L280 138" class="edge" marker-end="url(#a)"/>
+  <path d="M470 148 L500 148" class="edge" marker-end="url(#a)"/>
+  <path d="M690 148 L720 148" class="edge" marker-end="url(#a)"/>
+</svg>

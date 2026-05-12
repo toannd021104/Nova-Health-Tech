@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 620" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <style>
+      .box  { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.2; rx:8; ry:8; }
+      .em   { fill:#fef2f2; stroke:#dc2626; stroke-width:1.5; }
+      .cp   { fill:#eff6ff; stroke:#1d4ed8; stroke-width:1.5; }
+      .cache{ fill:#ecfdf5; stroke:#16a34a; }
+      .grp  { fill:#f8fafc; stroke:#94a3b8; stroke-dasharray:4 3; rx:12; ry:12; }
+      .ttl  { font-weight:700; }
+      .sm   { fill:#64748b; font-size:10.5px; }
+      .mono { font-family: Consolas, Menlo, monospace; font-size: 11px; fill:#0f172a; }
+    </style>
+  </defs>
+
+  <text x="640" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">
+    Performance architecture — 2-second emergency budget · 3 cache layers · Reserved Tier
+  </text>
+
+  <!-- Latency waterfall emergency -->
+  <rect x="20" y="60" width="620" height="270" class="grp"/>
+  <text x="30" y="82" class="ttl">Emergency lane waterfall (A2 Haiku 4.5, p95 ≤ 2 s)</text>
+  <rect x="30" y="100" width="600" height="28" class="box cache"/>
+  <text x="40" y="118" class="mono">[  20 ms] L1 semantic cache lookup (ElastiCache Redis OSS)</text>
+  <rect x="30" y="132" width="600" height="28" class="box"/>
+  <text x="40" y="150" class="mono">[ 100 ms] Cognito JWT + Comprehend Medical DetectPHI</text>
+  <rect x="30" y="164" width="600" height="28" class="box em"/>
+  <text x="40" y="182" class="mono">[  60 ms] Hybrid retrieval (OpenSearch SG) + Rerank (Tokyo)</text>
+  <rect x="30" y="196" width="600" height="28" class="box em"/>
+  <text x="40" y="214" class="mono">[ 400 ms] Haiku 4.5 TTFT with Bedrock Prompt Cache hit</text>
+  <rect x="30" y="228" width="600" height="28" class="box em"/>
+  <text x="40" y="246" class="mono">[1200 ms] Haiku 4.5 full 250-token answer (streaming)</text>
+  <rect x="30" y="260" width="600" height="28" class="box"/>
+  <text x="40" y="278" class="mono">[ 120 ms] Guardrails + grounding + citation validator</text>
+  <rect x="30" y="294" width="600" height="28" class="box cache"/>
+  <text x="40" y="312" class="mono">Σ p95 ≈ 1.9 s   ·   cached reply path ≈ 300-500 ms</text>
+
+  <!-- Complex lane waterfall -->
+  <rect x="660" y="60" width="600" height="270" class="grp"/>
+  <text x="670" y="82" class="ttl">Complex lane waterfall (A2 Sonnet 4.5, p95 ≤ 6 s)</text>
+  <rect x="670" y="100" width="580" height="28" class="box cache"/>
+  <text x="680" y="118" class="mono">[  20 ms] L1 semantic cache lookup</text>
+  <rect x="670" y="132" width="580" height="28" class="box"/>
+  <text x="680" y="150" class="mono">[ 100 ms] Auth + PHI mask</text>
+  <rect x="670" y="164" width="580" height="28" class="box cp"/>
+  <text x="680" y="182" class="mono">[ 150 ms] Router agent (Nova Micro, JSON only)</text>
+  <rect x="670" y="196" width="580" height="28" class="box cp"/>
+  <text x="680" y="214" class="mono">[ 200 ms] Agent tool-calls (kb_retrieve · graph_retrieve)</text>
+  <rect x="670" y="228" width="580" height="28" class="box cp"/>
+  <text x="680" y="246" class="mono">[ 600 ms] Sonnet 4.5 TTFT (Prompt Cache hit)</text>
+  <rect x="670" y="260" width="580" height="28" class="box cp"/>
+  <text x="680" y="278" class="mono">[4000 ms] Sonnet 4.5 streaming 800 tokens + side-channel agents</text>
+  <rect x="670" y="294" width="580" height="28" class="box cache"/>
+  <text x="680" y="312" class="mono">Σ p95 ≈ 5-6 s   ·   Nova Lite student on 40% cuts ~30-40% tail</text>
+
+  <!-- Cache layers -->
+  <rect x="20" y="350" width="1240" height="120" class="grp"/>
+  <text x="30" y="372" class="ttl">Three-layer cache stack</text>
+  <rect x="30" y="388" width="400" height="70" class="box cache"/>
+  <text x="230" y="408" text-anchor="middle" class="ttl">L1 · Semantic cache (ElastiCache Redis OSS)</text>
+  <text x="230" y="426" text-anchor="middle" class="sm">embed query → ANN lookup against cached Q/A pairs</text>
+  <text x="230" y="442" text-anchor="middle" class="sm">cosine threshold 0.93 · 30–45% hit · TTL 24 h · tag invalidation on ingest</text>
+
+  <rect x="440" y="388" width="400" height="70" class="box cache"/>
+  <text x="640" y="408" text-anchor="middle" class="ttl">L2 · Bedrock Prompt Caching</text>
+  <text x="640" y="426" text-anchor="middle" class="sm">explicit `&lt;cachePoint/&gt;` on system prefix · 5-min TTL</text>
+  <text x="640" y="442" text-anchor="middle" class="sm">Claude 4.x + Nova supported · ~50% input token reduction · ~85% TTFT cut</text>
+
+  <rect x="850" y="388" width="400" height="70" class="box cache"/>
+  <text x="1050" y="408" text-anchor="middle" class="ttl">L3 · Bedrock Reserved Tier</text>
+  <text x="1050" y="426" text-anchor="middle" class="sm">dedicated throughput on emergency lane · no cold-start penalty</text>
+  <text x="1050" y="442" text-anchor="middle" class="sm">sized to peak TPM · queue protection + predictable latency</text>
+
+  <!-- Scale and retrieval -->
+  <rect x="20" y="490" width="620" height="120" class="grp"/>
+  <text x="30" y="512" class="ttl">Auto-scaling &amp; load management</text>
+  <g font-size="11">
+    <text x="30" y="534" class="sm">• Lambda reserved + provisioned concurrency on chat · scales with API GW TPM</text>
+    <text x="30" y="552" class="sm">• OpenSearch Serverless scales OCU automatically · cap set to avoid runaway cost</text>
+    <text x="30" y="570" class="sm">• SQS queue in front of ingestion pipeline · smooths burst during WHO refresh</text>
+    <text x="30" y="588" class="sm">• Bedrock on-demand absorbs spillover beyond Reserved Tier · degraded-mode banner if queued &gt; 1 s</text>
+    <text x="30" y="604" class="sm">• Per-tenant rate limit via API GW usage plans · circuit breaker around PubMed tool</text>
+  </g>
+
+  <rect x="660" y="490" width="600" height="120" class="grp"/>
+  <text x="670" y="512" class="ttl">Retrieval optimizations</text>
+  <g font-size="11">
+    <text x="670" y="534" class="sm">• HNSW kNN parameters tuned (ef_construction 200 · ef_search 128 · m 24)</text>
+    <text x="670" y="552" class="sm">• Metadata pre-filter (specialty · recency) before vector search cuts recall set ~10×</text>
+    <text x="670" y="570" class="sm">• Rerank on top-20 only · not top-100 · saves Amazon Rerank cost and latency</text>
+    <text x="670" y="588" class="sm">• GraphRAG traversal depth capped at 2 hops · timeout 400 ms</text>
+    <text x="670" y="606" class="sm">• Query embedding cached (same embed for identical query within 10 min)</text>
+  </g>
+</svg>

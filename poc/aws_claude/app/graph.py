@@ -46,6 +46,7 @@ No fine-tuning in this POC — base Claude only.
 from __future__ import annotations
 
 import logging
+import os
 import re
 from dataclasses import dataclass, field
 from typing import Any, Optional
@@ -53,10 +54,16 @@ from typing import Any, Optional
 import boto3
 from langgraph.graph import END, StateGraph
 
-from poc.aws_claude.app import cache as redis_cache
-from poc.aws_claude.app import graphrag
-from poc.aws_claude.app.agents import DEPARTMENTS, CLAUDE_HAIKU, Department
-from poc.aws_claude.app.router import BEDROCK_REGION, RouterDecision, route as route_department
+try:
+    from . import cache as redis_cache
+    from . import graphrag
+    from .agents import DEPARTMENTS, CLAUDE_HAIKU, Department
+    from .router import BEDROCK_REGION, RouterDecision, route as route_department
+except ImportError:  # pragma: no cover — fallback when run outside a package
+    from app import cache as redis_cache  # type: ignore
+    from app import graphrag  # type: ignore
+    from app.agents import DEPARTMENTS, CLAUDE_HAIKU, Department  # type: ignore
+    from app.router import BEDROCK_REGION, RouterDecision, route as route_department  # type: ignore
 
 log = logging.getLogger(__name__)
 
@@ -174,7 +181,10 @@ def _node_emergency_agent(state: ChatState) -> ChatState:
 def _node_retrieve(state: ChatState) -> ChatState:
     if state.cache_hit:
         return state
-    from poc.aws_claude.app.rag import retrieve  # lazy import so tests can stub
+    try:
+        from .rag import retrieve  # lazy import so tests can stub
+    except ImportError:
+        from app.rag import retrieve  # type: ignore
 
     assert state.department is not None
     state.retrieved = retrieve(
@@ -260,12 +270,26 @@ def _node_generate(state: ChatState, *, bedrock=None) -> ChatState:
                     }
                 )
 
-    response = bedrock.converse(
+    # Guardrails config — wired in if GUARDRAIL_ID is set
+    guardrail_id = os.environ.get("GUARDRAIL_ID", "azsgfl02i9gn")
+    guardrail_config = {}
+    if guardrail_id:
+        guardrail_config = {
+            "guardrailIdentifier": guardrail_id,
+            "guardrailVersion": "DRAFT",
+            "trace": "enabled",
+        }
+
+    converse_kwargs: dict[str, Any] = dict(
         modelId=model_id,
         system=[{"text": state.department.system_prompt}],
         messages=[{"role": "user", "content": user_content}],
         inferenceConfig={"maxTokens": max_tokens, "temperature": temperature},
     )
+    if guardrail_config:
+        converse_kwargs["guardrailConfig"] = guardrail_config
+
+    response = bedrock.converse(**converse_kwargs)
     state.answer = _extract_text(response)
     return state
 

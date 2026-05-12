@@ -59,3 +59,27 @@ poc/*.zip
 # Cloud access key exports (never commit secrets)
 AccessKey.csv
 *AccessKey*.csv
+
+# WHO and PubMed source PDFs — large, re-downloadable, not for repo
+data/who/*.pdf
+data/pubmed/
+data/clinical-trials/protocols/*.pdf
+
+# POC runtime outputs and secrets
+poc/aws_claude/.outputs.env
+poc/aws_claude/.managed_outputs.json
+poc/aws_claude/.test_results.json
+poc/aws_claude/nova-claude-app.tar.gz
+
+# Recovered chat history — local only
+recovered_chat/
+RECOVERED_CHAT_SUMMARY.md
+
+# Temp scripts for kiro chat recovery
+scripts/dump_kiro_chat.py
+scripts/export_kiro_chat.py
+scripts/find_kiro_workspace.py
+
+# Temp cleanup files
+tmp_policy.json
+poc/aws_claude/check_agent.py

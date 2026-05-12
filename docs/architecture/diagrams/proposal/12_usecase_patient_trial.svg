@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 520" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <style>
+      .box  { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.2; rx:8; ry:8; }
+      .svc  { fill:#eff6ff; stroke:#60a5fa; }
+      .data { fill:#fefce8; stroke:#facc15; }
+      .aws  { fill:#fff7ed; stroke:#fb923c; }
+      .usr  { fill:#f0fdf4; stroke:#4ade80; }
+      .phi  { fill:#fff1f2; stroke:#dc2626; stroke-width:1.5; }
+      .num  { fill:#0ea5e9; }
+      .numt { fill:#ffffff; font-weight:700; font-size:11px; }
+      .ttl  { font-weight:700; }
+      .sm   { fill:#64748b; font-size:10.5px; }
+      .edge { stroke:#64748b; stroke-width:1.3; fill:none; }
+    </style>
+  </defs>
+  <text x="640" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">
+    Use case 3 · Internal trial query with patient-sensitive data
+  </text>
+  <text x="640" y="44" text-anchor="middle" font-size="12" fill="#64748b">
+    Oncologist asks for trial precedent citing a named patient · PHI never leaves the tenant boundary in clear text
+  </text>
+
+  <g>
+    <circle cx="70" cy="120" r="14" class="num"/><text x="70" y="125" text-anchor="middle" class="numt">1</text>
+    <rect x="100" y="95" width="260" height="60" class="box usr"/>
+    <text x="230" y="115" text-anchor="middle" class="ttl">Clinician prompt</text>
+    <text x="230" y="131" text-anchor="middle" class="sm">"Patient Jane Doe MRN 12345 with BRCA2 · precedent</text>
+    <text x="230" y="147" text-anchor="middle" class="sm">in our internal trials for olaparib + platinum combo?"</text>
+  </g>
+
+  <g>
+    <circle cx="410" cy="120" r="14" class="num"/><text x="410" y="125" text-anchor="middle" class="numt">2</text>
+    <rect x="440" y="95" width="260" height="60" class="box phi"/>
+    <text x="570" y="115" text-anchor="middle" class="ttl">Comprehend Medical DetectPHI</text>
+    <text x="570" y="131" text-anchor="middle" class="sm">masks name + MRN · reversible KMS tokens</text>
+    <text x="570" y="147" text-anchor="middle" class="sm">cleartext stays inside tenant VPC only</text>
+  </g>
+
+  <g>
+    <circle cx="750" cy="120" r="14" class="num"/><text x="750" y="125" text-anchor="middle" class="numt">3</text>
+    <rect x="780" y="95" width="260" height="60" class="box svc"/>
+    <text x="910" y="115" text-anchor="middle" class="ttl">EHR adapter (optional)</text>
+    <text x="910" y="131" text-anchor="middle" class="sm">SMART on FHIR · read-only</text>
+    <text x="910" y="147" text-anchor="middle" class="sm">pulls allergies + meds · tokenized before LLM</text>
+  </g>
+
+  <g>
+    <circle cx="1090" cy="120" r="14" class="num"/><text x="1090" y="125" text-anchor="middle" class="numt">4</text>
+    <rect x="1120" y="95" width="140" height="60" class="box svc"/>
+    <text x="1190" y="115" text-anchor="middle" class="ttl">Router agent</text>
+    <text x="1190" y="131" text-anchor="middle" class="sm">→ Oncology specialty</text>
+    <text x="1190" y="147" text-anchor="middle" class="sm">+ Clinical Pharmacy</text>
+  </g>
+
+  <g>
+    <circle cx="70" cy="230" r="14" class="num"/><text x="70" y="235" text-anchor="middle" class="numt">5</text>
+    <rect x="100" y="205" width="260" height="60" class="box data"/>
+    <text x="230" y="225" text-anchor="middle" class="ttl">Internal trial KB retrieve</text>
+    <text x="230" y="241" text-anchor="middle" class="sm">kb-internal-trials · tenant filter</text>
+    <text x="230" y="257" text-anchor="middle" class="sm">chunks contain tokenized PHI only</text>
+  </g>
+
+  <g>
+    <circle cx="410" cy="230" r="14" class="num"/><text x="410" y="235" text-anchor="middle" class="numt">6</text>
+    <rect x="440" y="205" width="260" height="60" class="box data"/>
+    <text x="570" y="225" text-anchor="middle" class="ttl">GraphRAG traversal</text>
+    <text x="570" y="241" text-anchor="middle" class="sm">BRCA2 → olaparib · contraindications</text>
+    <text x="570" y="257" text-anchor="middle" class="sm">2-hop cap on Neptune Analytics</text>
+  </g>
+
+  <g>
+    <circle cx="750" cy="230" r="14" class="num"/><text x="750" y="235" text-anchor="middle" class="numt">7</text>
+    <rect x="780" y="205" width="260" height="60" class="box aws"/>
+    <text x="910" y="225" text-anchor="middle" class="ttl">Oncology agent — Sonnet 4.5</text>
+    <text x="910" y="241" text-anchor="middle" class="sm">grounded-only prompt · citation required</text>
+    <text x="910" y="257" text-anchor="middle" class="sm">tokens in responses remain tokenized</text>
+  </g>
+
+  <g>
+    <circle cx="1090" cy="230" r="14" class="num"/><text x="1090" y="235" text-anchor="middle" class="numt">8</text>
+    <rect x="1120" y="205" width="140" height="60" class="box aws"/>
+    <text x="1190" y="225" text-anchor="middle" class="ttl">Clinical Pharmacy</text>
+    <text x="1190" y="241" text-anchor="middle" class="sm">side-channel check</text>
+    <text x="1190" y="257" text-anchor="middle" class="sm">drug interactions</text>
+  </g>
+
+  <g>
+    <circle cx="70" cy="340" r="14" class="num"/><text x="70" y="345" text-anchor="middle" class="numt">9</text>
+    <rect x="100" y="315" width="260" height="60" class="box svc"/>
+    <text x="230" y="335" text-anchor="middle" class="ttl">Bedrock Guardrails</text>
+    <text x="230" y="351" text-anchor="middle" class="sm">PHI filter · dosing-override denied</text>
+    <text x="230" y="367" text-anchor="middle" class="sm">grounding ≥ 0.7 · citation required</text>
+  </g>
+
+  <g>
+    <circle cx="410" cy="340" r="14" class="num"/><text x="410" y="345" text-anchor="middle" class="numt">10</text>
+    <rect x="440" y="315" width="260" height="60" class="box svc"/>
+    <text x="570" y="335" text-anchor="middle" class="ttl">Citation validator</text>
+    <text x="570" y="351" text-anchor="middle" class="sm">every cited chunk resolvable</text>
+    <text x="570" y="367" text-anchor="middle" class="sm">trial_id · section · page</text>
+  </g>
+
+  <g>
+    <circle cx="750" cy="340" r="14" class="num"/><text x="750" y="345" text-anchor="middle" class="numt">11</text>
+    <rect x="780" y="315" width="260" height="60" class="box phi"/>
+    <text x="910" y="335" text-anchor="middle" class="ttl">Detokenize inside tenant VPC</text>
+    <text x="910" y="351" text-anchor="middle" class="sm">only just before response returns to clinician</text>
+    <text x="910" y="367" text-anchor="middle" class="sm">detokenize event logged to CloudTrail</text>
+  </g>
+
+  <g>
+    <circle cx="1090" cy="340" r="14" class="num"/><text x="1090" y="345" text-anchor="middle" class="numt">12</text>
+    <rect x="1120" y="315" width="140" height="60" class="box svc"/>
+    <text x="1190" y="335" text-anchor="middle" class="ttl">chat_trace</text>
+    <text x="1190" y="351" text-anchor="middle" class="sm">query · chunks · model</text>
+    <text x="1190" y="367" text-anchor="middle" class="sm">6 yr WORM</text>
+  </g>
+
+  <rect x="20" y="410" width="1240" height="90" class="box phi"/>
+  <text x="640" y="430" text-anchor="middle" class="ttl">PHI flow guarantees</text>
+  <text x="640" y="450" text-anchor="middle" class="sm">1) Cleartext PHI only inside tenant VPC · 2) Model calls see tokens only · 3) Every detokenize event audited · 4) Retrieval results are tenant-scoped by ABAC session tags</text>
+  <text x="640" y="468" text-anchor="middle" class="sm">5) Guardrails block any generated content that contains raw PHI patterns · 6) KMS CMK for PHI token mapping isolated from audit and config CMKs</text>
+  <text x="640" y="486" text-anchor="middle" class="sm">7) Patient-sensitive trials never leave ap-southeast-1 · embed and rerank use tokenized text only · cross-region calls carry no PHI</text>
+
+  <path d="M360 125 L410 125" class="edge" marker-end="url(#a)"/>
+  <path d="M700 125 L750 125" class="edge" marker-end="url(#a)"/>
+  <path d="M1040 125 L1090 125" class="edge" marker-end="url(#a)"/>
+  <path d="M1190 155 L1190 180 L230 180 L230 205" class="edge" marker-end="url(#a)"/>
+  <path d="M360 235 L410 235" class="edge" marker-end="url(#a)"/>
+  <path d="M700 235 L750 235" class="edge" marker-end="url(#a)"/>
+  <path d="M1040 235 L1090 235" class="edge" marker-end="url(#a)"/>
+  <path d="M1190 265 L1190 290 L230 290 L230 315" class="edge" marker-end="url(#a)"/>
+  <path d="M360 345 L410 345" class="edge" marker-end="url(#a)"/>
+  <path d="M700 345 L750 345" class="edge" marker-end="url(#a)"/>
+  <path d="M1040 345 L1090 345" class="edge" marker-end="url(#a)"/>
+</svg>

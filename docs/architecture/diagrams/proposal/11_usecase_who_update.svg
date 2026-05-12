@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 520" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <style>
+      .box  { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.2; rx:8; ry:8; }
+      .svc  { fill:#eff6ff; stroke:#60a5fa; }
+      .data { fill:#fefce8; stroke:#facc15; }
+      .aws  { fill:#fff7ed; stroke:#fb923c; }
+      .ext  { fill:#faf5ff; stroke:#c084fc; }
+      .num  { fill:#0ea5e9; }
+      .numt { fill:#ffffff; font-weight:700; font-size:11px; }
+      .ttl  { font-weight:700; }
+      .sm   { fill:#64748b; font-size:10.5px; }
+      .edge { stroke:#64748b; stroke-width:1.3; fill:none; }
+    </style>
+  </defs>
+  <text x="640" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">
+    Use case 2 · Monthly WHO protocol update propagation
+  </text>
+
+  <g>
+    <circle cx="70" cy="120" r="14" class="num"/><text x="70" y="125" text-anchor="middle" class="numt">1</text>
+    <rect x="100" y="95" width="260" height="60" class="box ext"/>
+    <text x="230" y="115" text-anchor="middle" class="ttl">WHO publishes monthly PDF</text>
+    <text x="230" y="131" text-anchor="middle" class="sm">RSS + page-change notify</text>
+    <text x="230" y="147" text-anchor="middle" class="sm">ICD-11 API delta available</text>
+  </g>
+  <g>
+    <circle cx="410" cy="120" r="14" class="num"/><text x="410" y="125" text-anchor="middle" class="numt">2</text>
+    <rect x="440" y="95" width="260" height="60" class="box svc"/>
+    <text x="570" y="115" text-anchor="middle" class="ttl">EventBridge cron</text>
+    <text x="570" y="131" text-anchor="middle" class="sm">day 1 02:30 SGT · downloads PDF to S3 /raw/who</text>
+    <text x="570" y="147" text-anchor="middle" class="sm">daily 02:00 SGT · ICD-11 delta to S3 /raw/icd11</text>
+  </g>
+  <g>
+    <circle cx="750" cy="120" r="14" class="num"/><text x="750" y="125" text-anchor="middle" class="numt">3</text>
+    <rect x="780" y="95" width="260" height="60" class="box aws"/>
+    <text x="910" y="115" text-anchor="middle" class="ttl">S3 putObject event</text>
+    <text x="910" y="131" text-anchor="middle" class="sm">GuardDuty malware scan</text>
+    <text x="910" y="147" text-anchor="middle" class="sm">Macie PHI scan (async)</text>
+  </g>
+  <g>
+    <circle cx="1090" cy="120" r="14" class="num"/><text x="1090" y="125" text-anchor="middle" class="numt">4</text>
+    <rect x="1120" y="95" width="140" height="60" class="box aws"/>
+    <text x="1190" y="115" text-anchor="middle" class="ttl">Step Functions</text>
+    <text x="1190" y="131" text-anchor="middle" class="sm">ingestion orchestrator</text>
+    <text x="1190" y="147" text-anchor="middle" class="sm">retries + DLQ</text>
+  </g>
+
+  <g>
+    <circle cx="70" cy="230" r="14" class="num"/><text x="70" y="235" text-anchor="middle" class="numt">5</text>
+    <rect x="100" y="205" width="260" height="60" class="box aws"/>
+    <text x="230" y="225" text-anchor="middle" class="ttl">BDA advanced parse (Sydney)</text>
+    <text x="230" y="241" text-anchor="middle" class="sm">legacy PDFs · tables · flowcharts</text>
+    <text x="230" y="257" text-anchor="middle" class="sm">output = structured JSON + text blocks</text>
+  </g>
+  <g>
+    <circle cx="410" cy="230" r="14" class="num"/><text x="410" y="235" text-anchor="middle" class="numt">6</text>
+    <rect x="440" y="205" width="260" height="60" class="box svc"/>
+    <text x="570" y="225" text-anchor="middle" class="ttl">Chunker + metadata</text>
+    <text x="570" y="241" text-anchor="middle" class="sm">semantic chunks · 10% overlap</text>
+    <text x="570" y="257" text-anchor="middle" class="sm">attach: doc · revision · review_date · specialty</text>
+  </g>
+  <g>
+    <circle cx="750" cy="230" r="14" class="num"/><text x="750" y="235" text-anchor="middle" class="numt">7</text>
+    <rect x="780" y="205" width="260" height="60" class="box aws"/>
+    <text x="910" y="225" text-anchor="middle" class="ttl">Titan Embed Text v2 (Tokyo)</text>
+    <text x="910" y="241" text-anchor="middle" class="sm">1024-dim · batch of chunks</text>
+    <text x="910" y="257" text-anchor="middle" class="sm">figures → Nova Multimodal Embed (us-east-1)</text>
+  </g>
+  <g>
+    <circle cx="1090" cy="230" r="14" class="num"/><text x="1090" y="235" text-anchor="middle" class="numt">8</text>
+    <rect x="1120" y="205" width="140" height="60" class="box data"/>
+    <text x="1190" y="225" text-anchor="middle" class="ttl">Upsert to KB</text>
+    <text x="1190" y="241" text-anchor="middle" class="sm">OpenSearch Serverless</text>
+    <text x="1190" y="257" text-anchor="middle" class="sm">+ Neptune graph</text>
+  </g>
+
+  <g>
+    <circle cx="70" cy="340" r="14" class="num"/><text x="70" y="345" text-anchor="middle" class="numt">9</text>
+    <rect x="100" y="315" width="260" height="60" class="box aws"/>
+    <text x="230" y="335" text-anchor="middle" class="ttl">GraphRAG extraction (Sonnet 4.5)</text>
+    <text x="230" y="351" text-anchor="middle" class="sm">entities + relations updated</text>
+    <text x="230" y="367" text-anchor="middle" class="sm">~$80 one-time per refresh</text>
+  </g>
+  <g>
+    <circle cx="410" cy="340" r="14" class="num"/><text x="410" y="345" text-anchor="middle" class="numt">10</text>
+    <rect x="440" y="315" width="260" height="60" class="box svc"/>
+    <text x="570" y="335" text-anchor="middle" class="ttl">Cache invalidation</text>
+    <text x="570" y="351" text-anchor="middle" class="sm">by tag: source:who · topic:sepsis · etc.</text>
+    <text x="570" y="367" text-anchor="middle" class="sm">next query bypasses stale cache entry</text>
+  </g>
+  <g>
+    <circle cx="750" cy="340" r="14" class="num"/><text x="750" y="345" text-anchor="middle" class="numt">11</text>
+    <rect x="780" y="315" width="260" height="60" class="box data"/>
+    <text x="910" y="335" text-anchor="middle" class="ttl">Eval harness replay</text>
+    <text x="910" y="351" text-anchor="middle" class="sm">golden-question set · before/after diff</text>
+    <text x="910" y="367" text-anchor="middle" class="sm">Sonnet-as-judge · regression gate</text>
+  </g>
+  <g>
+    <circle cx="1090" cy="340" r="14" class="num"/><text x="1090" y="345" text-anchor="middle" class="numt">12</text>
+    <rect x="1120" y="315" width="140" height="60" class="box svc"/>
+    <text x="1190" y="335" text-anchor="middle" class="ttl">Notify ops + clinical lead</text>
+    <text x="1190" y="351" text-anchor="middle" class="sm">SNS · digest report</text>
+    <text x="1190" y="367" text-anchor="middle" class="sm">stale-doc banners cleared</text>
+  </g>
+
+  <rect x="20" y="410" width="1240" height="90" class="box data"/>
+  <text x="640" y="430" text-anchor="middle" class="ttl">Freshness guarantees</text>
+  <text x="640" y="450" text-anchor="middle" class="sm">`review_date` metadata per chunk · stale-doc banner surfaces in clinician UI if `now &gt; review_date`</text>
+  <text x="640" y="468" text-anchor="middle" class="sm">WHO monthly refresh latency: PDF detected → indexed typically &lt; 4 hours (gated by BDA + embed pipeline)</text>
+  <text x="640" y="486" text-anchor="middle" class="sm">ICD-11 daily delta latency: API → index &lt; 30 minutes (text-only path, no BDA)</text>
+
+  <path d="M360 125 L410 125" class="edge" marker-end="url(#a)"/>
+  <path d="M700 125 L750 125" class="edge" marker-end="url(#a)"/>
+  <path d="M1040 125 L1090 125" class="edge" marker-end="url(#a)"/>
+  <path d="M1190 155 L1190 180 L230 180 L230 205" class="edge" marker-end="url(#a)"/>
+  <path d="M360 235 L410 235" class="edge" marker-end="url(#a)"/>
+  <path d="M700 235 L750 235" class="edge" marker-end="url(#a)"/>
+  <path d="M1040 235 L1090 235" class="edge" marker-end="url(#a)"/>
+  <path d="M1190 265 L1190 290 L230 290 L230 315" class="edge" marker-end="url(#a)"/>
+  <path d="M360 345 L410 345" class="edge" marker-end="url(#a)"/>
+  <path d="M700 345 L750 345" class="edge" marker-end="url(#a)"/>
+  <path d="M1040 345 L1090 345" class="edge" marker-end="url(#a)"/>
+</svg>

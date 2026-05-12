@@ -1,14 +1,19 @@
 """Per-department agent prompts for the POC (Version A — AWS + Claude).
 
-All models are available in Singapore (`ap-southeast-1`) via `global.*` and
-`apac.*` inference profiles. No fine-tuning in this POC — base Claude /
-Nova only.
+Model IDs verified on 11 May 2026 against the `gapv50k` account:
+- `global.anthropic.claude-haiku-4-5-20251001-v1:0`  — Converse test OK
+- `global.anthropic.claude-sonnet-4-5-20250929-v1:0` — Converse test OK
+- `apac.amazon.nova-micro-v1:0`                      — Converse test OK
+
+All three route SG-native via the `global.*` / `apac.*` inference profiles.
+No fine-tuning in this PoC — base Claude / Nova only, matching the PoC
+README's "no-training baseline" approach.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-# Claude 4.x + Amazon Nova model IDs on Bedrock Singapore.
+# Claude 4.x + Amazon Nova model IDs — Converse-tested against the target account.
 CLAUDE_HAIKU = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
 CLAUDE_SONNET = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 NOVA_MICRO = "apac.amazon.nova-micro-v1:0"

@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <style>
+      .box  { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.2; rx:8; ry:8; }
+      .svc  { fill:#eff6ff; stroke:#60a5fa; }
+      .ext  { fill:#faf5ff; stroke:#c084fc; }
+      .usr  { fill:#f0fdf4; stroke:#4ade80; }
+      .aws  { fill:#fff7ed; stroke:#fb923c; }
+      .grp  { fill:#f8fafc; stroke:#94a3b8; stroke-dasharray:4 3; rx:12; ry:12; }
+      .ttl  { font-weight:700; }
+      .sm   { fill:#64748b; font-size:10.5px; }
+      .edge { stroke:#64748b; stroke-width:1.3; fill:none; }
+    </style>
+  </defs>
+
+  <text x="640" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">
+    Corporate integration — EHR · SharePoint · SSO · audit export
+  </text>
+
+  <!-- Hospital side -->
+  <rect x="20" y="60" width="320" height="540" class="grp"/>
+  <text x="30" y="82" class="ttl">Hospital tenant</text>
+
+  <rect x="30" y="100" width="300" height="60" class="box usr"/>
+  <text x="180" y="120" text-anchor="middle" class="ttl">EHR — Epic / Cerner / Allscripts</text>
+  <text x="180" y="136" text-anchor="middle" class="sm">FHIR R4 · SMART App Launch v2</text>
+  <text x="180" y="152" text-anchor="middle" class="sm">read-only scopes · OAuth 2.0</text>
+
+  <rect x="30" y="170" width="300" height="60" class="box usr"/>
+  <text x="180" y="190" text-anchor="middle" class="ttl">SharePoint / OneDrive</text>
+  <text x="180" y="206" text-anchor="middle" class="sm">Microsoft Graph subscriptions</text>
+  <text x="180" y="222" text-anchor="middle" class="sm">Sites.Selected scoping</text>
+
+  <rect x="30" y="240" width="300" height="60" class="box usr"/>
+  <text x="180" y="260" text-anchor="middle" class="ttl">Clinician IdP (EntraID)</text>
+  <text x="180" y="276" text-anchor="middle" class="sm">OIDC / SAML · MFA + conditional access</text>
+  <text x="180" y="292" text-anchor="middle" class="sm">role claims → Cognito group mapping</text>
+
+  <rect x="30" y="310" width="300" height="60" class="box usr"/>
+  <text x="180" y="330" text-anchor="middle" class="ttl">Teams / Epic in-basket</text>
+  <text x="180" y="346" text-anchor="middle" class="sm">optional: CDS Hooks card hand-off</text>
+  <text x="180" y="362" text-anchor="middle" class="sm">deep link to chat with context</text>
+
+  <rect x="30" y="380" width="300" height="60" class="box usr"/>
+  <text x="180" y="400" text-anchor="middle" class="ttl">Hospital SIEM</text>
+  <text x="180" y="416" text-anchor="middle" class="sm">Splunk / Sentinel / QRadar</text>
+  <text x="180" y="432" text-anchor="middle" class="sm">cross-account role into S3 audit bucket</text>
+
+  <rect x="30" y="450" width="300" height="60" class="box usr"/>
+  <text x="180" y="470" text-anchor="middle" class="ttl">Customer Gateway (on-prem)</text>
+  <text x="180" y="486" text-anchor="middle" class="sm">Site-to-Site VPN endpoint</text>
+  <text x="180" y="502" text-anchor="middle" class="sm">dual-tunnel HA · BGP</text>
+
+  <rect x="30" y="520" width="300" height="60" class="box usr"/>
+  <text x="180" y="540" text-anchor="middle" class="ttl">Clinician browser</text>
+  <text x="180" y="556" text-anchor="middle" class="sm">Chat UI · emergency toggle</text>
+  <text x="180" y="572" text-anchor="middle" class="sm">Markdown + DOMPurify rendering</text>
+
+  <!-- AWS side -->
+  <rect x="380" y="60" width="880" height="540" class="grp"/>
+  <text x="390" y="82" class="ttl">AWS ap-southeast-1</text>
+
+  <rect x="400" y="100" width="400" height="60" class="box svc"/>
+  <text x="600" y="120" text-anchor="middle" class="ttl">API Gateway · FHIR pass-through</text>
+  <text x="600" y="136" text-anchor="middle" class="sm">per-tenant Cognito client app · JWT on chat + EHR calls</text>
+  <text x="600" y="152" text-anchor="middle" class="sm">SMART token exchange with EHR authorization server</text>
+
+  <rect x="820" y="100" width="430" height="60" class="box svc"/>
+  <text x="1035" y="120" text-anchor="middle" class="ttl">Lambda — EHR adapter</text>
+  <text x="1035" y="136" text-anchor="middle" class="sm">FHIR client · de-identify patient slice (Comprehend Medical)</text>
+  <text x="1035" y="152" text-anchor="middle" class="sm">attach patient context to chat query via session scope</text>
+
+  <rect x="400" y="170" width="400" height="60" class="box svc"/>
+  <text x="600" y="190" text-anchor="middle" class="ttl">SharePoint webhook → S3 /raw</text>
+  <text x="600" y="206" text-anchor="middle" class="sm">API GW → Lambda → S3 putObject with versioning</text>
+  <text x="600" y="222" text-anchor="middle" class="sm">Step Functions re-ingest on doc update</text>
+
+  <rect x="820" y="170" width="430" height="60" class="box svc"/>
+  <text x="1035" y="190" text-anchor="middle" class="ttl">Weekly reconciliation (safety net)</text>
+  <text x="1035" y="206" text-anchor="middle" class="sm">EventBridge Sun 03:00 SGT · diff SharePoint list vs index</text>
+  <text x="1035" y="222" text-anchor="middle" class="sm">re-ingest drift; alert SNS on failure</text>
+
+  <rect x="400" y="240" width="400" height="60" class="box aws"/>
+  <text x="600" y="260" text-anchor="middle" class="ttl">Cognito User Pool (per tenant)</text>
+  <text x="600" y="276" text-anchor="middle" class="sm">SAML / OIDC federation to hospital IdP</text>
+  <text x="600" y="292" text-anchor="middle" class="sm">groups = roles · tenant_id custom claim</text>
+
+  <rect x="820" y="240" width="430" height="60" class="box aws"/>
+  <text x="1035" y="260" text-anchor="middle" class="ttl">IAM Identity Center (Nova staff)</text>
+  <text x="1035" y="276" text-anchor="middle" class="sm">federated to Nova EntraID · permission sets per env</text>
+  <text x="1035" y="292" text-anchor="middle" class="sm">no long-lived IAM users for operators</text>
+
+  <rect x="400" y="310" width="400" height="60" class="box svc"/>
+  <text x="600" y="330" text-anchor="middle" class="ttl">CDS Hooks service</text>
+  <text x="600" y="346" text-anchor="middle" class="sm">medication-prescribe hook · order-sign hook</text>
+  <text x="600" y="362" text-anchor="middle" class="sm">returns card with chat deep link + summary</text>
+
+  <rect x="820" y="310" width="430" height="60" class="box svc"/>
+  <text x="1035" y="330" text-anchor="middle" class="ttl">PubMed tool Lambda</text>
+  <text x="1035" y="346" text-anchor="middle" class="sm">NCBI E-utilities · outbound allow-list</text>
+  <text x="1035" y="362" text-anchor="middle" class="sm">cache results 24 h in DynamoDB</text>
+
+  <rect x="400" y="380" width="400" height="60" class="box aws"/>
+  <text x="600" y="400" text-anchor="middle" class="ttl">S3 audit bucket (Object Lock)</text>
+  <text x="600" y="416" text-anchor="middle" class="sm">CloudTrail · chat_trace export · 6-yr retention</text>
+  <text x="600" y="432" text-anchor="middle" class="sm">KMS CMK · cross-account read for SIEM</text>
+
+  <rect x="820" y="380" width="430" height="60" class="box aws"/>
+  <text x="1035" y="400" text-anchor="middle" class="ttl">Event fan-out</text>
+  <text x="1035" y="416" text-anchor="middle" class="sm">EventBridge · SNS · SQS DLQ</text>
+  <text x="1035" y="432" text-anchor="middle" class="sm">retries · per-tenant throttle</text>
+
+  <rect x="400" y="450" width="400" height="60" class="box svc"/>
+  <text x="600" y="470" text-anchor="middle" class="ttl">VPN Gateway / Transit Gateway</text>
+  <text x="600" y="486" text-anchor="middle" class="sm">Site-to-Site VPN · propagated routes</text>
+  <text x="600" y="502" text-anchor="middle" class="sm">all management planes reachable private-side</text>
+
+  <rect x="820" y="450" width="430" height="60" class="box svc"/>
+  <text x="1035" y="470" text-anchor="middle" class="ttl">CloudFront + WAF</text>
+  <text x="1035" y="486" text-anchor="middle" class="sm">public chat path · TLS 1.3 · bot &amp; OWASP rules</text>
+  <text x="1035" y="502" text-anchor="middle" class="sm">per-tenant custom domain + ACM cert</text>
+
+  <rect x="400" y="520" width="850" height="60" class="box" fill="#ecfdf5" stroke="#16a34a"/>
+  <text x="825" y="540" text-anchor="middle" class="ttl">Tenant isolation</text>
+  <text x="825" y="556" text-anchor="middle" class="sm">`tenant_id` on every JWT, chunk metadata, KMS key policy, DynamoDB PK · Bedrock Agent alias per tenant for guardrail customization</text>
+  <text x="825" y="572" text-anchor="middle" class="sm">IAM session tags enforce row-level filtering in OpenSearch queries and S3 prefix access</text>
+
+  <!-- Edges hospital → AWS -->
+  <path d="M340 130 L400 130" class="edge" marker-end="url(#a)"/>
+  <path d="M340 200 L400 200" class="edge" marker-end="url(#a)"/>
+  <path d="M340 270 L400 270" class="edge" marker-end="url(#a)"/>
+  <path d="M340 340 L400 340" class="edge" marker-end="url(#a)"/>
+  <path d="M340 410 L400 410" class="edge" marker-end="url(#a)"/>
+  <path d="M340 480 L400 480" class="edge" marker-end="url(#a)"/>
+  <path d="M340 550 L400 480" class="edge" marker-end="url(#a)"/>
+</svg>

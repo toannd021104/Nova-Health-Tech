@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 700" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/>
+    </marker>
+    <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/>
+    </marker>
+    <style>
+      .box  { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.2; rx:8; ry:8; }
+      .svc  { fill:#eff6ff; stroke:#60a5fa; }
+      .data { fill:#fefce8; stroke:#facc15; }
+      .aws  { fill:#fff7ed; stroke:#fb923c; }
+      .em   { fill:#fef2f2; stroke:#dc2626; stroke-width:1.5; }
+      .cp   { fill:#eff6ff; stroke:#1d4ed8; stroke-width:1.5; }
+      .grp  { fill:#f8fafc; stroke:#94a3b8; stroke-dasharray:4 3; rx:12; ry:12; }
+      .ttl  { font-weight:700; }
+      .sm   { fill:#64748b; font-size:10.5px; }
+      .edge { stroke:#64748b; stroke-width:1.3; fill:none; }
+      .edge-em { stroke:#dc2626; stroke-width:1.8; fill:none; }
+      .edge-cp { stroke:#1d4ed8; stroke-width:1.8; fill:none; }
+      .num  { fill:#0ea5e9; }
+      .numt { fill:#ffffff; font-weight:700; font-size:11px; }
+    </style>
+  </defs>
+
+  <text x="640" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">
+    Model orchestration — if/else lane · 40-agent topology · Bedrock Agents + Guardrails
+  </text>
+
+  <!-- Entry + toggle -->
+  <rect x="20" y="60" width="260" height="80" class="box svc"/>
+  <text x="150" y="80" text-anchor="middle" class="ttl">User prompt + emergency toggle</text>
+  <text x="150" y="98" text-anchor="middle" class="sm">toggle is a UI checkbox, not a classifier</text>
+  <text x="150" y="116" text-anchor="middle" class="sm">PHI-masked in Lambda /chat before any LLM call</text>
+
+  <!-- If/else -->
+  <polygon points="400,60 560,100 400,140 240,100" class="box aws"/>
+  <text x="400" y="98" text-anchor="middle" class="ttl">if (emergency_toggle)</text>
+  <text x="400" y="116" text-anchor="middle" class="sm">pure boolean · ~0 ms</text>
+
+  <!-- Emergency path -->
+  <rect x="600" y="40" width="300" height="100" class="box em"/>
+  <text x="750" y="60" text-anchor="middle" class="ttl">Emergency agent</text>
+  <text x="750" y="78" text-anchor="middle" class="sm">Claude Haiku 4.5 (A2) · Nova Micro (A1+)</text>
+  <text x="750" y="94" text-anchor="middle" class="sm">temp 0.1 · max 700 · streaming</text>
+  <text x="750" y="110" text-anchor="middle" class="sm">Bedrock Prompt Caching on prefix</text>
+  <text x="750" y="126" text-anchor="middle" class="sm">Reserved Tier capacity · target p95 ≤ 2 s</text>
+
+  <!-- Router path -->
+  <rect x="600" y="160" width="300" height="90" class="box cp"/>
+  <text x="750" y="180" text-anchor="middle" class="ttl">Router agent</text>
+  <text x="750" y="198" text-anchor="middle" class="sm">Nova Micro · JSON-mode · temp 0 · max 150</text>
+  <text x="750" y="214" text-anchor="middle" class="sm">picks 1-of-40 specialty + confidence</text>
+  <text x="750" y="230" text-anchor="middle" class="sm">confidence &lt; 0.6 → General Medicine with banner</text>
+
+  <!-- Specialty grid -->
+  <rect x="360" y="270" width="900" height="180" class="grp"/>
+  <text x="370" y="292" class="ttl">40 specialty agents (UI never exposes list; configurable subset per tenant)</text>
+  <g font-size="10.5" fill="#334155">
+    <rect x="370" y="300" width="140" height="26" class="box cp"/><text x="440" y="317" text-anchor="middle">Emergency Medicine</text>
+    <rect x="515" y="300" width="140" height="26" class="box cp"/><text x="585" y="317" text-anchor="middle">Cardiology</text>
+    <rect x="660" y="300" width="140" height="26" class="box cp"/><text x="730" y="317" text-anchor="middle">Neurology</text>
+    <rect x="805" y="300" width="140" height="26" class="box cp"/><text x="875" y="317" text-anchor="middle">Oncology</text>
+    <rect x="950" y="300" width="140" height="26" class="box cp"/><text x="1020" y="317" text-anchor="middle">Pulmonology</text>
+    <rect x="1095" y="300" width="150" height="26" class="box cp"/><text x="1170" y="317" text-anchor="middle">Infectious Disease</text>
+
+    <rect x="370" y="332" width="140" height="26" class="box cp"/><text x="440" y="349" text-anchor="middle">Gastroenterology</text>
+    <rect x="515" y="332" width="140" height="26" class="box cp"/><text x="585" y="349" text-anchor="middle">Endocrinology</text>
+    <rect x="660" y="332" width="140" height="26" class="box cp"/><text x="730" y="349" text-anchor="middle">Nephrology</text>
+    <rect x="805" y="332" width="140" height="26" class="box cp"/><text x="875" y="349" text-anchor="middle">Obstetrics</text>
+    <rect x="950" y="332" width="140" height="26" class="box cp"/><text x="1020" y="349" text-anchor="middle">Pediatrics</text>
+    <rect x="1095" y="332" width="150" height="26" class="box cp"/><text x="1170" y="349" text-anchor="middle">Radiology (vision)</text>
+
+    <rect x="370" y="364" width="140" height="26" class="box cp"/><text x="440" y="381" text-anchor="middle">Clinical Pharmacy</text>
+    <rect x="515" y="364" width="140" height="26" class="box cp"/><text x="585" y="381" text-anchor="middle">Dermatology</text>
+    <rect x="660" y="364" width="140" height="26" class="box cp"/><text x="730" y="381" text-anchor="middle">Psychiatry</text>
+    <rect x="805" y="364" width="140" height="26" class="box cp"/><text x="875" y="381" text-anchor="middle">Orthopedics</text>
+    <rect x="950" y="364" width="140" height="26" class="box cp"/><text x="1020" y="381" text-anchor="middle">ENT</text>
+    <rect x="1095" y="364" width="150" height="26" class="box cp"/><text x="1170" y="381" text-anchor="middle">Ophthalmology</text>
+
+    <rect x="370" y="396" width="875" height="26" class="box" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="807" y="414" text-anchor="middle" class="sm">… + 22 more: Urology, Hematology, Rheumatology, Allergy-Immunology, Critical Care, Anesthesiology, General Surgery, Vascular, …</text>
+  </g>
+
+  <!-- Backing model -->
+  <rect x="20" y="470" width="1240" height="100" class="grp"/>
+  <text x="30" y="492" class="ttl">Backing models (all specialty agents call Bedrock; region = Singapore via global / apac inference profiles)</text>
+  <rect x="30" y="505" width="290" height="55" class="box cp"/>
+  <text x="175" y="525" text-anchor="middle" class="ttl">Claude Sonnet 4.5 (A2)</text>
+  <text x="175" y="543" text-anchor="middle" class="sm">global.anthropic.claude-sonnet-4-5 · complex lane · vision-capable</text>
+
+  <rect x="330" y="505" width="290" height="55" class="box cp"/>
+  <text x="475" y="525" text-anchor="middle" class="ttl">Nova Pro (A1+)</text>
+  <text x="475" y="543" text-anchor="middle" class="sm">apac.amazon.nova-pro-v1:0 · cheaper complex lane · vision-capable</text>
+
+  <rect x="630" y="505" width="290" height="55" class="box cp"/>
+  <text x="775" y="525" text-anchor="middle" class="ttl">Nova Lite student</text>
+  <text x="775" y="543" text-anchor="middle" class="sm">custom model · distilled from Sonnet 4.5 · ~40% of complex traffic</text>
+
+  <rect x="930" y="505" width="320" height="55" class="box em"/>
+  <text x="1090" y="525" text-anchor="middle" class="ttl">Claude Haiku 4.5 / Nova Micro</text>
+  <text x="1090" y="543" text-anchor="middle" class="sm">emergency + router · grounded-only prompt · temp 0.1</text>
+
+  <!-- Guardrails + Validation -->
+  <rect x="20" y="580" width="1240" height="100" class="grp"/>
+  <text x="30" y="602" class="ttl">Post-generation pipeline (every call, both lanes)</text>
+  <rect x="30" y="614" width="290" height="55" class="box svc"/>
+  <text x="175" y="634" text-anchor="middle" class="ttl">Bedrock Guardrails</text>
+  <text x="175" y="652" text-anchor="middle" class="sm">denied topics · grounding ≥ 0.7 · prompt-injection · PHI</text>
+
+  <rect x="330" y="614" width="290" height="55" class="box svc"/>
+  <text x="475" y="634" text-anchor="middle" class="ttl">Citation validator</text>
+  <text x="475" y="652" text-anchor="middle" class="sm">reject if unsupported · max 1 rerun with narrower retrieval</text>
+
+  <rect x="630" y="614" width="290" height="55" class="box svc"/>
+  <text x="775" y="634" text-anchor="middle" class="ttl">Session memory</text>
+  <text x="775" y="652" text-anchor="middle" class="sm">DynamoDB per-session · 24 h TTL · last 6 turns · PHI-tokenized</text>
+
+  <rect x="930" y="614" width="320" height="55" class="box svc"/>
+  <text x="1090" y="634" text-anchor="middle" class="ttl">Trace record → CloudTrail + chat_trace</text>
+  <text x="1090" y="652" text-anchor="middle" class="sm">query · chunks · model · tokens · latency · grounded flag</text>
+
+  <!-- Edges -->
+  <path d="M280 100 L240 100" class="edge" marker-end="url(#a)"/>
+  <path d="M560 100 L600 80" class="edge-em" marker-end="url(#ar)"/>
+  <path d="M560 100 L600 200" class="edge-cp" marker-end="url(#ab)"/>
+  <path d="M750 250 L750 270" class="edge-cp" marker-end="url(#ab)"/>
+  <path d="M750 430 L750 470" class="edge" marker-end="url(#a)"/>
+  <path d="M750 560 L750 580" class="edge" marker-end="url(#a)"/>
+  <path d="M900 90 L930 505" class="edge-em" marker-end="url(#ar)"/>
+</svg>

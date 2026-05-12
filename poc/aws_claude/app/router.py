@@ -15,7 +15,10 @@ from typing import Any
 
 import boto3
 
-from poc.aws_claude.app.agents import DEPARTMENTS, NOVA_MICRO
+try:
+    from .agents import DEPARTMENTS, NOVA_MICRO
+except ImportError:  # pragma: no cover
+    from app.agents import DEPARTMENTS, NOVA_MICRO  # type: ignore
 
 log = logging.getLogger(__name__)
 

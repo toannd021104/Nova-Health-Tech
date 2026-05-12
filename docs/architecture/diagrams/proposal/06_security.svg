@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <style>
+      .box  { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.2; rx:8; ry:8; }
+      .sec1 { fill:#fef2f2; stroke:#dc2626; stroke-width:1.2; }
+      .sec2 { fill:#fff7ed; stroke:#fb923c; stroke-width:1.2; }
+      .sec3 { fill:#fefce8; stroke:#facc15; stroke-width:1.2; }
+      .sec4 { fill:#ecfdf5; stroke:#16a34a; stroke-width:1.2; }
+      .sec5 { fill:#eff6ff; stroke:#1d4ed8; stroke-width:1.2; }
+      .grp  { fill:#f8fafc; stroke:#94a3b8; stroke-dasharray:4 3; rx:12; ry:12; }
+      .ttl  { font-weight:700; }
+      .sm   { fill:#334155; font-size:10.5px; }
+    </style>
+  </defs>
+
+  <text x="640" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">
+    Security architecture — layered, zero-trust, HIPAA + PDPA aligned
+  </text>
+
+  <!-- Perimeter -->
+  <rect x="20" y="60" width="1240" height="120" class="sec1 box"/>
+  <text x="40" y="82" class="ttl">Layer 1 — Perimeter &amp; network (public edge)</text>
+  <g font-size="11">
+    <text x="40" y="104" class="sm">• CloudFront + AWS WAF (OWASP Top 10, bot control, rate limits, managed IP reputation)</text>
+    <text x="40" y="122" class="sm">• API Gateway TLS 1.3 only · Cognito JWT authorizer · per-tenant API keys + usage plans</text>
+    <text x="40" y="140" class="sm">• Site-to-Site IPsec VPN (IKEv2 · AES-256-GCM · SHA-2 · PFS group 20) dual-tunnel HA for EHR / SharePoint / Admin portal</text>
+    <text x="40" y="158" class="sm">• No Outposts / Direct Connect · no public ingress to Lambda · all outbound via NAT with allow-list (WHO / PubMed / Graph / FHIR endpoints)</text>
+  </g>
+
+  <!-- Identity -->
+  <rect x="20" y="190" width="620" height="220" class="sec2 box"/>
+  <text x="40" y="212" class="ttl">Layer 2 — Identity &amp; access</text>
+  <g font-size="11">
+    <text x="40" y="234" class="sm">• Clinicians: Cognito user pool per tenant federated via SAML/OIDC to hospital IdP</text>
+    <text x="40" y="252" class="sm">• Nova staff: IAM Identity Center federated to Nova EntraID · permission sets per env</text>
+    <text x="40" y="270" class="sm">• MFA mandatory (hospital IdP side) · session lifetime ≤ 8 h</text>
+    <text x="40" y="288" class="sm">• RBAC: attending · resident · pharmacist · radiologist · auditor · admin</text>
+    <text x="40" y="306" class="sm">• ABAC: `tenant_id` + `department` IAM session tags on every Bedrock / S3 / OpenSearch call</text>
+    <text x="40" y="324" class="sm">• Break-glass: separate IAM role · MFA + SNS alert + 30-day access review</text>
+    <text x="40" y="342" class="sm">• Secrets Manager + automatic rotation · KMS CMK per secret · no env-var secrets</text>
+    <text x="40" y="360" class="sm">• No long-lived access keys; short STS tokens only · SCPs block root use</text>
+    <text x="40" y="378" class="sm">• SCIM provisioning from EntraID → Cognito for joiner/mover/leaver</text>
+    <text x="40" y="396" class="sm">• Bedrock Agent alias per tenant · KMS key policy scoped to tenant account boundary</text>
+  </g>
+
+  <!-- Data -->
+  <rect x="660" y="190" width="600" height="220" class="sec3 box"/>
+  <text x="680" y="212" class="ttl">Layer 3 — Data protection</text>
+  <g font-size="11">
+    <text x="680" y="234" class="sm">• Customer-managed KMS CMK per data class (audit · clinical · config)</text>
+    <text x="680" y="252" class="sm">• S3 Object Lock (Compliance mode) · 6-year retention on audit bucket</text>
+    <text x="680" y="270" class="sm">• OpenSearch Serverless + DynamoDB + ElastiCache all KMS-encrypted at rest</text>
+    <text x="680" y="288" class="sm">• TLS 1.3 in transit everywhere · VPC endpoints for Bedrock / S3 / OpenSearch</text>
+    <text x="680" y="306" class="sm">• Comprehend Medical DetectPHI on every inbound message → reversible tokenization</text>
+    <text x="680" y="324" class="sm">• Model never sees raw PHI; detokenize only inside tenant VPC response path</text>
+    <text x="680" y="342" class="sm">• Macie weekly scan on /raw/ · quarantine on PHI classification drift</text>
+    <text x="680" y="360" class="sm">• GuardDuty Malware Protection for S3 on every putObject</text>
+    <text x="680" y="378" class="sm">• DLP: outbound Lambda uses Macie + regex scanner to block MRN / SSN / passport leakage</text>
+    <text x="680" y="396" class="sm">• Backup Vault with KMS + Vault Lock · immutable tier · cross-account replication</text>
+  </g>
+
+  <!-- Model safety -->
+  <rect x="20" y="420" width="620" height="210" class="sec4 box"/>
+  <text x="40" y="442" class="ttl">Layer 4 — Model &amp; prompt safety</text>
+  <g font-size="11">
+    <text x="40" y="464" class="sm">• Bedrock Guardrails: denied topics (self-diagnosis without clinician, dosing override, illegal synthesis)</text>
+    <text x="40" y="482" class="sm">• PHI filter on input + output · prompt-injection filter · contextual grounding ≥ 0.7</text>
+    <text x="40" y="500" class="sm">• Fixed system prefix · `temperature=0.1` emergency, `0.2` complex · citation required</text>
+    <text x="40" y="518" class="sm">• Tool allow-list per agent · read-only FHIR scopes · outbound SSRF defense on Lambdas</text>
+    <text x="40" y="536" class="sm">• Red-team 200+ adversarial prompts pre-launch · re-run after any guardrail incident</text>
+    <text x="40" y="554" class="sm">• Model provenance: custom model ID pinned · training data hash recorded in catalog</text>
+    <text x="40" y="572" class="sm">• Canary deployment on every model/prompt change · 5% traffic · 72 h hold · auto-rollback on SLO breach</text>
+    <text x="40" y="590" class="sm">• Hallucination regression suite runs in CI against holdout questions</text>
+    <text x="40" y="608" class="sm">• Model card + data statement published per version · review gate signed by clinical lead</text>
+  </g>
+
+  <!-- Audit & monitoring -->
+  <rect x="660" y="420" width="600" height="210" class="sec5 box"/>
+  <text x="680" y="442" class="ttl">Layer 5 — Audit, monitoring &amp; non-repudiation</text>
+  <g font-size="11">
+    <text x="680" y="464" class="sm">• CloudTrail (management + data events) → S3 Object Lock WORM 6 years → Security Lake</text>
+    <text x="680" y="482" class="sm">• chat_trace DynamoDB: session · query · retrieved chunks · model · tokens · ms · grounded flag</text>
+    <text x="680" y="500" class="sm">• VPC Flow Logs · GuardDuty · Security Hub (CIS + AWS FSBP + HIPAA conformance pack)</text>
+    <text x="680" y="518" class="sm">• CloudWatch metrics → SNS: guardrail block rate, citation-fail rate, p95 per lane</text>
+    <text x="680" y="536" class="sm">• Per-tenant SIEM export via cross-account S3 role (Splunk / Sentinel / QRadar)</text>
+    <text x="680" y="554" class="sm">• Non-repudiation: every answer signed with KMS + hashed into chat_trace</text>
+    <text x="680" y="572" class="sm">• Break-glass and PHI-detokenize events emit CloudTrail + SNS to compliance inbox</text>
+    <text x="680" y="590" class="sm">• Quarterly access review · yearly pen-test · continuous compliance via Audit Manager</text>
+    <text x="680" y="608" class="sm">• Threat model (STRIDE + MITRE ATLAS) reviewed every release</text>
+  </g>
+</svg>

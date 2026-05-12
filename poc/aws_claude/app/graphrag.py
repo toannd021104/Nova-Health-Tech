@@ -1,16 +1,11 @@
-"""GraphRAG — Amazon Bedrock Knowledge Bases GraphRAG on Neptune Analytics.
+"""GraphRAG — Bedrock Knowledge Bases GraphRAG on Neptune Analytics.
 
-This module exposes a single `graph_retrieve(entity, hops=2)` tool that the
-complex-lane agent can call when a question needs multi-hop traversal or a
-corpus-wide summary. Bedrock KB GraphRAG:
-  - extracts entities + relations from the same parsed corpus fed to the
-    vector KB
-  - stores the graph in Neptune Analytics (1 m-NCU minimum, $0.16/hr)
-  - answers via a hybrid vector + graph traversal over the KB API
+Uses the deployed GraphRAG KB (FU6SXD0B8B, Neptune graph g-0keuwoev4a).
+Entity extraction was done at ingest time using Claude 3 Haiku as the
+graph construction model. The graph has 1,863 Entity nodes and 826 Chunk
+nodes from WHO B09540-eng.pdf.
 
-We call it via `bedrock-agent-runtime:Retrieve` with the GraphRAG-enabled
-knowledge base ID. The graph is built once at deploy time (see
-`poc/deploy.py`).
+Retrieval uses SEMANTIC search (HYBRID is not supported for Neptune-backed KBs).
 """
 from __future__ import annotations
 
@@ -23,8 +18,8 @@ import boto3
 
 log = logging.getLogger(__name__)
 
-KB_REGION = os.environ.get("KB_REGION", "ap-southeast-1")
-KB_ID = os.environ.get("BEDROCK_KB_ID", "")  # set by poc/deploy.py
+REGION = os.environ.get("AWS_REGION", "ap-southeast-1")
+GRAPHRAG_KB_ID = os.environ.get("BEDROCK_GRAPHRAG_KB_ID", "FU6SXD0B8B")
 
 
 @dataclass
@@ -35,43 +30,34 @@ class GraphHit:
 
 
 def graph_retrieve(query: str, top_k: int = 5) -> list[GraphHit]:
-    """Hybrid vector + graph retrieval via Bedrock KB GraphRAG.
+    """Retrieve from Bedrock GraphRAG KB (Neptune Analytics).
 
-    Returns empty list if KB_ID isn't configured (e.g. local dev without
-    the graph service).
+    Returns empty list if GRAPHRAG_KB_ID is not set.
     """
-    if not KB_ID:
-        log.info("graph_retrieve called but KB_ID not set; returning empty")
+    if not GRAPHRAG_KB_ID:
+        log.info("graph_retrieve: BEDROCK_GRAPHRAG_KB_ID not set; returning empty")
         return []
 
-    client = boto3.client("bedrock-agent-runtime", region_name=KB_REGION)
+    client = boto3.client("bedrock-agent-runtime", region_name=REGION)
     try:
         resp = client.retrieve(
-            knowledgeBaseId=KB_ID,
+            knowledgeBaseId=GRAPHRAG_KB_ID,
             retrievalQuery={"text": query},
             retrievalConfiguration={
                 "vectorSearchConfiguration": {
                     "numberOfResults": top_k,
-                },
+                    "overrideSearchType": "SEMANTIC",  # HYBRID not supported for Neptune KB
+                }
             },
         )
     except Exception as exc:  # noqa: BLE001
-        log.warning("graph_retrieve failed: %s", exc)
+        log.warning("GraphRAG retrieve failed: %s", exc)
         return []
 
     hits: list[GraphHit] = []
     for r in resp.get("retrievalResults", []):
-        content = r.get("content", {}).get("text", "")
-        source = (
-            r.get("location", {})
-            .get("s3Location", {})
-            .get("uri", "graph")
-        )
-        hits.append(
-            GraphHit(
-                text=content,
-                source=source,
-                score=r.get("score", 0.0),
-            )
-        )
+        text = r.get("content", {}).get("text", "")
+        source = r.get("location", {}).get("s3Location", {}).get("uri", "graph")
+        score = r.get("score", 0.0)
+        hits.append(GraphHit(text=text, source=source, score=score))
     return hits
