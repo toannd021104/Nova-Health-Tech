@@ -16,6 +16,8 @@ import logging
 import os
 from typing import Any
 
+from typing import Any
+
 import boto3
 
 log = logging.getLogger(__name__)
@@ -24,13 +26,16 @@ REGION = os.environ.get("AWS_REGION", "ap-southeast-1")
 KB_ID = os.environ.get("BEDROCK_KB_ID", "MUEEBGPRSJ")
 
 
-def retrieve(query: str, namespace: str = "", top_k: int = 5, **_) -> list[dict[str, Any]]:
+def retrieve(query: str, namespace: str = "", top_k: int = 15, **_) -> list[dict[str, Any]]:
     """Retrieve from Bedrock Vector KB (OpenSearch Serverless).
 
     `namespace` is accepted for API compatibility with the old FAISS path
     but is not used — the KB covers all departments.
+
+    Returns top-15 results by default for better recall across diverse data sources.
     """
     client = boto3.client("bedrock-agent-runtime", region_name=REGION)
+
     try:
         resp = client.retrieve(
             knowledgeBaseId=KB_ID,

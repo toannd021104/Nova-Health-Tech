@@ -20,7 +20,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -158,4 +158,131 @@ async def chat(req: ChatRequest, request: Request) -> dict[str, Any]:
 def index() -> HTMLResponse:
     return HTMLResponse(
         '<!doctype html><meta http-equiv="refresh" content="0; url=/ui/index.html">'
+    )
+
+
+@app.post("/api/chat/stream")
+async def chat_stream(req: ChatRequest, request: Request):
+    """Streaming SSE endpoint — sends tokens as they arrive from Bedrock.
+
+    Returns Server-Sent Events:
+      event: route   data: {"lane": ..., "department": ...}
+      event: token   data: {"text": "..."}
+      event: done    data: {"citations": [...]}
+    """
+    import json as _json
+
+    _check_token(request)
+
+    state = ChatState(
+        question=req.message,
+        emergency=req.emergency,
+        attachments=[a.model_dump() for a in req.attachments],
+    )
+
+    loop = asyncio.get_running_loop()
+
+    # Run graph up to generate (phi_mask, pick_lane, cache_lookup, route, retrieve)
+    # Then stream the generate step
+    def _run_pre_generate():
+        graph = get_graph()
+        # We need to run the graph but intercept before generate
+        # Simpler: run full graph for non-streaming, use converse_stream for streaming
+        from app.graph import (
+            _node_phi_mask, _node_pick_lane, _node_cache_lookup,
+            _branch_on_lane, _node_emergency_agent, _node_route_department,
+            _node_retrieve,
+        )
+        state_out = _node_phi_mask(state)
+        state_out = _node_pick_lane(state_out)
+        state_out = _node_cache_lookup(state_out)
+        branch = _branch_on_lane(state_out)
+        if branch == "cached":
+            return state_out
+        elif branch == "emergency":
+            state_out = _node_emergency_agent(state_out)
+        else:
+            state_out = _node_route_department(state_out)
+        if state_out.cache_hit:
+            return state_out
+        state_out = _node_retrieve(state_out)
+        return state_out
+
+    pre_state = await loop.run_in_executor(None, _run_pre_generate)
+
+    def _get(obj, key, default=None):
+        if isinstance(obj, dict):
+            return obj.get(key, default)
+        return getattr(obj, key, default)
+
+    async def event_generator():
+        # Send route info first
+        dept = pre_state.department
+        route_data = {
+            "lane": pre_state.lane,
+            "badge": pre_state.route_badge,
+            "department": dept.label if dept else None,
+        }
+        yield f"event: route\ndata: {_json.dumps(route_data)}\n\n"
+
+        # If cached, send full answer immediately
+        if pre_state.cache_hit:
+            yield f"event: token\ndata: {_json.dumps({'text': pre_state.answer})}\n\n"
+            yield f"event: done\ndata: {_json.dumps({'citations': pre_state.citations})}\n\n"
+            return
+
+        # Stream generate via converse_stream
+        import boto3 as _boto3
+        from app.graph import BEDROCK_REGION
+        from app.agents import CLAUDE_HAIKU
+
+        bedrock = _boto3.client("bedrock-runtime", region_name=BEDROCK_REGION)
+
+        context_parts = []
+        for c in pre_state.citations:
+            origin = c.get("origin", "vector")
+            page = f", page: {c.get('page', 'n/a')}" if c.get("page") else ""
+            context_parts.append(
+                f"[{c['id']}] (source: {c['source']}{page}, origin: {origin})\n{c['snippet']}"
+            )
+        context_block = "\n\n".join(context_parts) or (
+            "(no context retrieved)"
+        )
+
+        user_message = f"Clinical context:\n{context_block}\n\nQuestion:\n{pre_state.masked_question}"
+        model_id = CLAUDE_HAIKU if pre_state.lane == "emergency" else (dept.model if dept else CLAUDE_HAIKU)
+        max_tokens = 700 if pre_state.lane == "emergency" else 1500
+        temperature = 0.1 if pre_state.lane == "emergency" else 0.2
+
+        guardrail_id = os.environ.get("GUARDRAIL_ID", "azsgfl02i9gn")
+        converse_kwargs = dict(
+            modelId=model_id,
+            system=[{"text": dept.system_prompt if dept else "You are a clinical assistant."}],
+            messages=[{"role": "user", "content": [{"text": user_message}]}],
+            inferenceConfig={"maxTokens": max_tokens, "temperature": temperature},
+        )
+        if guardrail_id:
+            converse_kwargs["guardrailConfig"] = {
+                "guardrailIdentifier": guardrail_id,
+                "guardrailVersion": "DRAFT",
+                "trace": "enabled",
+            }
+
+        try:
+            resp = bedrock.converse_stream(**converse_kwargs)
+            for event in resp.get("stream", []):
+                if "contentBlockDelta" in event:
+                    delta = event["contentBlockDelta"].get("delta", {})
+                    text = delta.get("text", "")
+                    if text:
+                        yield f"event: token\ndata: {_json.dumps({'text': text})}\n\n"
+        except Exception as e:
+            yield f"event: error\ndata: {_json.dumps({'error': str(e)})}\n\n"
+
+        yield f"event: done\ndata: {_json.dumps({'citations': pre_state.citations})}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )

@@ -1,0 +1,38 @@
+﻿=== Sample Entity nodes (first 30) ===
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+  None
+
+=== Entity properties ===
+  {'props': []}
+
+=== Entities containing drug names ===
+
+=== How entities connect to chunks ===

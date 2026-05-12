@@ -187,16 +187,16 @@ def _node_retrieve(state: ChatState) -> ChatState:
         from app.rag import retrieve  # type: ignore
 
     assert state.department is not None
+
+    # Emergency lane: Vector KB only (no GraphRAG) — saves ~900ms
+    # Complex lane: Vector KB + GraphRAG for multi-hop questions
     state.retrieved = retrieve(
         query=state.masked_question,
         namespace=state.department.kb_namespace,
-        top_k=5,
+        top_k=15,
     )
 
-    if (
-        state.lane == "complex"
-        and (" and " in state.masked_question.lower() or "," in state.masked_question)
-    ):
+    if state.lane == "complex":
         graph_hits = graphrag.graph_retrieve(state.masked_question, top_k=3)
         state.graph_hits = [
             {"source": h.source, "text": h.text, "score": h.score} for h in graph_hits

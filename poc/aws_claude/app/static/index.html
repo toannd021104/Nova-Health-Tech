@@ -2,59 +2,79 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Nova Health Clinical AI — POC</title>
+  <title>Nova Health Clinical AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
 </head>
 <body>
   <header>
-    <h1>Nova Health Clinical AI — POC</h1>
-    <div class="subtitle">Multi-agent department routing · Emergency bypass · RAG-grounded · 10-day demo</div>
+    <h1>Nova Health Clinical AI</h1>
+    <div class="subtitle">AWS with Claude, Bedrock KB + GraphRAG + Guardrails, Singapore ap-southeast-1</div>
   </header>
 
   <main>
     <aside>
-      <div class="panel">
-        <h3>Emergency toggle</h3>
+      <div class="panel emergency-panel">
+        <h3>Emergency mode</h3>
         <label class="switch">
           <input type="checkbox" id="emergency">
           <span class="slider"></span>
         </label>
-        <p class="hint">When ON, bypasses the router and goes straight to Haiku 4.5 on the Emergency Medicine agent. Target p95 ≤ 2 s.</p>
+        <p class="hint">ON: bypasses router, uses Claude Haiku 4.5 for fast grounded answer. OFF: routes to specialty agent via Claude Sonnet 4.5.</p>
       </div>
 
       <div class="panel">
-        <h3>Route preview</h3>
-        <div id="route-badge" class="badge">—</div>
-        <div id="route-reason" class="reason-text">(submit a question to see how the router classified it)</div>
+        <h3>Route info</h3>
+        <div id="route-badge" class="badge">waiting</div>
+        <div id="route-reason" class="reason-text">Submit a question to see routing</div>
+        <div id="route-timing" class="reason-text"></div>
       </div>
 
       <div class="panel">
-        <h3>Try these</h3>
+        <h3>Sample questions</h3>
         <ul class="samples">
-          <li><button data-sample="What's the WHO 1-hour sepsis bundle for a 70 kg adult with septic shock?" data-emergency="true">Sepsis bundle (emergency)</button></li>
-          <li><button data-sample="54-year-old with eGFR 35 and a sulfa allergy, what antibiotic for complicated UTI?" data-emergency="false">Complicated UTI + eGFR 35 + sulfa allergy</button></li>
-          <li><button data-sample="Newly diagnosed HFrEF with LVEF 30%, pick the first-line quadruple therapy." data-emergency="false">HFrEF first-line</button></li>
-          <li><button data-sample="I'm attaching a chest X-ray — describe the findings." data-emergency="false">Radiology (attach an image below)</button></li>
+          <li><button data-sample="Patient with severe COVID-19, SpO2 88% on room air. What oxygen target and treatment does WHO recommend?" data-emergency="true">COVID-19 SpO2 88% (emergency)</button></li>
+          <li><button data-sample="According to WHO guidelines, what is the recommended treatment for hospitalised adult with severe COVID-19 requiring supplemental oxygen? Include drug names and evidence grading." data-emergency="false">COVID-19 treatment protocol (complex)</button></li>
+          <li><button data-sample="What does WHO recommend for anticoagulation in severe COVID-19? Prophylactic or therapeutic dose?" data-emergency="false">Anticoagulation in COVID-19</button></li>
+          <li><button data-sample="Can corticosteroids be combined with IL-6 receptor blockers and baricitinib in severe COVID-19?" data-emergency="false">Triple combination therapy</button></li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h3>Stack</h3>
+        <ul class="stack-info">
+          <li>Vector KB: OpenSearch Serverless</li>
+          <li>GraphRAG: Neptune Analytics</li>
+          <li>Embed: Cohere Multilingual v3</li>
+          <li>Guardrails: Bedrock Guardrails</li>
+          <li>Emergency: Claude Haiku 4.5</li>
+          <li>Complex: Claude Sonnet 4.5</li>
         </ul>
       </div>
     </aside>
 
     <section>
-      <div id="chat-log" class="chat-log"></div>
+      <div id="chat-log" class="chat-log">
+        <div class="welcome">
+          <p>Ask a clinical question grounded in WHO COVID-19 therapeutics guidelines (B09540-eng.pdf, 198 pages).</p>
+          <p>Toggle <strong>Emergency</strong> for fast-lane Haiku 4.5 response. Leave off for full specialty routing via Sonnet 4.5.</p>
+        </div>
+      </div>
 
       <form id="chat-form">
-        <input type="file" id="attach" accept="image/*" multiple>
-        <textarea id="message" placeholder="Ask a clinical question…" required></textarea>
-        <button type="submit">Send</button>
+        <div class="input-row">
+          <textarea id="message" placeholder="Ask a clinical question..." required rows="2"></textarea>
+          <button type="submit" id="send-btn">Send</button>
+        </div>
+        <div class="input-meta">
+          <input type="file" id="attach" accept="image/*" multiple>
+          <span id="timing-display"></span>
+        </div>
       </form>
     </section>
   </main>
-
-  <footer>
-    <span id="token-counter">0 tokens this session</span>
-    <span>Version: POC · cheapest AWS SG</span>
-  </footer>
 
   <script src="app.js"></script>
 </body>

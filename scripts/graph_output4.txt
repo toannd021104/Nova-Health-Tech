@@ -1,0 +1,6 @@
+﻿{"lbl": ["Entity"], "nid": "x-amz-bedrock-kb-covid19lnma.com", "k": []}
+{"lbl": ["Entity"], "nid": "x-amz-bedrock-kb-iv", "k": []}
+{"lbl": ["Chunk"], "nid": "d5bc6e92-4cd0-46b1-9399-4bc224d7fd58", "k": ["text", "metadata", "metadata_x-amz-bedrock-kb-source-uri", "metadata_x-amz-bedrock-kb-data-source-id", "metadata_x-amz-bedrock-kb-document-page-number", "metadata_x-amz-bedrock-kb-source-file-modality"]}
+
+{"props": ["text", "metadata", "metadata_x-amz-bedrock-kb-source-uri", "metadata_x-amz-bedrock-kb-data-source-id", "metadata_x-amz-bedrock-kb-document-page-number", "metadata_x-amz-bedrock-kb-source-file-modality"], "preview": ".     \u2022 Patients at moderate risk (3%) of hospitalization are those over 65 years, those with obesity, diabetes and/or chronic     cardiopulmonary disease, chronic kidney or liver disease, active canc"}
+{"props": ["text", "metadata", "metadata_x-amz-bedrock-kb-source-uri", "metadata_x-amz-bedrock-kb-data-source-id", "metadata_x-amz-bedrock-kb-document-page-number", "metadata_x-amz-bedrock-kb-source-file-modality"], "preview": "All of the trials compared remdesivir with standard care with or without a placebo. Five trials were not included because they enrolled patients with exclusively severe COVID-19, or did not report any"}

@@ -1,0 +1,16 @@
+﻿=== Entity types ===
+  {'label': ['Entity'], 'cnt': 1863}
+  {'label': ['Chunk'], 'cnt': 826}
+  {'label': ['DocumentId'], 'cnt': 1}
+
+=== Relation types ===
+  {'rel': 'CONTAINS', 'cnt': 5119}
+  {'rel': 'FROM', 'cnt': 826}
+
+=== Sample drug entities (first 20) ===
+
+=== Sample relations involving drugs (first 20) ===
+
+=== Drug interaction relations ===
+
+=== Relations from corticosteroids ===

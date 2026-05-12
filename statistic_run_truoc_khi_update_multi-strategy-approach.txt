@@ -1,0 +1,11 @@
+=== File sizes ===
+docs/test_questions_800.csv: 101,595 bytes
+docs/eval_results_900.csv: 592,456 bytes   
+docs/eval_summary_900.md: 3,474 bytes      
+
+=== eval_results_900.csv stats ===
+Total rows: 900
+Answered: 813 (90.3%)
+Refused: 89 (9.9%)
+Avg time: 7811 ms
+Min time: 2244 ms, Max time: 14439 ms

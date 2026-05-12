@@ -1,0 +1,901 @@
+id,type,question
+1,general,What is the WHO recommendation for dexamethasone in severe COVID-19?
+2,general,What dose of dexamethasone does WHO recommend for severe COVID-19?
+3,general,For how many days should dexamethasone be administered in severe COVID-19 per WHO guidelines?
+4,general,What is the GRADE certainty of evidence for dexamethasone in severe COVID-19?
+5,general,Does WHO recommend dexamethasone for non-severe COVID-19 patients?
+6,general,What is the alternative corticosteroid to dexamethasone recommended by WHO for severe COVID-19?
+7,general,What equivalent dose of hydrocortisone corresponds to dexamethasone 6 mg per WHO?
+8,general,What equivalent dose of methylprednisolone corresponds to dexamethasone 6 mg per WHO?
+9,general,Which trial provided key evidence for corticosteroids in COVID-19 per WHO guidelines?
+10,general,What was the mortality benefit of dexamethasone in the RECOVERY trial for ventilated patients?
+11,general,Does WHO recommend corticosteroids for patients with non-severe COVID-19 who are not at high risk?
+12,general,What is the route of administration for dexamethasone in severe COVID-19 per WHO?
+13,general,Can oral dexamethasone be used instead of IV in severe COVID-19 per WHO?
+14,general,What is the WHO recommendation strength for corticosteroids in critical COVID-19?
+15,general,What RECOVERY trial finding supports corticosteroid use in COVID-19?
+16,general,What is the WHO-recommended dose of methylprednisolone for severe COVID-19?
+17,general,What is the WHO-recommended dose of hydrocortisone for severe COVID-19?
+18,general,Is hydrocortisone considered equivalent to dexamethasone for COVID-19 treatment per WHO?
+19,general,What is the duration of hydrocortisone treatment for severe COVID-19 per WHO?
+20,general,Which corticosteroid does WHO list as the preferred option for severe COVID-19?
+21,general,What is the WHO recommendation for tocilizumab in severe COVID-19?
+22,general,What GRADE certainty supports tocilizumab use in severe COVID-19 per WHO?
+23,general,Should tocilizumab be combined with corticosteroids in severe COVID-19 per WHO?
+24,general,What is the recommended dose of tocilizumab for severe COVID-19 per WHO?
+25,general,What trial evidence supports tocilizumab use in COVID-19 per WHO guidelines?
+26,general,Does WHO recommend tocilizumab for non-severe COVID-19?
+27,general,What is the route of administration for tocilizumab in COVID-19 per WHO?
+28,general,What is the REMAP-CAP trial finding regarding tocilizumab in COVID-19?
+29,general,Can tocilizumab be used in COVID-19 patients with active bacterial infections per WHO?
+30,general,What is the WHO recommendation for tocilizumab in critical COVID-19?
+31,general,What is the WHO recommendation for sarilumab in severe COVID-19?
+32,general,Is sarilumab considered an alternative to tocilizumab per WHO guidelines?
+33,general,What dose of sarilumab is recommended for severe COVID-19 per WHO?
+34,general,What GRADE certainty supports sarilumab use in COVID-19 per WHO?
+35,general,Does WHO recommend sarilumab for non-severe COVID-19?
+36,general,What is the WHO recommendation for baricitinib in severe COVID-19?
+37,general,What GRADE certainty supports baricitinib use in severe COVID-19 per WHO?
+38,general,What is the recommended dose of baricitinib for severe COVID-19 per WHO?
+39,general,Should baricitinib be combined with corticosteroids in severe COVID-19 per WHO?
+40,general,What trial evidence supports baricitinib use in COVID-19 per WHO guidelines?
+41,general,Does WHO recommend baricitinib for non-severe COVID-19?
+42,general,What is the duration of baricitinib treatment for severe COVID-19 per WHO?
+43,general,Can baricitinib be used as an alternative to IL-6 receptor blockers per WHO?
+44,general,What is the WHO recommendation for baricitinib in critical COVID-19?
+45,general,What dose adjustment is needed for baricitinib in renal impairment per WHO?
+46,general,What is the WHO recommendation for ruxolitinib in severe COVID-19?
+47,general,Does WHO recommend ruxolitinib for COVID-19 treatment?
+48,general,What GRADE certainty is assigned to ruxolitinib for COVID-19 per WHO?
+49,general,Is ruxolitinib a strong or conditional recommendation per WHO COVID-19 guidelines?
+50,general,What is the evidence basis for ruxolitinib in COVID-19 per WHO?
+51,general,What is the WHO recommendation for tofacitinib in severe COVID-19?
+52,general,Does WHO recommend tofacitinib for COVID-19 treatment?
+53,general,What GRADE certainty is assigned to tofacitinib for COVID-19 per WHO?
+54,general,Is tofacitinib a strong or conditional recommendation per WHO COVID-19 guidelines?
+55,general,What safety concern is associated with tofacitinib in COVID-19 per WHO?
+56,general,What is the WHO recommendation for remdesivir in non-severe COVID-19 at high risk?
+57,general,What is the WHO recommendation for remdesivir in severe COVID-19?
+58,general,What GRADE certainty supports remdesivir use in non-severe high-risk COVID-19 per WHO?
+59,general,What is the recommended dose of remdesivir for COVID-19 per WHO?
+60,general,What is the duration of remdesivir treatment for COVID-19 per WHO?
+61,general,What trial evidence informs the WHO recommendation for remdesivir?
+62,general,Does WHO recommend remdesivir for all COVID-19 patients regardless of severity?
+63,general,What is the route of administration for remdesivir per WHO?
+64,general,What renal function threshold affects remdesivir use per WHO guidelines?
+65,general,Does WHO recommend remdesivir for critical COVID-19 patients on mechanical ventilation?
+66,general,What is the WHO recommendation for molnupiravir in non-severe COVID-19?
+67,general,What GRADE certainty supports molnupiravir use per WHO?
+68,general,What is the recommended dose of molnupiravir for COVID-19 per WHO?
+69,general,What is the duration of molnupiravir treatment per WHO?
+70,general,Does WHO recommend molnupiravir for severe COVID-19?
+71,general,What population is molnupiravir recommended for per WHO COVID-19 guidelines?
+72,general,Is molnupiravir recommended for pregnant women per WHO COVID-19 guidelines?
+73,general,What is the GRADE recommendation strength for molnupiravir per WHO?
+74,general,What trial evidence supports molnupiravir use in COVID-19 per WHO?
+75,general,What is the symptom onset timing for molnupiravir treatment per WHO?
+76,general,What is the WHO recommendation for nirmatrelvir-ritonavir in non-severe COVID-19?
+77,general,What GRADE certainty supports nirmatrelvir-ritonavir use per WHO?
+78,general,What is the recommended dose of nirmatrelvir-ritonavir for COVID-19 per WHO?
+79,general,What is the duration of nirmatrelvir-ritonavir treatment per WHO?
+80,general,What is the symptom onset timing for nirmatrelvir-ritonavir treatment per WHO?
+81,general,Does WHO recommend nirmatrelvir-ritonavir for severe COVID-19?
+82,general,What population is nirmatrelvir-ritonavir recommended for per WHO COVID-19 guidelines?
+83,general,What major drug interaction concern exists with nirmatrelvir-ritonavir per WHO?
+84,general,How does ritonavir in nirmatrelvir-ritonavir cause drug interactions per WHO guidelines?
+85,general,What dose adjustment is needed for nirmatrelvir-ritonavir in renal impairment per WHO?
+86,general,Is nirmatrelvir-ritonavir recommended for patients with severe renal impairment per WHO?
+87,general,What is the WHO recommendation for nirmatrelvir-ritonavir in liver impairment?
+88,general,Can nirmatrelvir-ritonavir be used in pregnant women per WHO COVID-19 guidelines?
+89,general,What immunosuppressant drugs interact with nirmatrelvir-ritonavir per WHO?
+90,general,What anticoagulants interact with nirmatrelvir-ritonavir per WHO guidelines?
+91,general,What is the WHO recommendation for prophylactic heparin in hospitalized COVID-19 patients?
+92,general,What is the WHO recommendation for therapeutic anticoagulation in non-critically ill COVID-19?
+93,general,What GRADE certainty supports prophylactic heparin in COVID-19 per WHO?
+94,general,Does WHO recommend therapeutic-dose anticoagulation for all hospitalized COVID-19 patients?
+95,general,What trial evidence informs heparin recommendations in COVID-19 per WHO?
+96,general,What is the difference between prophylactic and therapeutic anticoagulation in COVID-19 per WHO?
+97,general,Does WHO recommend therapeutic anticoagulation for critically ill COVID-19 patients?
+98,general,What is the ATTACC/ACTIV-4a trial finding regarding anticoagulation in COVID-19?
+99,general,What bleeding risk consideration applies to anticoagulation in COVID-19 per WHO?
+100,general,Does WHO recommend anticoagulation for non-severe COVID-19 outpatients?
+101,general,What is the WHO recommendation regarding ivermectin for COVID-19?
+102,general,Does WHO recommend ivermectin for non-severe COVID-19?
+103,general,What GRADE certainty is assigned to the recommendation against ivermectin per WHO?
+104,general,What is the evidence basis for WHO recommending against ivermectin in COVID-19?
+105,general,Is ivermectin recommended for severe COVID-19 per WHO guidelines?
+106,general,What is the WHO recommendation regarding hydroxychloroquine for COVID-19?
+107,general,Does WHO recommend hydroxychloroquine for any severity of COVID-19?
+108,general,What GRADE certainty supports the recommendation against hydroxychloroquine per WHO?
+109,general,What trial evidence led WHO to recommend against hydroxychloroquine in COVID-19?
+110,general,What safety concern is associated with hydroxychloroquine in COVID-19 per WHO?
+111,general,What is the WHO recommendation regarding lopinavir-ritonavir for COVID-19?
+112,general,Does WHO recommend lopinavir-ritonavir for severe COVID-19?
+113,general,What trial evidence led WHO to recommend against lopinavir-ritonavir in COVID-19?
+114,general,What GRADE certainty supports the recommendation against lopinavir-ritonavir per WHO?
+115,general,Is lopinavir-ritonavir recommended for non-severe COVID-19 per WHO?
+116,general,What is the WHO recommendation regarding convalescent plasma for COVID-19?
+117,general,Does WHO recommend convalescent plasma for severe COVID-19?
+118,general,What GRADE certainty supports the recommendation against convalescent plasma per WHO?
+119,general,What trial evidence led WHO to recommend against convalescent plasma in COVID-19?
+120,general,Is convalescent plasma recommended for non-severe COVID-19 per WHO?
+121,general,What is the WHO recommendation regarding colchicine for COVID-19?
+122,general,Does WHO recommend colchicine for non-severe COVID-19?
+123,general,What GRADE certainty supports the recommendation against colchicine per WHO?
+124,general,What trial evidence led WHO to recommend against colchicine in COVID-19?
+125,general,What is the WHO recommendation regarding fluvoxamine for COVID-19?
+126,general,Does WHO recommend fluvoxamine for non-severe COVID-19?
+127,general,What GRADE certainty supports the recommendation against fluvoxamine per WHO?
+128,general,What is the WHO recommendation regarding statins for COVID-19?
+129,general,Does WHO recommend statins for COVID-19 treatment?
+130,general,What GRADE certainty supports the recommendation against statins per WHO?
+131,general,What is the WHO recommendation regarding SGLT-2 inhibitors for COVID-19?
+132,general,Does WHO recommend SGLT-2 inhibitors for COVID-19 treatment?
+133,general,What GRADE certainty supports the recommendation against SGLT-2 inhibitors per WHO?
+134,general,What is the WHO recommendation regarding VV116 for COVID-19?
+135,general,Does WHO recommend VV116 for COVID-19 treatment?
+136,general,What GRADE certainty supports the recommendation against VV116 per WHO?
+137,general,What is the WHO recommendation regarding casirivimab-imdevimab for COVID-19?
+138,general,Why does WHO recommend against casirivimab-imdevimab for COVID-19?
+139,general,What variant-related reason led WHO to recommend against casirivimab-imdevimab?
+140,general,What is the WHO recommendation regarding sotrovimab for COVID-19?
+141,general,Why does WHO recommend against sotrovimab for COVID-19?
+142,general,What variant-related reason led WHO to recommend against sotrovimab?
+143,general,What is the WHO recommendation regarding metformin for COVID-19?
+144,general,Does WHO recommend metformin for COVID-19 treatment?
+145,general,What GRADE certainty supports the recommendation against metformin per WHO?
+146,general,How does WHO classify COVID-19 severity?
+147,general,What defines non-severe COVID-19 per WHO classification?
+148,general,What defines severe COVID-19 per WHO classification?
+149,general,What defines critical COVID-19 per WHO classification?
+150,general,What clinical features distinguish severe from critical COVID-19 per WHO?
+151,general,What oxygen saturation threshold defines severe COVID-19 per WHO?
+152,general,What respiratory rate threshold is used in WHO COVID-19 severity classification?
+153,general,How does WHO severity classification guide treatment decisions in COVID-19?
+154,general,What is the WHO definition of high-risk non-severe COVID-19?
+155,general,Which patient groups are considered high risk for hospitalization in non-severe COVID-19 per WHO?
+156,general,What factors make a non-severe COVID-19 patient high risk per WHO?
+157,general,Which antivirals does WHO recommend for non-severe high-risk COVID-19 patients?
+158,general,What is the preferred antiviral for non-severe high-risk COVID-19 per WHO?
+159,general,Does age alone make a non-severe COVID-19 patient high risk per WHO?
+160,general,What comorbidities increase hospitalization risk in non-severe COVID-19 per WHO?
+161,general,Does WHO recommend nirmatrelvir-ritonavir for non-severe COVID-19 patients at high risk?
+162,general,Does WHO recommend remdesivir for non-severe COVID-19 patients at high risk?
+163,general,Does WHO recommend molnupiravir for non-severe COVID-19 patients at high risk?
+164,general,What is the GRADE certainty for antivirals in non-severe high-risk COVID-19 per WHO?
+165,general,How does WHO rank antivirals for non-severe high-risk COVID-19 patients?
+166,general,What is the WHO recommendation for corticosteroids in pregnant women with severe COVID-19?
+167,general,Can dexamethasone be used in pregnant women with severe COVID-19 per WHO?
+168,general,What is the WHO recommendation for tocilizumab in pregnant women with severe COVID-19?
+169,general,Is nirmatrelvir-ritonavir recommended for pregnant women with COVID-19 per WHO?
+170,general,Is molnupiravir recommended for pregnant women with COVID-19 per WHO?
+171,general,What antivirals does WHO recommend for pregnant women with non-severe high-risk COVID-19?
+172,general,What is the WHO recommendation for remdesivir in pregnant women with COVID-19?
+173,general,Can baricitinib be used in pregnant women with COVID-19 per WHO?
+174,general,What is the WHO guidance on breastfeeding during COVID-19 treatment?
+175,general,What special considerations apply to anticoagulation in pregnant COVID-19 patients per WHO?
+176,general,What is the WHO recommendation for corticosteroids in children with severe COVID-19?
+177,general,Can dexamethasone be used in children with severe COVID-19 per WHO?
+178,general,What is the WHO recommendation for tocilizumab in children with severe COVID-19?
+179,general,Is nirmatrelvir-ritonavir approved for children with COVID-19 per WHO?
+180,general,What antivirals does WHO recommend for children with non-severe high-risk COVID-19?
+181,general,What is the WHO recommendation for baricitinib in pediatric COVID-19?
+182,general,What age threshold applies to nirmatrelvir-ritonavir use in COVID-19 per WHO?
+183,general,What weight threshold applies to nirmatrelvir-ritonavir use in COVID-19 per WHO?
+184,general,Does WHO recommend remdesivir for children with severe COVID-19?
+185,general,What special considerations apply to COVID-19 treatment in children per WHO?
+186,general,What dose adjustment is needed for remdesivir in renal impairment per WHO?
+187,general,What eGFR threshold contraindicates remdesivir use per WHO COVID-19 guidelines?
+188,general,What dose adjustment is needed for nirmatrelvir-ritonavir in moderate renal impairment per WHO?
+189,general,Is nirmatrelvir-ritonavir contraindicated in severe renal impairment per WHO?
+190,general,What is the recommended baricitinib dose for COVID-19 patients with eGFR between 30 and 60 per WHO?
+191,general,Can molnupiravir be used in patients with renal impairment per WHO?
+192,general,What anticoagulation considerations apply to COVID-19 patients with renal failure per WHO?
+193,general,Does renal impairment affect corticosteroid dosing in COVID-19 per WHO?
+194,general,What eGFR threshold requires dose reduction of nirmatrelvir-ritonavir per WHO?
+195,general,Which COVID-19 antivirals require dose adjustment in renal impairment per WHO?
+196,general,What is the WHO recommendation for nirmatrelvir-ritonavir in severe liver impairment?
+197,general,Is nirmatrelvir-ritonavir contraindicated in severe hepatic impairment per WHO?
+198,general,What liver function monitoring is recommended during COVID-19 treatment per WHO?
+199,general,Does liver impairment affect remdesivir use in COVID-19 per WHO?
+200,general,What hepatic considerations apply to baricitinib use in COVID-19 per WHO?
+201,general,Does liver impairment affect corticosteroid dosing in COVID-19 per WHO?
+202,general,What is the WHO recommendation for tocilizumab in patients with liver impairment?
+203,general,What liver enzyme elevation threshold affects COVID-19 treatment decisions per WHO?
+204,general,Can molnupiravir be used in patients with liver impairment per WHO?
+205,general,What hepatic safety monitoring is recommended for JAK inhibitors in COVID-19 per WHO?
+206,general,What is the WHO recommendation for COVID-19 treatment in HIV-positive patients?
+207,general,What is the WHO recommendation for COVID-19 treatment in transplant recipients?
+208,general,Does immunocompromised status affect COVID-19 treatment recommendations per WHO?
+209,general,What antivirals does WHO recommend for immunocompromised COVID-19 patients?
+210,general,What special considerations apply to corticosteroid use in immunocompromised COVID-19 patients per WHO?
+211,general,Does WHO recommend IL-6 blockers for immunocompromised patients with severe COVID-19?
+212,general,What infection risk considerations apply to immunocompromised COVID-19 patients per WHO?
+213,general,Does WHO recommend baricitinib for immunocompromised patients with severe COVID-19?
+214,general,What monitoring is recommended for immunocompromised COVID-19 patients on treatment per WHO?
+215,general,How does HIV status affect COVID-19 treatment decisions per WHO guidelines?
+216,general,What is the most significant drug interaction concern with nirmatrelvir-ritonavir per WHO?
+217,general,Which immunosuppressants interact with nirmatrelvir-ritonavir per WHO guidelines?
+218,general,Which anticoagulants interact with nirmatrelvir-ritonavir per WHO guidelines?
+219,general,Which antiepileptics interact with nirmatrelvir-ritonavir per WHO guidelines?
+220,general,Which statins interact with nirmatrelvir-ritonavir per WHO guidelines?
+221,general,How should tacrolimus be managed when starting nirmatrelvir-ritonavir per WHO?
+222,general,How should cyclosporine be managed when starting nirmatrelvir-ritonavir per WHO?
+223,general,What cardiac medications interact with nirmatrelvir-ritonavir per WHO guidelines?
+224,general,What psychiatric medications interact with nirmatrelvir-ritonavir per WHO guidelines?
+225,general,What HIV medications interact with nirmatrelvir-ritonavir per WHO guidelines?
+226,general,What does high certainty GRADE evidence mean in WHO COVID-19 guidelines?
+227,general,What does moderate certainty GRADE evidence mean in WHO COVID-19 guidelines?
+228,general,What does low certainty GRADE evidence mean in WHO COVID-19 guidelines?
+229,general,What does very low certainty GRADE evidence mean in WHO COVID-19 guidelines?
+230,general,What is the difference between a strong and conditional WHO recommendation?
+231,general,Which COVID-19 treatments have high certainty GRADE evidence per WHO?
+232,general,Which COVID-19 treatments have moderate certainty GRADE evidence per WHO?
+233,general,What GRADE certainty is assigned to corticosteroids in severe COVID-19 per WHO?
+234,general,What GRADE certainty is assigned to IL-6 blockers in severe COVID-19 per WHO?
+235,general,What GRADE certainty is assigned to baricitinib in severe COVID-19 per WHO?
+236,general,What mortality reduction did dexamethasone show in the RECOVERY trial for ventilated patients?
+237,general,What hospitalization reduction did nirmatrelvir-ritonavir show in clinical trials per WHO?
+238,general,What mortality benefit did tocilizumab show in COVID-19 trials per WHO?
+239,general,What hospitalization reduction did remdesivir show in non-severe high-risk COVID-19 per WHO?
+240,general,What mortality benefit did baricitinib show in COVID-19 trials per WHO?
+241,general,What outcome measure is primary in WHO COVID-19 treatment recommendations?
+242,general,What hospitalization reduction did molnupiravir show in clinical trials per WHO?
+243,general,What mortality benefit did corticosteroids show in critical COVID-19 per WHO?
+244,general,What outcome data supports IL-6 blocker use in severe COVID-19 per WHO?
+245,general,What mortality data supports combination therapy in severe COVID-19 per WHO?
+246,general,Within how many days of symptom onset should nirmatrelvir-ritonavir be started per WHO?
+247,general,Within how many days of symptom onset should molnupiravir be started per WHO?
+248,general,Within how many days of symptom onset should remdesivir be started per WHO?
+249,general,Why is early treatment initiation important for antivirals in COVID-19 per WHO?
+250,general,What is the maximum symptom duration for antiviral treatment eligibility per WHO?
+251,general,What is the SOLIDARITY trial and what did it find regarding COVID-19 treatments?
+252,general,What did the RECOVERY trial find regarding dexamethasone in COVID-19?
+253,general,What did the RECOVERY trial find regarding tocilizumab in COVID-19?
+254,general,What did the REMAP-CAP trial find regarding IL-6 blockers in COVID-19?
+255,general,What did the REMAP-CAP trial find regarding baricitinib in COVID-19?
+256,general,What did the SOLIDARITY trial find regarding remdesivir in COVID-19?
+257,general,What did the SOLIDARITY trial find regarding hydroxychloroquine in COVID-19?
+258,general,What did the SOLIDARITY trial find regarding lopinavir-ritonavir in COVID-19?
+259,general,What is the significance of the RECOVERY trial in WHO COVID-19 guidelines?
+260,general,What is the significance of the REMAP-CAP trial in WHO COVID-19 guidelines?
+261,general,What are the main adverse effects of dexamethasone in COVID-19 treatment per WHO?
+262,general,What are the main adverse effects of tocilizumab in COVID-19 treatment per WHO?
+263,general,What are the main adverse effects of baricitinib in COVID-19 treatment per WHO?
+264,general,What are the main adverse effects of nirmatrelvir-ritonavir in COVID-19 treatment per WHO?
+265,general,What are the main adverse effects of remdesivir in COVID-19 treatment per WHO?
+266,general,What are the main adverse effects of molnupiravir in COVID-19 treatment per WHO?
+267,general,What infection risk is associated with corticosteroid use in COVID-19 per WHO?
+268,general,What thrombocytopenia risk is associated with baricitinib in COVID-19 per WHO?
+269,general,What hepatotoxicity risk is associated with COVID-19 treatments per WHO?
+270,general,What reactivation risk is associated with corticosteroids in COVID-19 per WHO?
+271,general,What COVID-19 treatment recommendations does WHO make for resource-limited settings?
+272,general,Which COVID-19 treatments are most feasible in low- and middle-income countries per WHO?
+273,general,What is the WHO recommendation for corticosteroids in LMICs with severe COVID-19?
+274,general,What access considerations does WHO address for nirmatrelvir-ritonavir in LMICs?
+275,general,What is the WHO recommendation for remdesivir availability in resource-limited settings?
+276,general,How does WHO address treatment equity in COVID-19 guidelines?
+277,general,What is the WHO recommendation for anticoagulation in resource-limited settings?
+278,general,Which COVID-19 treatments does WHO prioritize for LMICs?
+279,general,What implementation considerations does WHO provide for COVID-19 treatment in LMICs?
+280,general,How does WHO address the cost of COVID-19 treatments in its guidelines?
+281,general,What combination therapy does WHO recommend for severe COVID-19?
+282,general,Should corticosteroids and IL-6 blockers be combined in severe COVID-19 per WHO?
+283,general,Should corticosteroids and baricitinib be combined in severe COVID-19 per WHO?
+284,general,What is the evidence for combining corticosteroids with tocilizumab in COVID-19 per WHO?
+285,general,Can IL-6 blockers and baricitinib be combined in severe COVID-19 per WHO?
+286,general,What is the WHO recommendation for triple therapy in severe COVID-19?
+287,general,What GRADE certainty supports combination therapy in severe COVID-19 per WHO?
+288,general,What trial evidence supports combination therapy in severe COVID-19 per WHO?
+289,general,What is the rationale for combining corticosteroids with immunomodulators in COVID-19 per WHO?
+290,general,Does WHO recommend adding an antiviral to immunomodulator therapy in severe COVID-19?
+291,general,What is the WHO recommendation for corticosteroids in COVID-19 patients requiring supplemental oxygen?
+292,general,Does WHO recommend corticosteroids for COVID-19 patients on non-invasive ventilation?
+293,general,What is the mechanism of benefit of corticosteroids in severe COVID-19 per WHO?
+294,general,How long after symptom onset can corticosteroids still be beneficial in COVID-19 per WHO?
+295,general,What is the WHO recommendation for corticosteroids in COVID-19 patients on invasive mechanical ventilation?
+296,general,Does WHO recommend corticosteroids for COVID-19 patients with ARDS?
+297,general,What is the WHO recommendation for corticosteroids in COVID-19 patients with septic shock?
+298,general,What is the WHO recommendation for corticosteroids in COVID-19 patients with cytokine storm?
+299,general,Does WHO recommend corticosteroids for COVID-19 patients who are not hypoxic?
+300,general,What is the WHO recommendation for corticosteroids in COVID-19 patients with diabetes?
+301,general,What inflammatory marker elevation supports IL-6 blocker use in COVID-19 per WHO?
+302,general,What CRP level threshold is associated with IL-6 blocker benefit in COVID-19 per WHO?
+303,general,Does WHO recommend IL-6 blockers for COVID-19 patients with normal inflammatory markers?
+304,general,What is the WHO recommendation for IL-6 blockers in COVID-19 patients with septic shock?
+305,general,Can sarilumab replace tocilizumab if tocilizumab is unavailable per WHO?
+306,general,What is the WHO recommendation for IL-6 blockers in COVID-19 patients on mechanical ventilation?
+307,general,Does WHO recommend IL-6 blockers for COVID-19 patients with non-invasive ventilation?
+308,general,What is the timing of IL-6 blocker administration relative to hospital admission per WHO?
+309,general,Does WHO recommend a second dose of tocilizumab in COVID-19 per WHO guidelines?
+310,general,What is the WHO recommendation for IL-6 blockers in COVID-19 patients with active tuberculosis?
+311,general,What is the WHO recommendation for JAK inhibitors when IL-6 blockers are unavailable?
+312,general,Does WHO recommend baricitinib over ruxolitinib for COVID-19?
+313,general,What is the mechanism of action of baricitinib in COVID-19 per WHO?
+314,general,What is the mechanism of action of JAK inhibitors in COVID-19 per WHO?
+315,general,Does WHO recommend JAK inhibitors for COVID-19 patients with active infections?
+316,general,What is the WHO recommendation for baricitinib in COVID-19 patients with thrombocytopenia?
+317,general,What is the WHO recommendation for baricitinib in COVID-19 patients on dialysis?
+318,general,Does WHO recommend tofacitinib as a first-line JAK inhibitor for COVID-19?
+319,general,What is the WHO recommendation for JAK inhibitors in COVID-19 patients with neutropenia?
+320,general,What is the WHO recommendation for baricitinib in COVID-19 patients with lymphopenia?
+321,general,What is the WHO recommendation for antivirals in COVID-19 patients who are not at high risk?
+322,general,Does WHO recommend antivirals for all COVID-19 patients regardless of risk?
+323,general,What is the WHO recommendation for antivirals in COVID-19 patients who are vaccinated?
+324,general,Does vaccination status affect antiviral recommendations in COVID-19 per WHO?
+325,general,What is the WHO recommendation for antivirals in COVID-19 patients with prior immunity?
+326,general,What is the WHO recommendation for antivirals in COVID-19 patients with Omicron variant?
+327,general,Does WHO recommend antivirals for COVID-19 patients with mild symptoms only?
+328,general,What is the WHO recommendation for antivirals in elderly COVID-19 patients?
+329,general,What is the WHO recommendation for antivirals in COVID-19 patients with obesity?
+330,general,What is the WHO recommendation for antivirals in COVID-19 patients with diabetes?
+331,general,What is the WHO recommendation for managing drug interactions before starting nirmatrelvir-ritonavir?
+332,general,How should warfarin be managed when starting nirmatrelvir-ritonavir per WHO?
+333,general,How should direct oral anticoagulants be managed with nirmatrelvir-ritonavir per WHO?
+334,general,What antifungal medications interact with nirmatrelvir-ritonavir per WHO guidelines?
+335,general,What antimycobacterial drugs interact with nirmatrelvir-ritonavir per WHO guidelines?
+336,general,What is the WHO recommendation for monitoring patients on nirmatrelvir-ritonavir?
+337,general,What is the WHO recommendation for managing drug interactions with baricitinib?
+338,general,What is the WHO recommendation for managing drug interactions with tocilizumab?
+339,general,What is the WHO recommendation for managing drug interactions with remdesivir?
+340,general,What is the WHO recommendation for managing drug interactions with molnupiravir?
+341,general,What is the WHO recommendation for COVID-19 treatment in elderly patients?
+342,general,What is the WHO recommendation for COVID-19 treatment in patients with obesity?
+343,general,What is the WHO recommendation for COVID-19 treatment in patients with diabetes?
+344,general,What is the WHO recommendation for COVID-19 treatment in patients with hypertension?
+345,general,What is the WHO recommendation for COVID-19 treatment in patients with chronic lung disease?
+346,general,What is the WHO recommendation for COVID-19 treatment in patients with cardiovascular disease?
+347,general,What is the WHO recommendation for COVID-19 treatment in patients with cancer?
+348,general,What is the WHO recommendation for COVID-19 treatment in patients with chronic kidney disease?
+349,general,What is the WHO recommendation for COVID-19 treatment in patients with chronic liver disease?
+350,general,What is the WHO recommendation for COVID-19 treatment in patients with autoimmune disease?
+351,general,How does WHO update its COVID-19 therapeutics living guideline?
+352,general,What is the living guideline approach used by WHO for COVID-19 therapeutics?
+353,general,What expert panel does WHO use to develop COVID-19 treatment recommendations?
+354,general,How does WHO assess the certainty of evidence for COVID-19 treatments?
+355,general,What is the WHO Guideline Development Group for COVID-19 therapeutics?
+356,general,How does WHO handle conflicts of interest in COVID-19 guideline development?
+357,general,What patient values and preferences does WHO consider in COVID-19 treatment recommendations?
+358,general,How does WHO balance benefits and harms in COVID-19 treatment recommendations?
+359,general,What is the role of systematic reviews in WHO COVID-19 treatment recommendations?
+360,general,How does WHO incorporate new trial data into its COVID-19 living guideline?
+361,general,What clinical outcomes does WHO prioritize in COVID-19 treatment recommendations?
+362,general,What is the WHO recommendation for monitoring patients on corticosteroids for COVID-19?
+363,general,What is the WHO recommendation for monitoring patients on tocilizumab for COVID-19?
+364,general,What is the WHO recommendation for monitoring patients on baricitinib for COVID-19?
+365,general,What is the WHO recommendation for monitoring patients on remdesivir for COVID-19?
+366,general,What laboratory monitoring is recommended for COVID-19 patients on anticoagulation per WHO?
+367,general,What is the WHO recommendation for monitoring inflammatory markers in severe COVID-19?
+368,general,What is the WHO recommendation for monitoring renal function in COVID-19 patients on antivirals?
+369,general,What is the WHO recommendation for monitoring liver function in COVID-19 patients on treatment?
+370,general,What is the WHO recommendation for monitoring blood counts in COVID-19 patients on JAK inhibitors?
+371,general,What is the WHO recommended treatment sequence for severe COVID-19?
+372,general,When should IL-6 blockers be added to corticosteroids in severe COVID-19 per WHO?
+373,general,When should baricitinib be added to corticosteroids in severe COVID-19 per WHO?
+374,general,What is the WHO recommendation for treatment escalation in COVID-19?
+375,general,What is the WHO recommendation for treatment de-escalation in COVID-19?
+376,general,How does WHO recommend clinicians choose between tocilizumab and baricitinib in COVID-19?
+377,general,What is the WHO recommendation for COVID-19 treatment when IL-6 blockers are unavailable?
+378,general,What is the WHO recommendation for COVID-19 treatment when baricitinib is unavailable?
+379,general,What is the WHO recommendation for COVID-19 treatment when nirmatrelvir-ritonavir is unavailable?
+380,general,What is the WHO recommendation for COVID-19 treatment when remdesivir is unavailable?
+381,general,What type of heparin does WHO recommend for prophylaxis in hospitalized COVID-19 patients?
+382,general,What is the WHO recommendation for low molecular weight heparin in COVID-19?
+383,general,What is the WHO recommendation for unfractionated heparin in COVID-19?
+384,general,What is the WHO recommendation for anticoagulation duration in hospitalized COVID-19 patients?
+385,general,What is the WHO recommendation for anticoagulation in COVID-19 patients with prior VTE?
+386,general,What is the WHO recommendation for anticoagulation in COVID-19 patients with atrial fibrillation?
+387,general,What is the WHO recommendation for anticoagulation in COVID-19 patients with thrombocytopenia?
+388,general,What is the WHO recommendation for anticoagulation in COVID-19 patients with active bleeding?
+389,general,What is the WHO recommendation for anticoagulation in COVID-19 patients post-discharge?
+390,general,What is the WHO recommendation for anticoagulation in COVID-19 patients with D-dimer elevation?
+391,general,What is the WHO recommendation for COVID-19 treatment in patients with active hepatitis B?
+392,general,What is the WHO recommendation for COVID-19 treatment in patients with active hepatitis C?
+393,general,What is the WHO recommendation for COVID-19 treatment in patients with active tuberculosis?
+394,general,What is the WHO recommendation for COVID-19 treatment in patients with fungal infections?
+395,general,What is the WHO recommendation for COVID-19 treatment in patients with bacterial co-infection?
+396,general,What is the WHO recommendation for COVID-19 treatment in patients with prior COVID-19 infection?
+397,general,What is the WHO recommendation for COVID-19 treatment in patients with long COVID?
+398,general,What is the WHO recommendation for COVID-19 treatment in patients with post-COVID complications?
+399,general,What is the WHO recommendation for COVID-19 treatment in patients with uncontrolled diabetes?
+400,general,What is the WHO recommendation for COVID-19 treatment in patients with severe malnutrition?
+401,emergency,Patient with severe COVID-19 and SpO2 88% on room air is admitted. What corticosteroid does WHO recommend starting immediately?
+402,emergency,A patient with critical COVID-19 on mechanical ventilation has no contraindications. What is the WHO-recommended corticosteroid and dose?
+403,emergency,Severe COVID-19 patient cannot receive IV medications. Can oral dexamethasone be substituted per WHO guidelines?
+404,emergency,A severe COVID-19 patient has been on dexamethasone for 10 days with improvement. Should it be continued per WHO?
+405,emergency,A COVID-19 patient with severe disease and uncontrolled diabetes is admitted. Should corticosteroids be withheld per WHO?
+406,emergency,A patient with severe COVID-19 and active bacterial pneumonia is admitted. What does WHO recommend regarding corticosteroids?
+407,emergency,A non-severe COVID-19 patient without risk factors requests dexamethasone. What does WHO recommend?
+408,emergency,A severe COVID-19 patient is allergic to dexamethasone. What alternative corticosteroid does WHO recommend?
+409,emergency,A critical COVID-19 patient on ECMO requires corticosteroids. What does WHO recommend?
+410,emergency,A severe COVID-19 patient with active tuberculosis needs treatment. What does WHO recommend regarding corticosteroids?
+411,emergency,A COVID-19 patient with severe disease and prior corticosteroid use for autoimmune disease is admitted. What does WHO recommend?
+412,emergency,A severe COVID-19 patient is not improving after 5 days of dexamethasone. What does WHO recommend adding?
+413,emergency,A critical COVID-19 patient develops hyperglycemia on dexamethasone. Should treatment be stopped per WHO?
+414,emergency,A severe COVID-19 patient with Cushing syndrome is admitted. What does WHO recommend regarding corticosteroids?
+415,emergency,A COVID-19 patient with severe disease and adrenal insufficiency is admitted. What does WHO recommend?
+416,emergency,A severe COVID-19 patient with active fungal infection is admitted. What does WHO recommend regarding corticosteroids?
+417,emergency,A COVID-19 patient with critical disease and thrombocytopenia is admitted. What does WHO recommend for corticosteroids?
+418,emergency,A severe COVID-19 patient with recent surgery is admitted. What does WHO recommend regarding corticosteroids?
+419,emergency,A COVID-19 patient with severe disease and active peptic ulcer is admitted. What does WHO recommend regarding corticosteroids?
+420,emergency,A severe COVID-19 patient with psychosis history is admitted. What does WHO recommend regarding corticosteroids?
+421,emergency,Patient with severe COVID-19 and rising CRP despite corticosteroids. Should IL-6 blockers be added per WHO?
+422,emergency,A severe COVID-19 patient on corticosteroids is deteriorating. What does WHO recommend adding?
+423,emergency,A critical COVID-19 patient on mechanical ventilation has elevated inflammatory markers. What does WHO recommend?
+424,emergency,A severe COVID-19 patient has tocilizumab unavailable. What alternative does WHO recommend?
+425,emergency,A severe COVID-19 patient with active bacterial infection needs IL-6 blocker therapy. What does WHO recommend?
+426,emergency,A severe COVID-19 patient with active hepatitis B needs IL-6 blocker therapy. What does WHO recommend?
+427,emergency,A severe COVID-19 patient with neutropenia needs IL-6 blocker therapy. What does WHO recommend?
+428,emergency,A severe COVID-19 patient with thrombocytopenia needs IL-6 blocker therapy. What does WHO recommend?
+429,emergency,A severe COVID-19 patient with prior bowel perforation needs IL-6 blocker therapy. What does WHO recommend?
+430,emergency,A severe COVID-19 patient with active tuberculosis needs IL-6 blocker therapy. What does WHO recommend?
+431,emergency,A severe COVID-19 patient with active fungal infection needs IL-6 blocker therapy. What does WHO recommend?
+432,emergency,A severe COVID-19 patient with normal CRP needs IL-6 blocker therapy. What does WHO recommend?
+433,emergency,A severe COVID-19 patient on corticosteroids has CRP 150 mg/L. Should tocilizumab be added per WHO?
+434,emergency,A critical COVID-19 patient on corticosteroids is not improving after 48 hours. What does WHO recommend?
+435,emergency,A severe COVID-19 patient with liver failure needs IL-6 blocker therapy. What does WHO recommend?
+436,emergency,A severe COVID-19 patient with renal failure needs IL-6 blocker therapy. What does WHO recommend?
+437,emergency,A severe COVID-19 patient with prior organ transplant needs IL-6 blocker therapy. What does WHO recommend?
+438,emergency,A severe COVID-19 patient with HIV needs IL-6 blocker therapy. What does WHO recommend?
+439,emergency,A severe COVID-19 patient with active malignancy needs IL-6 blocker therapy. What does WHO recommend?
+440,emergency,A severe COVID-19 patient with prior anaphylaxis to tocilizumab needs IL-6 blocker therapy. What does WHO recommend?
+441,emergency,Severe COVID-19 patient not improving on corticosteroids alone. What does WHO recommend adding?
+442,emergency,A severe COVID-19 patient has both tocilizumab and sarilumab unavailable. What does WHO recommend?
+443,emergency,A severe COVID-19 patient on corticosteroids needs baricitinib but has eGFR 20. What does WHO recommend?
+444,emergency,A severe COVID-19 patient on corticosteroids needs baricitinib but has active herpes zoster. What does WHO recommend?
+445,emergency,A severe COVID-19 patient on corticosteroids needs baricitinib but has thrombocytopenia. What does WHO recommend?
+446,emergency,A severe COVID-19 patient on corticosteroids needs baricitinib but has neutropenia. What does WHO recommend?
+447,emergency,A severe COVID-19 patient on corticosteroids needs baricitinib but has active tuberculosis. What does WHO recommend?
+448,emergency,A severe COVID-19 patient on corticosteroids needs baricitinib but has active hepatitis B. What does WHO recommend?
+449,emergency,A severe COVID-19 patient on corticosteroids needs baricitinib but is on dialysis. What does WHO recommend?
+450,emergency,A severe COVID-19 patient on corticosteroids needs baricitinib but has severe liver impairment. What does WHO recommend?
+451,emergency,A severe COVID-19 patient on corticosteroids needs baricitinib but is pregnant. What does WHO recommend?
+452,emergency,A severe COVID-19 patient on corticosteroids needs baricitinib but is a child under 2 years. What does WHO recommend?
+453,emergency,A severe COVID-19 patient on corticosteroids needs baricitinib but has active malignancy. What does WHO recommend?
+454,emergency,A severe COVID-19 patient on corticosteroids needs baricitinib but has prior VTE. What does WHO recommend?
+455,emergency,A severe COVID-19 patient on corticosteroids needs baricitinib but has HIV with low CD4 count. What does WHO recommend?
+456,emergency,Non-severe COVID-19 patient at high risk presents 3 days after symptom onset. Should nirmatrelvir-ritonavir be started per WHO?
+457,emergency,Non-severe COVID-19 patient at high risk presents 6 days after symptom onset. Should nirmatrelvir-ritonavir be started per WHO?
+458,emergency,COVID-19 patient on nirmatrelvir-ritonavir develops severe liver impairment. Continue or stop per WHO?
+459,emergency,COVID-19 patient on nirmatrelvir-ritonavir has eGFR 25. What dose adjustment does WHO recommend?
+460,emergency,COVID-19 patient on nirmatrelvir-ritonavir has eGFR 10. What does WHO recommend?
+461,emergency,COVID-19 patient on nirmatrelvir-ritonavir is also on tacrolimus. What does WHO recommend?
+462,emergency,COVID-19 patient on nirmatrelvir-ritonavir is also on cyclosporine. What does WHO recommend?
+463,emergency,COVID-19 patient on nirmatrelvir-ritonavir is also on warfarin. What does WHO recommend?
+464,emergency,COVID-19 patient on nirmatrelvir-ritonavir is also on rivaroxaban. What does WHO recommend?
+465,emergency,COVID-19 patient on nirmatrelvir-ritonavir is also on simvastatin. What does WHO recommend?
+466,emergency,COVID-19 patient on nirmatrelvir-ritonavir is also on carbamazepine. What does WHO recommend?
+467,emergency,COVID-19 patient on nirmatrelvir-ritonavir is also on rifampicin. What does WHO recommend?
+468,emergency,COVID-19 patient on nirmatrelvir-ritonavir is also on amiodarone. What does WHO recommend?
+469,emergency,COVID-19 patient on nirmatrelvir-ritonavir is also on quetiapine. What does WHO recommend?
+470,emergency,COVID-19 patient on nirmatrelvir-ritonavir is also on methadone. What does WHO recommend?
+471,emergency,Pregnant woman at 28 weeks with non-severe high-risk COVID-19. Should nirmatrelvir-ritonavir be used per WHO?
+472,emergency,Breastfeeding woman with non-severe high-risk COVID-19. Should nirmatrelvir-ritonavir be used per WHO?
+473,emergency,A 15-year-old weighing 35 kg with non-severe high-risk COVID-19. Can nirmatrelvir-ritonavir be used per WHO?
+474,emergency,A 12-year-old weighing 40 kg with non-severe high-risk COVID-19. Can nirmatrelvir-ritonavir be used per WHO?
+475,emergency,HIV-positive patient on antiretroviral therapy develops non-severe high-risk COVID-19. What does WHO recommend regarding nirmatrelvir-ritonavir?
+476,emergency,Transplant recipient on tacrolimus develops non-severe high-risk COVID-19. What does WHO recommend regarding nirmatrelvir-ritonavir?
+477,emergency,Non-severe COVID-19 patient at high risk with severe renal impairment eGFR 15. Which antiviral does WHO recommend?
+478,emergency,Non-severe COVID-19 patient at high risk with severe hepatic impairment. Which antiviral does WHO recommend?
+479,emergency,Non-severe COVID-19 patient at high risk with multiple drug interactions to nirmatrelvir-ritonavir. What does WHO recommend?
+480,emergency,Non-severe COVID-19 patient at high risk cannot access nirmatrelvir-ritonavir. What alternative does WHO recommend?
+481,emergency,Non-severe COVID-19 patient at high risk cannot take oral antivirals. What does WHO recommend?
+482,emergency,Severe COVID-19 patient on corticosteroids and IL-6 blockers. Should remdesivir be added per WHO?
+483,emergency,COVID-19 patient with renal failure eGFR 15. Which antivirals can be used per WHO?
+484,emergency,COVID-19 patient with eGFR 25 needs antiviral therapy. Can remdesivir be used per WHO?
+485,emergency,Pregnant woman at 28 weeks with severe COVID-19. Which treatments are safe per WHO?
+486,emergency,Pregnant woman at 28 weeks with non-severe high-risk COVID-19. Can remdesivir be used per WHO?
+487,emergency,A child with severe COVID-19 needs antiviral therapy. Can remdesivir be used per WHO?
+488,emergency,Non-severe COVID-19 patient at high risk presents on day 5 of symptoms. Can remdesivir be started per WHO?
+489,emergency,Non-severe COVID-19 patient at high risk presents on day 8 of symptoms. Can remdesivir be started per WHO?
+490,emergency,Severe COVID-19 patient on mechanical ventilation. Should remdesivir be added per WHO?
+491,emergency,Non-severe COVID-19 patient at high risk with liver failure. Can remdesivir be used per WHO?
+492,emergency,Non-severe COVID-19 patient at high risk with ALT 10x upper limit of normal. Can remdesivir be used per WHO?
+493,emergency,Non-severe COVID-19 patient at high risk with eGFR 28. Can remdesivir be used per WHO?
+494,emergency,Non-severe COVID-19 patient at high risk cannot access nirmatrelvir-ritonavir or molnupiravir. What does WHO recommend?
+495,emergency,Non-severe COVID-19 patient at high risk is pregnant and cannot take nirmatrelvir-ritonavir. What does WHO recommend?
+496,emergency,Non-severe COVID-19 patient at high risk cannot access nirmatrelvir-ritonavir. Can molnupiravir be used per WHO?
+497,emergency,Non-severe COVID-19 patient at high risk is pregnant. Can molnupiravir be used per WHO?
+498,emergency,Non-severe COVID-19 patient at high risk is breastfeeding. Can molnupiravir be used per WHO?
+499,emergency,Non-severe COVID-19 patient at high risk presents on day 4 of symptoms. Can molnupiravir be started per WHO?
+500,emergency,Non-severe COVID-19 patient at high risk presents on day 6 of symptoms. Can molnupiravir be started per WHO?
+501,emergency,Non-severe COVID-19 patient at high risk with renal failure. Can molnupiravir be used per WHO?
+502,emergency,Non-severe COVID-19 patient at high risk with liver failure. Can molnupiravir be used per WHO?
+503,emergency,Non-severe COVID-19 patient at high risk with multiple drug interactions. Can molnupiravir be used per WHO?
+504,emergency,Non-severe COVID-19 patient at high risk is a child under 18. Can molnupiravir be used per WHO?
+505,emergency,Non-severe COVID-19 patient at high risk has no access to IV remdesivir. Can molnupiravir be used per WHO?
+506,emergency,Hospitalized non-critically ill COVID-19 patient with no contraindications. Should prophylactic heparin be started per WHO?
+507,emergency,Hospitalized COVID-19 patient with D-dimer 4x upper limit of normal. Should therapeutic anticoagulation be started per WHO?
+508,emergency,Critically ill COVID-19 patient on mechanical ventilation. What anticoagulation does WHO recommend?
+509,emergency,Hospitalized COVID-19 patient with active bleeding. What anticoagulation does WHO recommend?
+510,emergency,Hospitalized COVID-19 patient with thrombocytopenia platelets 40. What anticoagulation does WHO recommend?
+511,emergency,Hospitalized COVID-19 patient with prior VTE on therapeutic anticoagulation. Should it be continued per WHO?
+512,emergency,Hospitalized COVID-19 patient with renal failure eGFR 10. What anticoagulation does WHO recommend?
+513,emergency,Hospitalized COVID-19 patient with severe liver disease and coagulopathy. What anticoagulation does WHO recommend?
+514,emergency,Hospitalized COVID-19 patient with atrial fibrillation on anticoagulation. Should it be continued per WHO?
+515,emergency,Non-severe COVID-19 outpatient at high risk. Should prophylactic anticoagulation be started per WHO?
+516,emergency,Hospitalized COVID-19 patient develops suspected pulmonary embolism. What does WHO recommend?
+517,emergency,Hospitalized COVID-19 patient on prophylactic heparin develops HIT. What does WHO recommend?
+518,emergency,Hospitalized COVID-19 patient on nirmatrelvir-ritonavir needs anticoagulation. What does WHO recommend?
+519,emergency,Hospitalized COVID-19 patient with obesity BMI 45. What anticoagulation does WHO recommend?
+520,emergency,Hospitalized COVID-19 patient post-discharge. Should anticoagulation be continued per WHO?
+521,emergency,Pregnant woman at 28 weeks with severe COVID-19 and no contraindications. What does WHO recommend?
+522,emergency,Pregnant woman at 32 weeks with critical COVID-19 on mechanical ventilation. What does WHO recommend?
+523,emergency,Pregnant woman at 20 weeks with non-severe high-risk COVID-19. Which antiviral does WHO recommend?
+524,emergency,Pregnant woman at 36 weeks with severe COVID-19. Can dexamethasone be used per WHO?
+525,emergency,Pregnant woman at 24 weeks with severe COVID-19. Can tocilizumab be used per WHO?
+526,emergency,Pregnant woman at 30 weeks with severe COVID-19. Can baricitinib be used per WHO?
+527,emergency,Pregnant woman at 28 weeks with non-severe high-risk COVID-19. Can molnupiravir be used per WHO?
+528,emergency,Pregnant woman at 28 weeks with non-severe high-risk COVID-19 needs IV antiviral. What does WHO recommend?
+529,emergency,Pregnant woman at 28 weeks with severe COVID-19 and renal failure. What does WHO recommend?
+530,emergency,Pregnant woman at 28 weeks with severe COVID-19 and liver failure. What does WHO recommend?
+531,emergency,Pregnant woman at 28 weeks with severe COVID-19 and active bacterial infection. What does WHO recommend?
+532,emergency,Breastfeeding woman with severe COVID-19. Can dexamethasone be used per WHO?
+533,emergency,Breastfeeding woman with non-severe high-risk COVID-19. Which antiviral does WHO recommend?
+534,emergency,Pregnant woman at 28 weeks with severe COVID-19 and thrombocytopenia. What does WHO recommend?
+535,emergency,Pregnant woman at 28 weeks with severe COVID-19 and diabetes. What does WHO recommend?
+536,emergency,Child aged 8 with severe COVID-19. What does WHO recommend for treatment?
+537,emergency,Child aged 5 with critical COVID-19 on mechanical ventilation. What does WHO recommend?
+538,emergency,Child aged 14 weighing 45 kg with non-severe high-risk COVID-19. Can nirmatrelvir-ritonavir be used per WHO?
+539,emergency,Child aged 10 with severe COVID-19 and renal failure. What does WHO recommend?
+540,emergency,Child aged 12 with severe COVID-19 and liver failure. What does WHO recommend?
+541,emergency,Child aged 7 with severe COVID-19 and active bacterial infection. What does WHO recommend?
+542,emergency,Child aged 3 with severe COVID-19. Can dexamethasone be used per WHO?
+543,emergency,Child aged 16 with severe COVID-19. Can tocilizumab be used per WHO?
+544,emergency,Child aged 15 with severe COVID-19. Can baricitinib be used per WHO?
+545,emergency,Child aged 11 with non-severe high-risk COVID-19. Which antiviral does WHO recommend?
+546,emergency,HIV-positive patient with CD4 count 50 develops severe COVID-19. What does WHO recommend?
+547,emergency,HIV-positive patient on antiretroviral therapy develops non-severe high-risk COVID-19. What does WHO recommend?
+548,emergency,Kidney transplant recipient on tacrolimus develops severe COVID-19. What does WHO recommend?
+549,emergency,Kidney transplant recipient on tacrolimus develops non-severe high-risk COVID-19. What does WHO recommend?
+550,emergency,Liver transplant recipient on cyclosporine develops severe COVID-19. What does WHO recommend?
+551,emergency,Patient on high-dose corticosteroids for autoimmune disease develops severe COVID-19. What does WHO recommend?
+552,emergency,Patient on rituximab for lymphoma develops severe COVID-19. What does WHO recommend?
+553,emergency,Patient on chemotherapy with neutropenia develops severe COVID-19. What does WHO recommend?
+554,emergency,Patient on TNF inhibitor for rheumatoid arthritis develops severe COVID-19. What does WHO recommend?
+555,emergency,Patient on mycophenolate for lupus develops severe COVID-19. What does WHO recommend?
+556,emergency,HIV-positive patient with CD4 count 200 develops severe COVID-19. Can IL-6 blockers be used per WHO?
+557,emergency,Transplant recipient on tacrolimus needs nirmatrelvir-ritonavir for COVID-19. What does WHO recommend?
+558,emergency,Immunocompromised COVID-19 patient with active fungal infection needs treatment. What does WHO recommend?
+559,emergency,Immunocompromised COVID-19 patient with active bacterial infection needs treatment. What does WHO recommend?
+560,emergency,Immunocompromised COVID-19 patient with active tuberculosis needs treatment. What does WHO recommend?
+561,emergency,COVID-19 patient with eGFR 15 needs antiviral therapy. What does WHO recommend?
+562,emergency,COVID-19 patient with eGFR 20 needs nirmatrelvir-ritonavir. What dose does WHO recommend?
+563,emergency,COVID-19 patient with eGFR 10 needs antiviral therapy. What does WHO recommend?
+564,emergency,COVID-19 patient on hemodialysis develops severe COVID-19. What does WHO recommend?
+565,emergency,COVID-19 patient on peritoneal dialysis develops severe COVID-19. What does WHO recommend?
+566,emergency,COVID-19 patient with acute kidney injury develops severe COVID-19. What does WHO recommend?
+567,emergency,COVID-19 patient with severe liver impairment Child-Pugh C needs nirmatrelvir-ritonavir. What does WHO recommend?
+568,emergency,COVID-19 patient with severe liver impairment needs antiviral therapy. What does WHO recommend?
+569,emergency,COVID-19 patient with ALT 20x upper limit of normal needs remdesivir. What does WHO recommend?
+570,emergency,COVID-19 patient with cirrhosis and severe COVID-19. What does WHO recommend?
+571,emergency,COVID-19 patient with acute liver failure develops severe COVID-19. What does WHO recommend?
+572,emergency,COVID-19 patient with renal failure needs baricitinib. What dose does WHO recommend?
+573,emergency,COVID-19 patient with renal failure needs anticoagulation. What does WHO recommend?
+574,emergency,COVID-19 patient with liver failure needs anticoagulation. What does WHO recommend?
+575,emergency,COVID-19 patient with combined renal and liver failure develops severe COVID-19. What does WHO recommend?
+576,emergency,COVID-19 patient on tacrolimus needs nirmatrelvir-ritonavir. What does WHO recommend?
+577,emergency,COVID-19 patient on cyclosporine needs nirmatrelvir-ritonavir. What does WHO recommend?
+578,emergency,COVID-19 patient on warfarin needs nirmatrelvir-ritonavir. What does WHO recommend?
+579,emergency,COVID-19 patient on rivaroxaban needs nirmatrelvir-ritonavir. What does WHO recommend?
+580,emergency,COVID-19 patient on apixaban needs nirmatrelvir-ritonavir. What does WHO recommend?
+581,emergency,COVID-19 patient on simvastatin needs nirmatrelvir-ritonavir. What does WHO recommend?
+582,emergency,COVID-19 patient on atorvastatin needs nirmatrelvir-ritonavir. What does WHO recommend?
+583,emergency,COVID-19 patient on carbamazepine needs nirmatrelvir-ritonavir. What does WHO recommend?
+584,emergency,COVID-19 patient on phenytoin needs nirmatrelvir-ritonavir. What does WHO recommend?
+585,emergency,COVID-19 patient on rifampicin needs nirmatrelvir-ritonavir. What does WHO recommend?
+586,emergency,COVID-19 patient on amiodarone needs nirmatrelvir-ritonavir. What does WHO recommend?
+587,emergency,COVID-19 patient on quetiapine needs nirmatrelvir-ritonavir. What does WHO recommend?
+588,emergency,COVID-19 patient on methadone needs nirmatrelvir-ritonavir. What does WHO recommend?
+589,emergency,COVID-19 patient on HIV antiretrovirals needs nirmatrelvir-ritonavir. What does WHO recommend?
+590,emergency,COVID-19 patient on multiple interacting drugs needs antiviral therapy. What does WHO recommend?
+591,emergency,Severe COVID-19 patient's family requests ivermectin. What does WHO recommend?
+592,emergency,Non-severe COVID-19 patient requests hydroxychloroquine. What does WHO recommend?
+593,emergency,Severe COVID-19 patient requests lopinavir-ritonavir. What does WHO recommend?
+594,emergency,Severe COVID-19 patient's family requests convalescent plasma. What does WHO recommend?
+595,emergency,Non-severe COVID-19 patient requests colchicine. What does WHO recommend?
+596,emergency,Non-severe COVID-19 patient requests fluvoxamine. What does WHO recommend?
+597,emergency,COVID-19 patient on statins for cardiovascular disease. Should statins be continued per WHO?
+598,emergency,COVID-19 patient on SGLT-2 inhibitors for diabetes. Should they be continued per WHO?
+599,emergency,COVID-19 patient requests VV116. What does WHO recommend?
+600,emergency,COVID-19 patient requests casirivimab-imdevimab. What does WHO recommend?
+601,emergency,COVID-19 patient requests sotrovimab. What does WHO recommend?
+602,emergency,COVID-19 patient on metformin for diabetes. Should it be continued per WHO?
+603,emergency,Severe COVID-19 patient requests ivermectin as add-on therapy. What does WHO recommend?
+604,emergency,Non-severe COVID-19 patient requests hydroxychloroquine as prophylaxis. What does WHO recommend?
+605,emergency,Severe COVID-19 patient requests convalescent plasma as add-on therapy. What does WHO recommend?
+606,emergency,Severe COVID-19 patient in a resource-limited setting has no access to IL-6 blockers. What does WHO recommend?
+607,emergency,Severe COVID-19 patient in a resource-limited setting has no access to baricitinib. What does WHO recommend?
+608,emergency,Non-severe high-risk COVID-19 patient in a resource-limited setting has no access to nirmatrelvir-ritonavir. What does WHO recommend?
+609,emergency,Non-severe high-risk COVID-19 patient in a resource-limited setting has no access to remdesivir. What does WHO recommend?
+610,emergency,Severe COVID-19 patient in a resource-limited setting has only dexamethasone available. What does WHO recommend?
+611,emergency,Severe COVID-19 patient in a resource-limited setting has no access to anticoagulation. What does WHO recommend?
+612,emergency,Non-severe high-risk COVID-19 patient in a resource-limited setting has no access to any antiviral. What does WHO recommend?
+613,emergency,Severe COVID-19 patient in a resource-limited setting has no access to tocilizumab or sarilumab. What does WHO recommend?
+614,emergency,Severe COVID-19 patient in a resource-limited setting has limited monitoring capacity. What does WHO recommend?
+615,emergency,Non-severe high-risk COVID-19 patient in a resource-limited setting has only molnupiravir available. What does WHO recommend?
+616,emergency,Severe COVID-19 patient on corticosteroids is deteriorating. Should tocilizumab be added per WHO?
+617,emergency,Severe COVID-19 patient on corticosteroids and tocilizumab is still deteriorating. Should baricitinib be added per WHO?
+618,emergency,Severe COVID-19 patient on corticosteroids and baricitinib is still deteriorating. Should tocilizumab be added per WHO?
+619,emergency,Critical COVID-19 patient on corticosteroids and IL-6 blockers. Should an antiviral be added per WHO?
+620,emergency,Severe COVID-19 patient on corticosteroids alone. What does WHO recommend adding?
+621,emergency,Severe COVID-19 patient on corticosteroids and tocilizumab. Should remdesivir be added per WHO?
+622,emergency,Severe COVID-19 patient on corticosteroids and baricitinib. Should remdesivir be added per WHO?
+623,emergency,"Severe COVID-19 patient on corticosteroids, tocilizumab, and baricitinib. What does WHO recommend?"
+624,emergency,Severe COVID-19 patient on corticosteroids and IL-6 blockers with rising inflammatory markers. What does WHO recommend?
+625,emergency,Severe COVID-19 patient on corticosteroids and baricitinib with rising inflammatory markers. What does WHO recommend?
+626,emergency,COVID-19 patient with SpO2 93% on room air. How does WHO classify this and what treatment is recommended?
+627,emergency,COVID-19 patient with SpO2 88% on room air. How does WHO classify this and what treatment is recommended?
+628,emergency,COVID-19 patient with respiratory rate 32 breaths/min. How does WHO classify this and what treatment is recommended?
+629,emergency,COVID-19 patient with SpO2 95% on room air and no risk factors. How does WHO classify this and what treatment is recommended?
+630,emergency,COVID-19 patient with SpO2 95% on room air and diabetes. How does WHO classify this and what treatment is recommended?
+631,emergency,COVID-19 patient on mechanical ventilation with COVID-19. How does WHO classify this and what treatment is recommended?
+632,emergency,COVID-19 patient with multi-organ failure. How does WHO classify this and what treatment is recommended?
+633,emergency,COVID-19 patient with SpO2 90% on 2L oxygen. How does WHO classify this and what treatment is recommended?
+634,emergency,COVID-19 patient with SpO2 96% on room air and age 75. How does WHO classify this and what treatment is recommended?
+635,emergency,COVID-19 patient with SpO2 94% on room air and immunocompromised. How does WHO classify this and what treatment is recommended?
+636,emergency,Clinician asks whether to use a COVID-19 treatment with very low GRADE certainty. What does WHO recommend?
+637,emergency,Clinician asks whether to use a COVID-19 treatment with only observational evidence. What does WHO recommend?
+638,emergency,Clinician asks whether to use a COVID-19 treatment not included in WHO guidelines. What does WHO recommend?
+639,emergency,Clinician asks whether to use a COVID-19 treatment recommended against by WHO. What does WHO recommend?
+640,emergency,Clinician asks whether to use a COVID-19 treatment with conditional WHO recommendation. What does WHO recommend?
+641,emergency,Clinician asks whether to use a COVID-19 treatment with strong WHO recommendation. What does WHO recommend?
+642,emergency,Clinician asks whether to use a COVID-19 treatment with moderate GRADE certainty. What does WHO recommend?
+643,emergency,Clinician asks whether to use a COVID-19 treatment with high GRADE certainty. What does WHO recommend?
+644,emergency,Clinician asks whether to use a COVID-19 treatment based on SOLIDARITY trial findings. What does WHO recommend?
+645,emergency,Clinician asks whether to use a COVID-19 treatment based on RECOVERY trial findings. What does WHO recommend?
+646,emergency,Severe COVID-19 patient with uncontrolled hyperglycemia on dexamethasone. Should treatment be modified per WHO?
+647,emergency,Severe COVID-19 patient with steroid-induced psychosis. What does WHO recommend?
+648,emergency,Severe COVID-19 patient with Strongyloides infection risk. What does WHO recommend regarding corticosteroids?
+649,emergency,Severe COVID-19 patient with active varicella infection. What does WHO recommend regarding corticosteroids?
+650,emergency,Severe COVID-19 patient with active herpes simplex infection. What does WHO recommend regarding corticosteroids?
+651,emergency,Severe COVID-19 patient with prior organ transplant on immunosuppression. What does WHO recommend regarding corticosteroids?
+652,emergency,Severe COVID-19 patient with uncontrolled hypertension. What does WHO recommend regarding corticosteroids?
+653,emergency,Severe COVID-19 patient with severe osteoporosis. What does WHO recommend regarding corticosteroids?
+654,emergency,Severe COVID-19 patient with recent myopathy. What does WHO recommend regarding corticosteroids?
+655,emergency,Severe COVID-19 patient with active gastrointestinal bleeding. What does WHO recommend regarding corticosteroids?
+656,emergency,Non-severe COVID-19 patient at high risk with age 70 and no comorbidities. Which antiviral does WHO recommend?
+657,emergency,Non-severe COVID-19 patient at high risk with age 65 and hypertension. Which antiviral does WHO recommend?
+658,emergency,Non-severe COVID-19 patient at high risk with age 60 and diabetes. Which antiviral does WHO recommend?
+659,emergency,Non-severe COVID-19 patient at high risk with age 55 and obesity. Which antiviral does WHO recommend?
+660,emergency,Non-severe COVID-19 patient at high risk with age 50 and chronic lung disease. Which antiviral does WHO recommend?
+661,emergency,Non-severe COVID-19 patient at high risk with age 45 and cardiovascular disease. Which antiviral does WHO recommend?
+662,emergency,Non-severe COVID-19 patient at high risk with age 40 and cancer. Which antiviral does WHO recommend?
+663,emergency,Non-severe COVID-19 patient at high risk with age 35 and HIV. Which antiviral does WHO recommend?
+664,emergency,Non-severe COVID-19 patient at high risk with age 30 and organ transplant. Which antiviral does WHO recommend?
+665,emergency,Non-severe COVID-19 patient at high risk with age 25 and immunosuppression. Which antiviral does WHO recommend?
+666,emergency,Non-severe COVID-19 patient at high risk presents on day 1 of symptoms. Which antiviral does WHO recommend?
+667,emergency,Non-severe COVID-19 patient at high risk presents on day 2 of symptoms. Which antiviral does WHO recommend?
+668,emergency,Non-severe COVID-19 patient at high risk presents on day 3 of symptoms. Which antiviral does WHO recommend?
+669,emergency,Non-severe COVID-19 patient at high risk presents on day 4 of symptoms. Which antiviral does WHO recommend?
+670,emergency,Non-severe COVID-19 patient at high risk presents on day 5 of symptoms. Which antiviral does WHO recommend?
+671,emergency,Severe COVID-19 patient on corticosteroids with CRP 200 mg/L. What does WHO recommend adding?
+672,emergency,Severe COVID-19 patient on corticosteroids with ferritin 5000. What does WHO recommend adding?
+673,emergency,Severe COVID-19 patient on corticosteroids with IL-6 level elevated. What does WHO recommend adding?
+674,emergency,Severe COVID-19 patient on corticosteroids with lymphopenia. What does WHO recommend adding?
+675,emergency,Severe COVID-19 patient on corticosteroids with worsening oxygenation. What does WHO recommend adding?
+676,emergency,Severe COVID-19 patient on corticosteroids with worsening chest X-ray. What does WHO recommend adding?
+677,emergency,Severe COVID-19 patient on corticosteroids with rising LDH. What does WHO recommend adding?
+678,emergency,Severe COVID-19 patient on corticosteroids with rising D-dimer. What does WHO recommend adding?
+679,emergency,Severe COVID-19 patient on corticosteroids with rising troponin. What does WHO recommend adding?
+680,emergency,Severe COVID-19 patient on corticosteroids with rising creatinine. What does WHO recommend adding?
+681,emergency,Severe COVID-19 patient on corticosteroids with rising bilirubin. What does WHO recommend adding?
+682,emergency,Severe COVID-19 patient on corticosteroids with rising procalcitonin. What does WHO recommend adding?
+683,emergency,Severe COVID-19 patient on corticosteroids with rising white cell count. What does WHO recommend adding?
+684,emergency,Severe COVID-19 patient on corticosteroids with falling platelet count. What does WHO recommend adding?
+685,emergency,Severe COVID-19 patient on corticosteroids with falling neutrophil count. What does WHO recommend adding?
+686,emergency,Elderly COVID-19 patient aged 80 with severe disease and multiple comorbidities. What does WHO recommend?
+687,emergency,Elderly COVID-19 patient aged 85 with non-severe high-risk disease. What does WHO recommend?
+688,emergency,Obese COVID-19 patient with BMI 45 and severe disease. What does WHO recommend?
+689,emergency,Diabetic COVID-19 patient with HbA1c 12% and severe disease. What does WHO recommend?
+690,emergency,COVID-19 patient with end-stage renal disease on dialysis and severe disease. What does WHO recommend?
+691,emergency,COVID-19 patient with end-stage liver disease and severe disease. What does WHO recommend?
+692,emergency,COVID-19 patient with heart failure and severe disease. What does WHO recommend?
+693,emergency,COVID-19 patient with COPD and severe disease. What does WHO recommend?
+694,emergency,COVID-19 patient with asthma and severe disease. What does WHO recommend?
+695,emergency,COVID-19 patient with interstitial lung disease and severe disease. What does WHO recommend?
+696,emergency,COVID-19 patient with pulmonary hypertension and severe disease. What does WHO recommend?
+697,emergency,COVID-19 patient with sickle cell disease and severe disease. What does WHO recommend?
+698,emergency,COVID-19 patient with thalassemia and severe disease. What does WHO recommend?
+699,emergency,COVID-19 patient with Down syndrome and severe disease. What does WHO recommend?
+700,emergency,COVID-19 patient with cerebral palsy and severe disease. What does WHO recommend?
+701,emergency,COVID-19 patient on tocilizumab develops elevated liver enzymes. What does WHO recommend?
+702,emergency,COVID-19 patient on baricitinib develops thrombocytopenia. What does WHO recommend?
+703,emergency,COVID-19 patient on baricitinib develops neutropenia. What does WHO recommend?
+704,emergency,COVID-19 patient on baricitinib develops herpes zoster. What does WHO recommend?
+705,emergency,COVID-19 patient on remdesivir develops elevated liver enzymes. What does WHO recommend?
+706,emergency,COVID-19 patient on remdesivir develops bradycardia. What does WHO recommend?
+707,emergency,COVID-19 patient on nirmatrelvir-ritonavir develops nausea and vomiting. What does WHO recommend?
+708,emergency,COVID-19 patient on nirmatrelvir-ritonavir develops dysgeusia. What does WHO recommend?
+709,emergency,COVID-19 patient on molnupiravir develops nausea. What does WHO recommend?
+710,emergency,COVID-19 patient on dexamethasone develops severe hyperglycemia. What does WHO recommend?
+711,emergency,COVID-19 patient on dexamethasone develops secondary bacterial infection. What does WHO recommend?
+712,emergency,COVID-19 patient on dexamethasone develops secondary fungal infection. What does WHO recommend?
+713,emergency,COVID-19 patient on tocilizumab develops secondary bacterial infection. What does WHO recommend?
+714,emergency,COVID-19 patient on baricitinib develops secondary bacterial infection. What does WHO recommend?
+715,emergency,COVID-19 patient on anticoagulation develops major bleeding. What does WHO recommend?
+716,emergency,Severe COVID-19 patient is improving on corticosteroids alone. Should IL-6 blockers be added per WHO?
+717,emergency,Severe COVID-19 patient is improving on corticosteroids alone. Should baricitinib be added per WHO?
+718,emergency,Severe COVID-19 patient on corticosteroids and tocilizumab is improving. Should baricitinib be added per WHO?
+719,emergency,Severe COVID-19 patient on corticosteroids and baricitinib is improving. Should tocilizumab be added per WHO?
+720,emergency,Severe COVID-19 patient on corticosteroids is stable. Should IL-6 blockers be added per WHO?
+721,emergency,Severe COVID-19 patient on corticosteroids is stable. Should baricitinib be added per WHO?
+722,emergency,Severe COVID-19 patient on corticosteroids is worsening. Should IL-6 blockers be added per WHO?
+723,emergency,Severe COVID-19 patient on corticosteroids is worsening. Should baricitinib be added per WHO?
+724,emergency,Severe COVID-19 patient on corticosteroids is worsening. Should remdesivir be added per WHO?
+725,emergency,Severe COVID-19 patient on corticosteroids is worsening. Should anticoagulation be escalated per WHO?
+726,emergency,Severe COVID-19 patient on corticosteroids and IL-6 blockers is worsening. What does WHO recommend?
+727,emergency,Severe COVID-19 patient on corticosteroids and baricitinib is worsening. What does WHO recommend?
+728,emergency,"Severe COVID-19 patient on corticosteroids, IL-6 blockers, and baricitinib is worsening. What does WHO recommend?"
+729,emergency,"Severe COVID-19 patient on corticosteroids, IL-6 blockers, and remdesivir is worsening. What does WHO recommend?"
+730,emergency,Severe COVID-19 patient on all recommended treatments is worsening. What does WHO recommend?
+731,emergency,Clinician asks about using a COVID-19 treatment with low GRADE certainty in a critically ill patient. What does WHO recommend?
+732,emergency,Clinician asks about using a COVID-19 treatment with very low GRADE certainty in a critically ill patient. What does WHO recommend?
+733,emergency,Clinician asks about using a COVID-19 treatment with high GRADE certainty in a non-severe patient. What does WHO recommend?
+734,emergency,Clinician asks about using a COVID-19 treatment with moderate GRADE certainty in a severe patient. What does WHO recommend?
+735,emergency,Clinician asks about using a COVID-19 treatment with conditional recommendation in a severe patient. What does WHO recommend?
+736,emergency,Clinician asks about using a COVID-19 treatment with strong recommendation in a severe patient. What does WHO recommend?
+737,emergency,Clinician asks about using a COVID-19 treatment not yet evaluated by WHO. What does WHO recommend?
+738,emergency,Clinician asks about using a COVID-19 treatment based on REMAP-CAP trial findings. What does WHO recommend?
+739,emergency,Clinician asks about using a COVID-19 treatment based on ATTACC trial findings. What does WHO recommend?
+740,emergency,Clinician asks about using a COVID-19 treatment based on ACTIV-4a trial findings. What does WHO recommend?
+741,emergency,Severe COVID-19 patient in a resource-limited setting has only hydrocortisone available. What does WHO recommend?
+742,emergency,Severe COVID-19 patient in a resource-limited setting has only methylprednisolone available. What does WHO recommend?
+743,emergency,Non-severe high-risk COVID-19 patient in a resource-limited setting has only molnupiravir and no other antivirals. What does WHO recommend?
+744,emergency,Non-severe high-risk COVID-19 patient in a resource-limited setting has only remdesivir available. What does WHO recommend?
+745,emergency,Severe COVID-19 patient in a resource-limited setting has only corticosteroids and heparin available. What does WHO recommend?
+746,emergency,Severe COVID-19 patient in a resource-limited setting has corticosteroids and baricitinib available. What does WHO recommend?
+747,emergency,Severe COVID-19 patient in a resource-limited setting has corticosteroids and tocilizumab available. What does WHO recommend?
+748,emergency,Non-severe high-risk COVID-19 patient in a resource-limited setting has only nirmatrelvir-ritonavir available. What does WHO recommend?
+749,emergency,Severe COVID-19 patient in a resource-limited setting has no laboratory monitoring available. What does WHO recommend?
+750,emergency,Severe COVID-19 patient in a resource-limited setting has no IV access available. What does WHO recommend?
+751,emergency,Pregnant woman at 10 weeks with non-severe high-risk COVID-19. Which antiviral does WHO recommend?
+752,emergency,Pregnant woman at 16 weeks with severe COVID-19. What does WHO recommend?
+753,emergency,Pregnant woman at 38 weeks with severe COVID-19. What does WHO recommend?
+754,emergency,Pregnant woman at 28 weeks with severe COVID-19 and HIV. What does WHO recommend?
+755,emergency,Pregnant woman at 28 weeks with severe COVID-19 and organ transplant. What does WHO recommend?
+756,emergency,Newborn of COVID-19 positive mother. What does WHO recommend regarding treatment?
+757,emergency,Child aged 1 with severe COVID-19. What does WHO recommend?
+758,emergency,Child aged 2 with severe COVID-19. What does WHO recommend?
+759,emergency,Child aged 16 with non-severe high-risk COVID-19. Which antiviral does WHO recommend?
+760,emergency,Child aged 17 weighing 50 kg with non-severe high-risk COVID-19. Can nirmatrelvir-ritonavir be used per WHO?
+761,emergency,COVID-19 patient on phenobarbital needs nirmatrelvir-ritonavir. What does WHO recommend?
+762,emergency,COVID-19 patient on St. John's Wort needs nirmatrelvir-ritonavir. What does WHO recommend?
+763,emergency,COVID-19 patient on colchicine needs nirmatrelvir-ritonavir. What does WHO recommend?
+764,emergency,COVID-19 patient on digoxin needs nirmatrelvir-ritonavir. What does WHO recommend?
+765,emergency,COVID-19 patient on fentanyl needs nirmatrelvir-ritonavir. What does WHO recommend?
+766,emergency,COVID-19 patient on sildenafil needs nirmatrelvir-ritonavir. What does WHO recommend?
+767,emergency,COVID-19 patient on tadalafil needs nirmatrelvir-ritonavir. What does WHO recommend?
+768,emergency,COVID-19 patient on hormonal contraceptives needs nirmatrelvir-ritonavir. What does WHO recommend?
+769,emergency,COVID-19 patient on immunosuppressants needs nirmatrelvir-ritonavir. What does WHO recommend?
+770,emergency,COVID-19 patient on multiple interacting medications needs antiviral therapy. What does WHO recommend?
+771,emergency,Severe COVID-19 patient with active COVID-19 and prior COVID-19 vaccination. What does WHO recommend?
+772,emergency,Severe COVID-19 patient with Omicron variant confirmed. What does WHO recommend?
+773,emergency,Severe COVID-19 patient with Delta variant confirmed. What does WHO recommend?
+774,emergency,Severe COVID-19 patient with unknown variant. What does WHO recommend?
+775,emergency,Non-severe COVID-19 patient at high risk with Omicron variant. Which antiviral does WHO recommend?
+776,emergency,Non-severe COVID-19 patient at high risk with prior COVID-19 infection. Which antiviral does WHO recommend?
+777,emergency,Non-severe COVID-19 patient at high risk with prior COVID-19 vaccination. Which antiviral does WHO recommend?
+778,emergency,Severe COVID-19 patient with cytokine release syndrome. What does WHO recommend?
+779,emergency,Severe COVID-19 patient with macrophage activation syndrome. What does WHO recommend?
+780,emergency,Severe COVID-19 patient with COVID-19-associated coagulopathy. What does WHO recommend?
+781,emergency,Severe COVID-19 patient with COVID-19-associated myocarditis. What does WHO recommend?
+782,emergency,Severe COVID-19 patient with COVID-19-associated encephalitis. What does WHO recommend?
+783,emergency,Severe COVID-19 patient with COVID-19-associated acute kidney injury. What does WHO recommend?
+784,emergency,Severe COVID-19 patient with COVID-19-associated liver injury. What does WHO recommend?
+785,emergency,Severe COVID-19 patient with COVID-19-associated ARDS. What does WHO recommend?
+786,emergency,Severe COVID-19 patient with COVID-19-associated sepsis. What does WHO recommend?
+787,emergency,Severe COVID-19 patient with COVID-19-associated multi-organ dysfunction. What does WHO recommend?
+788,emergency,Severe COVID-19 patient with COVID-19-associated thrombosis. What does WHO recommend?
+789,emergency,Severe COVID-19 patient with COVID-19-associated lymphopenia. What does WHO recommend?
+790,emergency,Severe COVID-19 patient with COVID-19-associated hyperinflammation. What does WHO recommend?
+791,emergency,Non-severe COVID-19 patient at high risk with COVID-19-associated hyperglycemia. Which antiviral does WHO recommend?
+792,emergency,Non-severe COVID-19 patient at high risk with COVID-19-associated hyponatremia. Which antiviral does WHO recommend?
+793,emergency,Non-severe COVID-19 patient at high risk with COVID-19-associated elevated D-dimer. Which antiviral does WHO recommend?
+794,emergency,Non-severe COVID-19 patient at high risk with COVID-19-associated elevated CRP. Which antiviral does WHO recommend?
+795,emergency,Non-severe COVID-19 patient at high risk with COVID-19-associated elevated ferritin. Which antiviral does WHO recommend?
+796,emergency,Non-severe COVID-19 patient at high risk with COVID-19-associated elevated LDH. Which antiviral does WHO recommend?
+797,emergency,Non-severe COVID-19 patient at high risk with COVID-19-associated elevated troponin. Which antiviral does WHO recommend?
+798,emergency,Non-severe COVID-19 patient at high risk with COVID-19-associated elevated procalcitonin. Which antiviral does WHO recommend?
+799,emergency,Non-severe COVID-19 patient at high risk with COVID-19-associated lymphopenia. Which antiviral does WHO recommend?
+800,emergency,Non-severe COVID-19 patient at high risk with COVID-19-associated thrombocytopenia. Which antiviral does WHO recommend?
+801,general,"[PMC1236923] According to PMC1236923, how many national heart failure guidelines published after 1994 were analyzed in relation to the ESC guideline?"
+802,general,"[PMC1236923] According to PMC1236923, in the IMPROVEMENT-HF study, what was the range of beta-blocker use in primary care across European countries?"
+803,general,"[PMC1236923] According to PMC1236923, in which drug classes were relevant differences in heart failure treatment recommendations seen among European guidelines?"
+804,general,"[PMC1236923] According to PMC1236923, what was the range of ACE inhibitor use in primary care across European countries in the IMPROVEMENT-HF study?"
+805,general,"[PMC1236923] According to PMC1236923, what was the conclusion regarding differences in guideline recommendations and variation in prescribing among European countries?"
+806,general,"[PMC11846407] According to PMC11846407, how many guidelines for the management of sepsis infection were identified in the systematic review?"
+807,general,"[PMC11846407] According to PMC11846407, what was the range of overall scores for the included sepsis management guidelines using the AGREE II tool?"
+808,general,"[PMC11846407] According to PMC11846407, which domain of the AGREE II assessment had the lowest average score among sepsis guidelines, and what was that score?"
+809,general,"[PMC11846407] According to PMC11846407, what percentage of sepsis guideline recommendations were classified as weak strength?"
+810,general,"[PMC11846407] According to PMC11846407, what percentage of evidence cited in sepsis guidelines was classified as very low quality?"
+811,general,"[PMC2898118] According to PMC2898118, what percentage of patients responded to the survey about diabetes care manager preferences at Mayo Clinic?"
+812,general,"[PMC2898118] According to PMC2898118, what percentage of providers expressed willingness to have various aspects of diabetes care managed by a care manager?"
+813,general,"[PMC2898118] According to PMC2898118, what percentage of providers would be comfortable expanding the care manager role to other chronic diseases?"
+814,general,"[PMC2898118] According to PMC2898118, what percentage of patient responders would be willing to see a care manager for other chronic problems beyond diabetes?"
+815,general,"[PMC2898118] According to PMC2898118, what factor was associated with decreased patient likelihood to work with a care manager?"
+816,general,"[PMC12400259] According to PMC12400259, what are the four main roles of nutrition and dietary treatments in inflammatory bowel disease management?"
+817,general,"[PMC12400259] According to PMC12400259, why are dietitians identified as the most appropriate health professional for nutritional assessment in IBD patients?"
+818,general,"[PMC12400259] According to PMC12400259, what do best practice IBD management guidelines recommend regarding multidisciplinary care models?"
+819,general,"[PMC12400259] According to PMC12400259, what is the main barrier patients face in accessing nutrition-based strategies for IBD management?"
+820,general,"[PMC12400259] According to PMC12400259, what outcome improvements have been shown when IBD multidisciplinary teams include dietitians?"
+821,general,"[PMC11638529] According to PMC11638529, how many student nurses responded to the national survey on antimicrobial stewardship knowledge across UK universities?"
+822,general,"[PMC11638529] According to PMC11638529, in which competency areas did student nurses feel least prepared regarding antimicrobial stewardship?"
+823,general,"[PMC11638529] According to PMC11638529, what were the preferred modes of education delivery identified by student nurses for antimicrobial stewardship?"
+824,general,"[PMC11638529] According to PMC11638529, what benefits did students who had shared antimicrobial stewardship teaching with other professions report?"
+825,general,"[PMC11638529] According to PMC11638529, what knowledge gaps were identified in pre-registration nurse education regarding antimicrobial management?"
+826,general,"[PMC3701497] According to PMC3701497, what was the prevalence of hypertension among CKD stage 3 patients in the Renal Risk in Derby Study?"
+827,general,"[PMC3701497] According to PMC3701497, what percentage of hypertensive CKD stage 3 patients achieved NICE blood pressure targets?"
+828,general,"[PMC3701497] According to PMC3701497, what percentage of hypertensive CKD stage 3 patients achieved KDOQI blood pressure targets?"
+829,general,"[PMC3701497] According to PMC3701497, what percentage of CKD stage 3 patients with hypertension were only taking one antihypertensive agent?"
+830,general,"[PMC3701497] According to PMC3701497, which patient characteristics were negatively associated with achieving BP control targets on multivariable analysis?"
+831,general,"[PMC10640530] According to PMC10640530, what five promising cerebral blood flow-enhancing therapeutics were identified for acute ischemic stroke?"
+832,general,"[PMC10640530] According to PMC10640530, why are adjunctive therapies for cerebral blood flow enhancement urgently needed in acute ischemic stroke?"
+833,general,"[PMC10640530] According to PMC10640530, what role does collateral blood flow play in the success of endovascular therapies for acute ischemic stroke?"
+834,general,"[PMC10640530] According to PMC10640530, what is the mechanism of action of Fasudil as a cerebral blood flow enhancer in ischemic stroke?"
+835,general,"[PMC10640530] According to PMC10640530, what is the role of the sphenopalatine ganglion stimulation as a potential CBF-enhancing therapy in acute ischemic stroke?"
+836,general,"[PMC4451740] According to PMC4451740, what percentage of health facility providers correctly identified magnesium sulphate as the drug of choice for severe pre-eclampsia/eclampsia?"
+837,general,"[PMC4451740] According to PMC4451740, what percentage of providers had been trained on the use of magnesium sulphate for pre-eclampsia/eclampsia management?"
+838,general,"[PMC4451740] According to PMC4451740, what percentage of respondents indicated that magnesium sulphate was actually used in their facilities to prevent and treat convulsions?"
+839,general,"[PMC4451740] According to PMC4451740, what were the main barriers to management of pre-eclampsia/eclampsia in health facilities in Northern Nigeria?"
+840,general,"[PMC4451740] According to PMC4451740, what percentage of health facilities had service registers available for pre-eclampsia/eclampsia management?"
+841,general,"[PMC5803577] According to PMC5803577, what proportion of registered breast cancer trials listed in ClinicalTrials.gov had been published?"
+842,general,"[PMC5803577] According to PMC5803577, what was the median time to publication for registered breast cancer trials?"
+843,general,"[PMC5803577] According to PMC5803577, how many breast cancer trials were published within 24 months of completion?"
+844,general,"[PMC5803577] According to PMC5803577, was there a significant increase in publication proportions of breast cancer trials after the introduction of the ClinicalTrials.gov results database?"
+845,general,"[PMC5803577] According to PMC5803577, what trial characteristics were associated with publication of registered breast cancer trials?"
+846,general,"[PMC2206501] According to PMC2206501, what cardiovascular topics in paediatric intensive care were summarized from papers published in 2006?"
+847,general,"[PMC2206501] According to PMC2206501, what was the role of arginine-vasopressin and terlipressin in catecholamine-resistant septic shock in children?"
+848,general,"[PMC2206501] According to PMC2206501, what were the findings regarding AVP infusion in extremely low birth weight infants with catecholamine-resistant shock?"
+849,general,"[PMC12232468] According to PMC12232468, how many secondary hospitals are involved in the nationwide COPD standardized management trial in China?"
+850,general,"[PMC12232468] According to PMC12232468, what are the five components of the integrated intervention in the standardized management group of the COPD trial?"
+851,emergency,"[PMC1236923] Based on PMC1236923, a primary care physician in a country with no national heart failure guideline asks which guideline to follow — what does the study show about guideline use in such countries?"
+852,emergency,"[PMC1236923] Based on PMC1236923, a cardiologist notes low beta-blocker prescribing in their country — what range of beta-blocker use did the IMPROVEMENT-HF study find across European primary care settings?"
+853,emergency,"[PMC1236923] Based on PMC1236923, a health system wants to improve heart failure prescribing by aligning with guidelines — what does the study conclude about the relationship between guideline recommendations and actual prescribing?"
+854,emergency,"[PMC11846407] Based on PMC11846407, a clinician is selecting a sepsis management guideline for their ICU — which quality threshold distinguishes high-quality guidelines in this AGREE II assessment?"
+855,emergency,"[PMC11846407] Based on PMC11846407, an emergency physician notes that sepsis guideline recommendations are mostly weak — what percentage of recommendations in the reviewed guidelines were classified as weak strength?"
+856,emergency,"[PMC11846407] Based on PMC11846407, a hospital quality team wants to improve sepsis guideline applicability — which AGREE II domain had the lowest average score and what was it?"
+857,emergency,"[PMC11846407] Based on PMC11846407, a researcher is evaluating the evidence base for sepsis guidelines — what was the predominant level of evidence cited in the reviewed sepsis infection management guidelines?"
+858,emergency,"[PMC2898118] Based on PMC2898118, a primary care clinic is implementing a diabetes care manager program — what percentage of patients expressed willingness to work with a care manager for diabetes management?"
+859,emergency,"[PMC2898118] Based on PMC2898118, a provider wants to expand care manager services to other chronic diseases — what does the study show about patient willingness to see a care manager for non-diabetes chronic problems?"
+860,emergency,"[PMC2898118] Based on PMC2898118, a care team is identifying patients less likely to engage with a care manager — what patient factor was associated with decreased likelihood to work with a care manager?"
+861,emergency,"[PMC12400259] Based on PMC12400259, an IBD patient is malnourished and asks about dietary support — what does the paper identify as the main barrier patients face in accessing specialist nutrition advice?"
+862,emergency,"[PMC12400259] Based on PMC12400259, a gastroenterology unit is building a multidisciplinary IBD team — what evidence does the paper provide for including a dietitian in the IBD MDT?"
+863,emergency,"[PMC12400259] Based on PMC12400259, a hospital administrator questions whether dietitians are necessary in IBD care — what does the paper state about IBD MDTs that include dietitians versus those that do not?"
+864,emergency,"[PMC12400259] Based on PMC12400259, a dietitian is asked to justify their role in IBD management — what unique qualifications make dietitians the most appropriate professional for nutritional assessment in IBD?"
+865,emergency,"[PMC11638529] Based on PMC11638529, a nursing school is reviewing its antimicrobial stewardship curriculum — what specific knowledge gaps were identified in UK pre-registration nursing students?"
+866,emergency,"[PMC11638529] Based on PMC11638529, a nurse educator wants to improve antimicrobial stewardship training — what modes of education delivery did student nurses prefer for antimicrobial stewardship?"
+867,emergency,"[PMC11638529] Based on PMC11638529, a hospital is considering interprofessional antimicrobial stewardship education — what benefits did students report from shared teaching with other professions?"
+868,emergency,"[PMC11638529] Based on PMC11638529, a nursing program director wants to strengthen antimicrobial stewardship competencies — in which competency areas did students feel least prepared?"
+869,emergency,"[PMC3701497] Based on PMC3701497, a CKD stage 3 patient with diabetes and albuminuria presents with uncontrolled hypertension — what does the study show about BP control rates in this high-risk subgroup?"
+870,emergency,"[PMC3701497] Based on PMC3701497, a nephrologist reviews a CKD stage 3 patient on only one antihypertensive — what proportion of CKD stage 3 patients with hypertension were on monotherapy in this study?"
+871,emergency,"[PMC3701497] Based on PMC3701497, a primary care physician is managing an elderly CKD stage 3 patient with hypertension — how does age affect the likelihood of achieving systolic versus diastolic BP targets?"
+872,emergency,"[PMC3701497] Based on PMC3701497, a quality improvement team wants to set BP targets for CKD stage 3 patients — what three BP control standards were used to assess BP control in this study?"
+873,emergency,"[PMC3701497] Based on PMC3701497, a primary care practice wants to improve BP control in CKD patients — what does the study suggest about using more antihypertensive agents in combination?"
+874,emergency,"[PMC10640530] Based on PMC10640530, an acute ischemic stroke patient is ineligible for endovascular therapy — what adjunctive CBF-enhancing therapies does the review identify as most promising?"
+875,emergency,"[PMC10640530] Based on PMC10640530, a neurologist is considering Fasudil for a stroke patient — what is the mechanism by which Fasudil may enhance cerebral blood flow in acute ischemic stroke?"
+876,emergency,"[PMC10640530] Based on PMC10640530, a stroke team is evaluating remote ischemic perconditioning — what does PMC10640530 identify as the potential benefit of this intervention in acute ischemic stroke?"
+877,emergency,"[PMC10640530] Based on PMC10640530, a stroke researcher is studying collateral circulation — what does the review state about the role of pial collaterals and genetics in acute ischemic stroke outcomes?"
+878,emergency,"[PMC10640530] Based on PMC10640530, a clinician asks about Sanguinate for stroke — what type of agent is Sanguinate and what is its proposed mechanism for enhancing CBF in acute ischemic stroke?"
+879,emergency,"[PMC4451740] Based on PMC4451740, a patient presents with severe pre-eclampsia at a Nigerian health facility — what percentage of facilities had magnesium sulphate available and what were the main supply barriers?"
+880,emergency,"[PMC4451740] Based on PMC4451740, a health facility manager in Northern Nigeria wants to improve eclampsia management — what integrated program components does the study recommend?"
+881,emergency,"[PMC4451740] Based on PMC4451740, a provider at a Nigerian facility has not been trained on MgSO4 — what percentage of providers in the study had received training on MgSO4 for PE/E management?"
+882,emergency,"[PMC4451740] Based on PMC4451740, an obstetric emergency team is assessing facility readiness for pre-eclampsia management — what essential equipment and supply gaps were identified in Northern Nigerian facilities?"
+883,emergency,"[PMC4451740] Based on PMC4451740, a maternal health program is designing interventions to improve MgSO4 use — what were the key facilitators identified for magnesium sulphate use in pre-eclampsia management?"
+884,emergency,"[PMC5803577] Based on PMC5803577, an oncology researcher is assessing publication bias in breast cancer trials — what proportion of registered trials remained unpublished?"
+885,emergency,"[PMC5803577] Based on PMC5803577, a clinical trial investigator wants to understand publication timelines — what was the median time to publication for registered breast cancer trials and what proportion were published within 24 months?"
+886,emergency,"[PMC5803577] Based on PMC5803577, a systematic reviewer is assessing whether the ClinicalTrials.gov results database improved publication rates — what did the study find about publication proportions before versus after the database introduction?"
+887,emergency,"[PMC5803577] Based on PMC5803577, a researcher is identifying factors that predict trial publication — what trial characteristics were independently associated with publication of registered breast cancer trials?"
+888,emergency,"[PMC2206501] Based on PMC2206501, a child presents with catecholamine-resistant septic shock — what rescue therapies were studied in paediatric ICU patients with this condition according to the 2006 review?"
+889,emergency,"[PMC2206501] Based on PMC2206501, an extremely low birth weight infant develops catecholamine-resistant septic shock — what did the study by Meyer et al. report about AVP infusion outcomes in this population?"
+890,emergency,"[PMC2206501] Based on PMC2206501, a PICU team is considering terlipressin for a child with refractory septic shock — what was the study design and findings of the Rodriguez-Nunez terlipressin trial in children?"
+891,emergency,"[PMC12232468] Based on PMC12232468, a COPD patient in GOLD Group B is being enrolled in a standardized management program — what five intervention components will they receive?"
+892,emergency,"[PMC12232468] Based on PMC12232468, a pulmonologist wants to know the target population for the COPD STANDARD trial — which GOLD 2023 ABE classification groups are eligible for enrollment?"
+893,emergency,"[PMC12232468] Based on PMC12232468, a hospital is deciding whether to implement standardized COPD management — what is the primary goal of the COPD STANDARD trial and when is it expected to complete?"
+894,general,"[PMC4775830] According to PMC4775830, what was the overarching theme identified in the study of radiographer-referrer communication in rural Australian practice?"
+895,general,"[PMC4775830] According to PMC4775830, what indirect communication strategies did rural radiographers use when direct communication pathways were blocked?"
+896,general,"[PMC4775830] According to PMC4775830, what factors enabled direct communication pathways between rural radiographers and referring doctors?"
+897,general,"[PMC4775830] According to PMC4775830, what barriers shaped by historical hierarchical relationships limited direct communication between radiographers and referrers?"
+898,emergency,"[PMC4775830] Based on PMC4775830, a rural radiographer identifies an abnormality but the referring doctor appears to have missed it — what strategies does the study describe for radiographers in this situation?"
+899,emergency,"[PMC4775830] Based on PMC4775830, a rural health service wants to improve radiographer-referrer communication — what does the study recommend for strengthening interprofessional communication pathways?"
+900,emergency,"[PMC4775830] Based on PMC4775830, a radiographer in rural practice lacks confidence in communicating radiographic findings — what does the study identify as the root causes of this communication barrier?"
