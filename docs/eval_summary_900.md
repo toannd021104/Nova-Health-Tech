@@ -267,3 +267,79 @@ Complex:   Query -> Nova Micro route -> Vector KB (15 chunks) + GraphRAG (3 chun
            -> Sonnet 4.5 Stream (with guardrails) -> SSE tokens
            Pre-gen: ~1,600ms | Model TTFT: ~10,700ms | Total: ~12,300ms
 ```
+
+---
+
+## Version 4 Update (2026-05-13 08:30 SGT)
+
+### Changes Applied (v3 to v4)
+
+| Change | v3 | v4 |
+|---|---|---|
+| Streaming architecture | Sync `converse_stream` in async generator (blocks event loop) | **asyncio.Queue + thread worker** (non-blocking) |
+| boto3 clients | New client created per request | **Singleton** (reused across requests) |
+| UI subtitle | "AWS with Claude, Bedrock KB + GraphRAG + Guardrails, Singapore ap-southeast-1" | **Removed** |
+| UI footer | None | **"Powered by AWS · Amazon Bedrock Claude LLM"** |
+| UI stack panel | 6 items | Added **Prompt Cache: Bedrock Prompt Caching** |
+| UI generating state | Loading dots only | **"Generating..."** indicator after route event received |
+
+### Root Cause Analysis
+
+The v3 TTFT measured from browser (3.8-4.7s) was much higher than the actual Bedrock model TTFT measured on EC2 (~1s). Investigation revealed:
+
+1. `converse_stream()` is a synchronous blocking call
+2. Running it inside an async generator blocks uvicorn's event loop
+3. SSE events are buffered until the generator yields back control
+4. Result: all tokens arrive in a burst after the entire stream completes
+
+Fix: run `converse_stream` iteration in a background thread, push events to an `asyncio.Queue`, and have the async generator await the queue. This allows uvicorn to flush each SSE event immediately.
+
+Additionally, boto3 client creation (bedrock-runtime, bedrock-agent-runtime) was happening per-request. While fast on subsequent calls (~4ms), the first call in a new process could add overhead. Switched to singleton pattern.
+
+### v4 Results (20 questions: 10 emergency + 10 general, streaming)
+
+| Metric | v3 | v4 | Delta |
+|---|---|---|---|
+| **Emergency avg TTFT** | 3,852ms | **1,654ms** | **-57%** |
+| **Emergency avg total** | 3,860ms | **4,323ms** | +463ms (more output due to true streaming) |
+| **General avg TTFT** | 12,287ms | **9,679ms** | **-21%** |
+| **General avg total** | 12,331ms | **12,396ms** | +65ms (negligible) |
+| Emergency SLA (<=5s TTFT) | 100% | **100%** | Maintained |
+| General SLA (<=15s total) | 100% | **100%** | Maintained |
+| Emergency TTFT range | 3,275-4,201ms | **1,295-2,923ms** | Much tighter |
+| General TTFT range | 11,092-14,010ms | **9,071-10,517ms** | Improved |
+
+### TTFT Breakdown (v4, emergency)
+
+| Phase | Time | % of TTFT |
+|---|---|---|
+| KB Retrieve (2 chunks) | ~230ms | 14% |
+| Bedrock converse_stream first token | ~1,100ms | 67% |
+| Network (EC2 to browser) | ~100ms | 6% |
+| FastAPI/uvicorn overhead | ~200ms | 12% |
+| **Total TTFT** | **~1,650ms** | 100% |
+
+### Architecture (v4)
+
+```
+Emergency: Query -> [thread] KB retrieve (2 chunks, ~230ms)
+           -> yield SSE "route" event
+           -> [thread] converse_stream -> asyncio.Queue -> yield SSE "token" events
+           TTFT: ~1,650ms | Total: ~4,300ms
+
+Complex:   Query -> [thread] Nova Micro route + KB (15) + GraphRAG (3) (~1,500ms)
+           -> yield SSE "route" event
+           -> [thread] converse_stream -> asyncio.Queue -> yield SSE "token" events
+           TTFT: ~9,700ms | Total: ~12,400ms
+```
+
+### Comparison Across All Versions
+
+| Metric | v1 | v2 | v3 | v4 |
+|---|---|---|---|---|
+| Emergency TTFT | N/A (sync) | ~5,000ms | 3,852ms | **1,654ms** |
+| Emergency SLA pass | 16.6% | 3.6% | 100% | **100%** |
+| General TTFT | N/A (sync) | ~8,500ms | 12,287ms | **9,679ms** |
+| General SLA pass | 100% | 100% | 100% | **100%** |
+| Answer rate | 90.3% | 100% | 100% | **100%** |
+| True streaming (tokens visible incrementally) | No | Partial | No (buffered) | **Yes** |

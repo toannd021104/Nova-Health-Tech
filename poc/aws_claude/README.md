@@ -115,23 +115,25 @@ No cross-region calls. All tokens stay in Singapore.
 
 ## Test results summary
 
-Results from streaming TTFT test (v3, 2026-05-13):
+Results from streaming TTFT test (v4, 2026-05-13):
 
 | Metric | Emergency (Haiku 4.5, streaming) | General (Sonnet 4.5, streaming) |
 |---|---|---|
-| Vector KB retrieval | ~260ms, 2 chunks | ~1,200ms, 15 chunks |
+| Vector KB retrieval | ~230ms, 2 chunks | ~1,200ms, 15 chunks |
 | GraphRAG retrieval | Skipped (speed) | ~400ms, 3 chunks |
 | Guardrails | Skipped (speed) | Enabled |
-| TTFT (avg, 10 questions) | **3,852ms** — PASS vs 5s SLA | **12,287ms** — PASS vs 15s SLA |
-| Total (avg) | **3,860ms** | **12,331ms** |
+| TTFT (avg, 10 questions) | **1,654ms** — PASS vs 5s SLA | **9,679ms** — PASS vs 15s SLA |
+| Total (avg) | **4,323ms** | **12,396ms** |
 | SLA pass rate | **100%** (10/10) | **100%** (10/10) |
 | Input tokens (avg) | 370 | 2,500 |
 | Output tokens (avg) | 295 | 400 |
 
-**Key architecture decisions (v3):**
+**Key architecture decisions (v4):**
 - Emergency: top-2 retrieval, no GraphRAG, no guardrails, short system prompt (230 chars), Haiku 4.5, max_tokens 300
 - Complex: top-15 retrieval + GraphRAG top-3, guardrails enabled, full system prompt, Sonnet 4.5, max_tokens 1500
-- Streaming: SSE via `/api/chat/stream`, uvicorn direct on port 80 (no Caddy proxy)
+- Streaming: asyncio.Queue + thread worker for non-blocking SSE (was blocking event loop in v3)
+- Singleton boto3 clients (bedrock-runtime, bedrock-agent-runtime) reused across requests
+- Uvicorn direct on port 80 (no Caddy proxy)
 - UI shows: TTFT, total time, input/output token counts, timing breakdown (pre-gen, retrieve)
 
 ## Files in this folder

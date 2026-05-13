@@ -216,16 +216,16 @@ The following reflects the actual deployed state as of the PoC run. This is a si
 | Amazon Rerank | **Not available** | Not in `ap-southeast-1`; production gap — no reranking of merged 10 chunks |
 | Data | 1 file only | WHO B09540-eng.pdf; embed cost < $0.01 |
 
-**PoC test results summary** (v3, streaming, 2026-05-13):
+**PoC test results summary** (v4, streaming, 2026-05-13):
 
 | Case | Retrieval | Guardrails | TTFT (avg, 10q) | Total (avg) | vs SLA |
 |---|---|---|---|---|---|
-| Emergency (Haiku 4.5, streaming) | Vector KB only, top-2, ~260ms | Disabled (speed) | **3,852ms** | **3,860ms** | **PASS** (5s SLA) |
-| Complex (Sonnet 4.5, streaming) | Vector KB top-15 + GraphRAG top-3, ~1,600ms | Enabled | **12,287ms** | **12,331ms** | **PASS** (15s SLA) |
+| Emergency (Haiku 4.5, streaming) | Vector KB only, top-2, ~230ms | Disabled (speed) | **1,654ms** | **4,323ms** | **PASS** (5s SLA) |
+| Complex (Sonnet 4.5, streaming) | Vector KB top-15 + GraphRAG top-3, ~1,500ms | Enabled | **9,679ms** | **12,396ms** | **PASS** (15s SLA) |
 
 Emergency SLA pass rate: **100%** (10/10). General SLA pass rate: **100%** (10/10). Answer rate: **100%** (hierarchical + semantic chunking eliminated refusals).
 
-Key optimizations applied in PoC v3: emergency uses top-2 retrieval, short system prompt (230 chars), no guardrails, no GraphRAG, max_tokens 300. Complex uses top-15 retrieval + GraphRAG top-3, guardrails enabled, full system prompt, max_tokens 1500. SSE streaming via `/api/chat/stream`, uvicorn direct on port 80 (no reverse proxy).
+Key optimizations applied in PoC v4: async queue-based streaming (non-blocking event loop), singleton boto3 clients, emergency uses top-2 retrieval, short system prompt (230 chars), no guardrails, no GraphRAG, max_tokens 300. Complex uses top-15 retrieval + GraphRAG top-3, guardrails enabled, full system prompt, max_tokens 1500. SSE streaming via `/api/chat/stream`, uvicorn direct on port 80 (no reverse proxy).
 
 ---
 
@@ -476,14 +476,14 @@ RPO 15 minutes and RTO 60 minutes within ap-southeast-1 using multi-AZ. Backup V
 | Complex, cached prefix | 1.5 to 3 s | 4.5 s | 6 s |
 | Complex, cold (Sonnet 4.5) | 3 to 5 s | 6 s | 6 s |
 
-**PoC-measured (v3, on-demand tier, no cache, no Reserved Tier):**
+**PoC-measured (v4, on-demand tier, no cache, no Reserved Tier):**
 
 | Traffic class | Avg TTFT | Range | SLA (relaxed for PoC) |
 |---|---|---|---|
-| Emergency, streaming (Haiku 4.5, top-2) | 3,852ms | 3,275 to 4,201ms | 5s: **100% pass** |
-| Complex, streaming (Sonnet 4.5, top-15 + GraphRAG) | 12,287ms | 11,092 to 14,010ms | 15s: **100% pass** |
+| Emergency, streaming (Haiku 4.5, top-2) | 1,654ms | 1,295 to 2,923ms | 5s: **100% pass** |
+| Complex, streaming (Sonnet 4.5, top-15 + GraphRAG) | 9,679ms | 9,071 to 10,517ms | 15s: **100% pass** |
 
-Production targets (2s emergency, 6s complex) require Reserved Tier + Prompt Caching + ElastiCache Redis. The PoC demonstrates the architecture works within relaxed SLAs on on-demand tier.
+Production targets (2s emergency, 6s complex) require Reserved Tier + Prompt Caching + ElastiCache Redis. The PoC demonstrates the architecture works within relaxed SLAs on on-demand tier. Emergency TTFT (1.6s avg) is already close to the 2s production target without any paid optimization.
 
 ### Cache stack
 
@@ -552,7 +552,7 @@ Production targets (2s emergency, 6s complex) require Reserved Tier + Prompt Cac
 
 An ED physician toggles emergency on and asks about a dosing question. The Lambda verifies the JWT, masks PHI, misses the semantic cache, retrieves top 20 from OpenSearch Serverless, and streams a grounded answer from Claude Haiku 4.5 with inline citations. Guardrails and the citation validator pass. Cold p95 sits near 1.9 s; the cached path returns in 300 to 500 ms. (Note: Amazon Rerank is not available in ap-southeast-1; production should use an alternative reranking strategy.)
 
-**PoC-measured (v3, on-demand tier):** Emergency TTFT avg 3.8s with top-2 retrieval, no guardrails, no GraphRAG, no cache, no Reserved Tier. Production with Reserved Tier + Prompt Caching + ElastiCache would bring this under 2s.
+**PoC-measured (v4, on-demand tier):** Emergency TTFT avg 1.6s with top-2 retrieval, no guardrails, no GraphRAG, no cache, no Reserved Tier. Already close to the 2s production target without paid optimizations.
 
 ### 12.2 Monthly WHO protocol update
 
@@ -677,3 +677,4 @@ Baseline workload: 600,000 calls per month, 30 percent emergency and 70 percent 
 | v1 | 2026-05-11 | Initial proposal with full architecture, 15 sections, 12 SVG diagrams |
 | v2 | 2026-05-12 | Revised per client feedback: removed cover summary, replaced arrows/em-dashes, shortened sections 4-14, added ToC, professional format. Updated to reflect actual deployed stack (Cohere Embed v3, no Amazon Rerank in SG) |
 | v3 | 2026-05-13 | Updated PoC test results: emergency TTFT 3.8s avg (100% SLA pass), general 12.3s avg (100% SLA pass). Emergency lane optimized: top-2 retrieval, short system prompt, no guardrails, no GraphRAG. Streaming SSE via converse_stream. Caddy removed, uvicorn direct on port 80. Added PoC-measured latency table to Section 10 |
+| v4 | 2026-05-13 | Fixed streaming architecture: async queue + thread worker (was blocking event loop). Singleton boto3 clients. Emergency TTFT 3.8s to 1.6s (-57%). General TTFT 12.3s to 9.7s (-21%). True token-by-token streaming now visible in browser. UI: removed subtitle, added footer, added Prompt Cache to stack panel |
