@@ -180,32 +180,38 @@ async def chat_stream(req: ChatRequest, request: Request):
         attachments=[a.model_dump() for a in req.attachments],
     )
 
+    import time as _time
+
     loop = asyncio.get_running_loop()
 
     # Run graph up to generate (phi_mask, pick_lane, cache_lookup, route, retrieve)
     # Then stream the generate step
     def _run_pre_generate():
         graph = get_graph()
-        # We need to run the graph but intercept before generate
-        # Simpler: run full graph for non-streaming, use converse_stream for streaming
         from app.graph import (
             _node_phi_mask, _node_pick_lane, _node_cache_lookup,
             _branch_on_lane, _node_emergency_agent, _node_route_department,
             _node_retrieve,
         )
+        t_start = _time.time()
         state_out = _node_phi_mask(state)
         state_out = _node_pick_lane(state_out)
         state_out = _node_cache_lookup(state_out)
         branch = _branch_on_lane(state_out)
         if branch == "cached":
+            state_out._pre_gen_ms = int((_time.time() - t_start) * 1000)
             return state_out
         elif branch == "emergency":
             state_out = _node_emergency_agent(state_out)
         else:
             state_out = _node_route_department(state_out)
         if state_out.cache_hit:
+            state_out._pre_gen_ms = int((_time.time() - t_start) * 1000)
             return state_out
+        t_retrieve = _time.time()
         state_out = _node_retrieve(state_out)
+        state_out._retrieve_ms = int((_time.time() - t_retrieve) * 1000)
+        state_out._pre_gen_ms = int((_time.time() - t_start) * 1000)
         return state_out
 
     pre_state = await loop.run_in_executor(None, _run_pre_generate)
@@ -216,12 +222,16 @@ async def chat_stream(req: ChatRequest, request: Request):
         return getattr(obj, key, default)
 
     async def event_generator():
-        # Send route info first
+        # Send route info first (includes pre-generate timing)
         dept = pre_state.department
+        pre_gen_ms = getattr(pre_state, '_pre_gen_ms', 0)
+        retrieve_ms = getattr(pre_state, '_retrieve_ms', 0)
         route_data = {
             "lane": pre_state.lane,
             "badge": pre_state.route_badge,
             "department": dept.label if dept else None,
+            "preGenMs": pre_gen_ms,
+            "retrieveMs": retrieve_ms,
         }
         yield f"event: route\ndata: {_json.dumps(route_data)}\n\n"
 
@@ -251,7 +261,8 @@ async def chat_stream(req: ChatRequest, request: Request):
 
         user_message = f"Clinical context:\n{context_block}\n\nQuestion:\n{pre_state.masked_question}"
         model_id = CLAUDE_HAIKU if pre_state.lane == "emergency" else (dept.model if dept else CLAUDE_HAIKU)
-        max_tokens = 700 if pre_state.lane == "emergency" else 1500
+        # Emergency: 300 tokens max for speed. Complex: 1500 for thorough answers.
+        max_tokens = 300 if pre_state.lane == "emergency" else 1500
         temperature = 0.1 if pre_state.lane == "emergency" else 0.2
 
         guardrail_id = os.environ.get("GUARDRAIL_ID", "azsgfl02i9gn")
@@ -261,6 +272,8 @@ async def chat_stream(req: ChatRequest, request: Request):
             messages=[{"role": "user", "content": [{"text": user_message}]}],
             inferenceConfig={"maxTokens": max_tokens, "temperature": temperature},
         )
+        # Emergency lane: NO guardrails (speed priority, check post-hoc if needed)
+        # Complex lane: guardrails enabled
         if guardrail_id and pre_state.lane != "emergency":
             converse_kwargs["guardrailConfig"] = {
                 "guardrailIdentifier": guardrail_id,

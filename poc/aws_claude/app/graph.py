@@ -99,6 +99,8 @@ class ChatState:
     citations: list[dict[str, Any]] = field(default_factory=list)
     route_badge: str = ""
     cache_hit: bool = False
+    _pre_gen_ms: int = 0
+    _retrieve_ms: int = 0
 
 
 def _node_phi_mask(state: ChatState) -> ChatState:
@@ -189,8 +191,8 @@ def _node_retrieve(state: ChatState) -> ChatState:
     assert state.department is not None
 
     # Emergency lane: Vector KB only (no GraphRAG) — saves ~900ms
-    # Emergency: top-3 for maximum speed. Complex: top-15 for recall.
-    retrieve_k = 3 if state.lane == "emergency" else 15
+    # Emergency: top-2 for maximum speed. Complex: top-15 for recall.
+    retrieve_k = 2 if state.lane == "emergency" else 15
 
     state.retrieved = retrieve(
         query=state.masked_question,

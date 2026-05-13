@@ -102,6 +102,10 @@ source /opt/nova/venv/bin/activate
 pip install --upgrade pip >/dev/null
 pip install -r app/requirements.txt
 
+# Stop Caddy if running (uvicorn serves directly on port 80 now)
+sudo systemctl stop caddy.service 2>/dev/null || true
+sudo systemctl disable caddy.service 2>/dev/null || true
+
 sudo tee /etc/systemd/system/nova-claude.service >/dev/null <<UNIT
 [Unit]
 Description=Nova Clinical AI — PoC Version A (Claude)
@@ -109,7 +113,7 @@ After=network-online.target
 
 [Service]
 Type=simple
-User=ec2-user
+User=root
 WorkingDirectory=/home/ec2-user/app
 Environment=AWS_REGION={region}
 Environment=S3_BUCKET={bucket}
@@ -118,29 +122,7 @@ Environment=BEDROCK_GRAPHRAG_KB_ID={graphrag_kb_id}
 Environment=GUARDRAIL_ID={guardrail_id}
 Environment=STACK_TAG={stack_tag}
 Environment=PYTHONPATH=/home/ec2-user
-ExecStart=/opt/nova/venv/bin/uvicorn app.server:app --host 127.0.0.1 --port 8000
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-UNIT
-
-sudo mkdir -p /etc/caddy
-sudo tee /etc/caddy/Caddyfile >/dev/null <<CADDY
-:80 {{
-    encode gzip
-    reverse_proxy 127.0.0.1:8000
-}}
-CADDY
-
-sudo tee /etc/systemd/system/caddy.service >/dev/null <<UNIT
-[Unit]
-Description=Caddy
-After=network-online.target
-
-[Service]
-User=ec2-user
-ExecStart=/usr/local/bin/caddy run --config /etc/caddy/Caddyfile
+ExecStart=/opt/nova/venv/bin/uvicorn app.server:app --host 0.0.0.0 --port 80
 Restart=on-failure
 
 [Install]
@@ -151,13 +133,13 @@ sudo mkdir -p /opt/nova
 sudo chown -R ec2-user:ec2-user /opt/nova
 
 sudo systemctl daemon-reload
-sudo systemctl enable --now nova-claude.service caddy.service
+sudo systemctl enable --now nova-claude.service
 sleep 5
-sudo systemctl status --no-pager --lines=0 nova-claude.service caddy.service || true
+sudo systemctl status --no-pager --lines=0 nova-claude.service || true
 
 echo '== /healthz =='
 for i in 1 2 3 4 5 6; do
-    curl -sS http://127.0.0.1:8000/healthz && break
+    curl -sS http://127.0.0.1:80/healthz && break
     echo "  waiting for uvicorn ($i/6) ..."; sleep 3
 done
 echo

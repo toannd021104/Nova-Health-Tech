@@ -48,14 +48,7 @@ DEPARTMENTS: dict[str, Department] = {
         english="Emergency Medicine",
         kb_namespace="departments/emergency",
         model=CLAUDE_HAIKU,
-        system_prompt=_COMMON_STYLE + """
-Scope: acute resuscitation, sepsis bundle, anaphylaxis, stroke activation, trauma triage, ACS protocols.
-
-Emergency-lane rules:
-- Assume the clinician needs an action in the next 60 seconds. Put the action first.
-- If the case is clearly time-critical (sepsis shock, STEMI, anaphylaxis), prepend: "Time-critical — act now."
-- Always include: call emergency response + get senior review if the clinician is junior.
-""",
+        system_prompt="""You are an emergency clinical AI assistant. Ground claims in retrieved context with [1],[2] citations. If context lacks the answer, say so. Write for clinicians: precise, concise. Put the action first. End with "Recommendation:" line.""",
     ),
     "cardiology-internal": Department(
         label="cardiology-internal",

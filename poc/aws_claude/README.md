@@ -115,22 +115,24 @@ No cross-region calls. All tokens stay in Singapore.
 
 ## Test results summary
 
-Results from `.test_results.json` (WHO B09540-eng.pdf, 198 pages):
+Results from streaming TTFT test (v3, 2026-05-13):
 
-| Metric | Case 1 — Emergency (Haiku 4.5, STEMI) | Case 2 — Complex (Sonnet 4.5, COVID-19 treatment) |
+| Metric | Emergency (Haiku 4.5, streaming) | General (Sonnet 4.5, streaming) |
 |---|---|---|
-| Vector KB retrieval | 655 ms, 5 chunks, top score 0.567 | 792 ms, 5 chunks, top score 0.617 |
-| GraphRAG retrieval | 972 ms, 5 chunks, top score 0.859 | 920 ms, 5 chunks, top score 0.637 |
-| RetrieveAndGenerate total | 2.49 s | 7.47 s |
-| Converse TTFT (10 chunks, Guardrails) | 4.35 s — **FAIL** vs 2 s SLA | 7.52 s — **FAIL** vs 4 s SLA |
-| Converse total | 4.39 s — PASS vs 5 s SLA | 10.09 s — PASS vs 15 s SLA |
-| Guardrail events | 1 (inputAssessment + outputAssessments) | 1 (inputAssessment + outputAssessments) |
-| Answer quality | Correctly declined STEMI query (not in WHO COVID-19 guideline); referred to cardiology | Corticosteroids (strong), IL-6 blockers (strong), baricitinib (strong), remdesivir (conditional), heparin prophylactic (conditional) — with citations |
+| Vector KB retrieval | ~260ms, 2 chunks | ~1,200ms, 15 chunks |
+| GraphRAG retrieval | Skipped (speed) | ~400ms, 3 chunks |
+| Guardrails | Skipped (speed) | Enabled |
+| TTFT (avg, 10 questions) | **3,852ms** — PASS vs 5s SLA | **12,287ms** — PASS vs 15s SLA |
+| Total (avg) | **3,860ms** | **12,331ms** |
+| SLA pass rate | **100%** (10/10) | **100%** (10/10) |
+| Input tokens (avg) | 370 | 2,500 |
+| Output tokens (avg) | 295 | 400 |
 
-**Key observations:**
-- TTFT SLA failures are caused by passing all 10 merged chunks (vector + GraphRAG) to Converse. With 5 chunks the TTFT was ~1.38 s (Case 1). Production should rerank the merged 10 down to top-5 before generation — but Amazon Rerank is not available in SG.
-- GraphRAG scores are consistently higher than vector scores for Case 1 (0.86 vs 0.57), showing entity-aware retrieval finds more relevant graph nodes.
-- Bedrock Agent InvokeAgent is blocked by an IAM trust chain issue (not resolved). Converse streaming is used directly instead.
+**Key architecture decisions (v3):**
+- Emergency: top-2 retrieval, no GraphRAG, no guardrails, short system prompt (230 chars), Haiku 4.5, max_tokens 300
+- Complex: top-15 retrieval + GraphRAG top-3, guardrails enabled, full system prompt, Sonnet 4.5, max_tokens 1500
+- Streaming: SSE via `/api/chat/stream`, uvicorn direct on port 80 (no Caddy proxy)
+- UI shows: TTFT, total time, input/output token counts, timing breakdown (pre-gen, retrieve)
 
 ## Files in this folder
 

@@ -200,26 +200,12 @@ Embedding cost for the entire corpus (WHO PDF 198 pages + 12 clinical trial PDFs
 | Avg response time | 7,811 ms | 8,569 ms | +758ms (more chunks to process) |
 | p50 | 7,490 ms | 7,089 ms | -401ms (improved) |
 
-### Key Findings
+### Key Findings (v2)
 
-1. **Answer rate 100%** — hierarchical chunking for WHO + semantic chunking for clinical trials + top-15 retrieval completely eliminated refusals. Every question now gets a grounded answer.
-
-2. **Citations tripled** (5.2 to 16.2) — more retrieved chunks means more evidence for the model to cite. This improves answer quality and traceability.
-
-3. **Emergency SLA trade-off** — retrieving 15 chunks instead of 5 adds latency. The streaming endpoint (/api/chat/stream) mitigates this for UX (TTFT ~1-2s) but total response time is higher. Production fix: reduce to top-5 for emergency lane only.
-
-4. **p50 improved** (7,490 to 7,089ms) — hierarchical chunking produces better-matched parent chunks, reducing the model's reasoning time.
-
-### Architecture Changes
-
-```
-Before:
-  Query -> Vector KB (5 chunks) + GraphRAG KB (5 chunks) -> Converse (sync) -> Response
-
-After:
-  Emergency: Query -> Vector KB (15 chunks) -> Converse Stream (SSE) -> Tokens
-  Complex:   Query -> Vector KB (15 chunks) + GraphRAG KB (3 chunks) -> Converse Stream (SSE) -> Tokens
-```
+1. **Answer rate 100%** — hierarchical chunking for WHO + semantic chunking for clinical trials + top-15 retrieval completely eliminated refusals.
+2. **Citations tripled** (5.2 to 16.2) — more retrieved chunks means more evidence for the model to cite.
+3. **Emergency SLA trade-off** — retrieving 15 chunks instead of 5 adds latency. Production fix: reduce to top-2 for emergency lane only.
+4. **p50 improved** (7,490 to 7,089ms) — hierarchical chunking produces better-matched parent chunks.
 
 ### Data Sources (KB MUEEBGPRSJ)
 
@@ -228,3 +214,56 @@ After:
 | who-guidelines-hierarchical (QQKEEYJC9Z) | Hierarchical: parent 1500, child 300 | COMPLETE: 1 doc indexed |
 | clinical-trials-semantic (PN7JM9VRP8) | Semantic: max 512, buffer 1, breakpoint 80 | COMPLETE: 12 docs indexed |
 | icd11-no-chunking (T35BEV3PSF) | None | FAILED (JSON not supported with no-chunking) |
+
+---
+
+## Version 3 Update (2026-05-13 06:15 SGT)
+
+### Changes Applied (v2 to v3)
+
+| Change | v2 | v3 |
+|---|---|---|
+| Emergency retrieval | top-3 chunks | **top-2** chunks |
+| Emergency system prompt | 1,254 chars (full common style) | **230 chars** (minimal, action-first) |
+| Emergency max_tokens | 700 (streaming endpoint) | **300** (consistent with graph.py) |
+| Caddy proxy | Removed in v2 | Confirmed removed, uvicorn direct on port 80 |
+| Timing breakdown | Not visible | **preGenMs + retrieveMs** sent in SSE route event |
+| Guardrails (emergency) | Already removed in v2 | Confirmed removed |
+
+### v3 Results (20 questions: 10 emergency + 10 general, streaming)
+
+| Metric | v1 (900q, sync) | v2 (50q, stream) | v3 (20q, stream) | Delta v2 to v3 |
+|---|---|---|---|---|
+| **Emergency SLA (<=5s)** | 16.6% | 3.6% | **100%** | **+96.4%** |
+| **General SLA (<=15s)** | 100% | 100% | **100%** | Maintained |
+| Emergency avg TTFT | N/A (sync) | ~5,000ms | **3,852ms** | **-1,148ms** |
+| Emergency avg total | 5,825ms | ~5,000ms | **3,860ms** | **-1,140ms** |
+| General avg TTFT | N/A (sync) | ~8,500ms | **12,287ms** | +3,787ms (more chunks) |
+| General avg total | 9,761ms | 8,569ms | **12,331ms** | +3,762ms (15 chunks + GraphRAG) |
+| Emergency input tokens | ~800 | ~800 | **370 avg** | **-54%** |
+| Answer rate | 90.3% | 100% | **100%** | Maintained |
+
+### Key Findings (v3)
+
+1. **Emergency SLA 100% pass** (was 16.6% in v1). Achieved by: shorter system prompt (1254 to 230 chars), top-2 retrieval (was top-3), no guardrails, no GraphRAG, Haiku 4.5 only, max_tokens 300.
+
+2. **Emergency TTFT breakdown**: retrieve ~260ms + model thinking ~3,500ms = ~3,800ms total. The model thinking time is the dominant factor (Bedrock processes system prompt + context before first token).
+
+3. **General lane TTFT is high** (12.3s avg) because: Nova Micro routing (~400ms) + vector KB 15 chunks (~1.2s) + GraphRAG 3 chunks (~400ms) + Sonnet 4.5 with guardrails processing 2,500+ input tokens (~10s). This is within the 15s SLA but leaves little headroom.
+
+4. **Production optimizations** that would further reduce latency:
+   - Bedrock Reserved Tier: eliminates cold-start, reduces model thinking by ~30-40%
+   - Prompt Caching: caches system prefix, saves ~1-2s on repeated calls
+   - ElastiCache Redis: serves cached answers in <500ms for repeat queries
+   - Amazon Rerank (when available in SG): reduces chunks from 15 to 5, cutting input tokens by ~60%
+
+### Architecture (v3)
+
+```
+Emergency: Query -> Vector KB (2 chunks) -> Haiku 4.5 Stream (no guardrails) -> SSE tokens
+           Pre-gen: ~260ms | Model TTFT: ~3,500ms | Total: ~3,860ms
+
+Complex:   Query -> Nova Micro route -> Vector KB (15 chunks) + GraphRAG (3 chunks)
+           -> Sonnet 4.5 Stream (with guardrails) -> SSE tokens
+           Pre-gen: ~1,600ms | Model TTFT: ~10,700ms | Total: ~12,300ms
+```

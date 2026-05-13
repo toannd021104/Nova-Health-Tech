@@ -178,7 +178,7 @@ form.addEventListener('submit', async (ev) => {
             routeTagEl.className = 'msg-tag' + (data.lane === 'emergency' ? ' emergency-tag' : ' dept-tag');
             badge.textContent = dept;
             badge.className = 'badge' + (data.lane === 'emergency' ? ' emergency' : '');
-            reasonEl.textContent = 'lane: ' + data.lane;
+            reasonEl.textContent = 'lane: ' + data.lane + (data.preGenMs ? ' | retrieve: ' + data.retrieveMs + 'ms | pre-gen: ' + data.preGenMs + 'ms' : '');
           } else if (eventType === 'token') {
             if (!firstToken) {
               firstToken = true;
