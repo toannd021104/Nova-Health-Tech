@@ -21,13 +21,18 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 │   ├── customization.md                                ← SFT / DPO / GRPO / distillation per version
 │   ├── regional_services.md                            ← live-verified AWS + Alibaba service availability matrix
 │   ├── compliance.md                                   ← PDPA / HIPAA / HCSA / FDA / EU AI Act / audit 6-yr
+│   ├── eval_summary_900.md                             ← 900-question benchmark results (v1-v4)
+│   ├── test_questions_800.csv                          ← 900 test questions (800 WHO + 100 PMC)
+│   ├── eval_results_900.csv                            ← full evaluation results
 │   ├── proposals/
+│   │   ├── AWS_Claude_Technical_Proposal.md            ← Version A — AWS + Claude (SG), full 15-section proposal
 │   │   ├── version_a_aws_claude.md                     ← Version A — AWS + Claude (SG)
 │   │   ├── version_b_aws_qwen.md                       ← Version B — AWS + Qwen (Bedrock Sydney)
 │   │   └── version_c_alibaba_qwen.md                   ← Version C — Alibaba + Qwen (SG) [recommended default]
 │   └── architecture/
 │       └── diagrams/
-│           └── aws_workflow.svg                        ← numbered workflow diagram
+│           ├── aws_workflow.svg                        ← numbered workflow diagram
+│           └── proposal/                              ← 12 SVG architecture diagrams for the proposal
 │
 ├── poc/                                               ← 10-day interview POC
 │   ├── README.md                                       ← scope + cost math for 100 questions
@@ -115,6 +120,34 @@ Production proposal for Nova Health Tech's clinical decision-support GenAI assis
 | 4 | Version A2 (Haiku 4.5 + Sonnet 4.5) | ~$7,295 | ✅ chat; Tokyo embed+rerank |
 
 ## Running the pieces
+
+### Live PoC (Version A, AWS + Claude)
+
+Deployed on EC2 `t4g.small` in `ap-southeast-1`. Running 24/7.
+
+| Resource | Value |
+|---|---|
+| URL | http://47.130.120.152/ui/index.html |
+| Healthz | http://47.130.120.152/healthz |
+| EC2 | i-0cc616a81b9f27c8d (47.130.120.152) |
+| Vector KB | MUEEBGPRSJ (OpenSearch Serverless) |
+| GraphRAG KB | FU6SXD0B8B (Neptune Analytics, g-0keuwoev4a) |
+| Guardrails | azsgfl02i9gn (DRAFT) |
+| Embedding | Cohere Embed Multilingual v3 (SG-native) |
+| Data | WHO B09540-eng.pdf (198 pages) + 12 clinical trial PDFs |
+
+**Performance (v4, 2026-05-13):**
+
+| Lane | Avg TTFT | Avg Total | SLA | Pass rate |
+|---|---|---|---|---|
+| Emergency (Haiku 4.5, top-2, no guardrails) | **1,654ms** | 4,323ms | 5s | **100%** |
+| General (Sonnet 4.5, top-15 + GraphRAG, guardrails) | **9,679ms** | 12,396ms | 15s | **100%** |
+
+Answer rate: 100%. True token-by-token streaming via SSE.
+
+See `poc/aws_claude/README.md` for full details, `docs/eval_summary_900.md` for the 900-question benchmark.
+
+### Scripts
 
 Environment variables (never commit secrets):
 
