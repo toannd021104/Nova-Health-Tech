@@ -156,6 +156,7 @@ form.addEventListener('submit', async (ev) => {
     let buffer = '';
     let firstToken = false;
     let eventType = '';
+    let ttftMs = 0;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -182,7 +183,8 @@ form.addEventListener('submit', async (ev) => {
             if (!firstToken) {
               firstToken = true;
               body.innerHTML = '';
-              const ttft = ((performance.now() - t0) / 1000).toFixed(2);
+              ttftMs = performance.now() - t0;
+              const ttft = (ttftMs / 1000).toFixed(2);
               timingDisplay.textContent = 'TTFT ' + ttft + 's';
             }
             fullText += data.text;
@@ -190,11 +192,17 @@ form.addEventListener('submit', async (ev) => {
             chatLog.scrollTop = chatLog.scrollHeight;
           } else if (eventType === 'done') {
             const elapsed = (performance.now() - t0) / 1000;
-            aiTimingEl.textContent = elapsed.toFixed(1) + 's';
-            timingEl.textContent = 'Total: ' + elapsed.toFixed(2) + 's';
-            timingDisplay.textContent = elapsed.toFixed(1) + 's';
+            const ttftSec = (ttftMs / 1000).toFixed(2);
+            aiTimingEl.textContent = elapsed.toFixed(1) + 's (TTFT ' + ttftSec + 's)';
+            // Show token usage if available
+            const usage = data.usage || {};
+            const inTok = usage.inputTokens || 0;
+            const outTok = usage.outputTokens || 0;
+            const tokenInfo = inTok ? ' | ' + inTok + ' in / ' + outTok + ' out' : '';
+            timingEl.textContent = 'TTFT: ' + ttftSec + 's | Total: ' + elapsed.toFixed(2) + 's' + tokenInfo;
+            timingDisplay.textContent = elapsed.toFixed(1) + 's' + (inTok ? ' (' + (inTok+outTok) + ' tok)' : '');
             if (data.citations && data.citations.length > 0) {
-              let html = '<details><summary>' + data.citations.length + ' citation(s)</summary><ul>';
+              let html = '<details><summary>' + data.citations.length + ' citation(s)' + tokenInfo + '</summary><ul>';
               for (const c of data.citations) {
                 const src = c.source || 'unknown';
                 const shortSrc = src.split('/').pop();

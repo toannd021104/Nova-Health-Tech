@@ -268,6 +268,8 @@ async def chat_stream(req: ChatRequest, request: Request):
                 "trace": "enabled",
             }
 
+        input_tokens = 0
+        output_tokens = 0
         try:
             resp = bedrock.converse_stream(**converse_kwargs)
             for event in resp.get("stream", []):
@@ -276,10 +278,14 @@ async def chat_stream(req: ChatRequest, request: Request):
                     text = delta.get("text", "")
                     if text:
                         yield f"event: token\ndata: {_json.dumps({'text': text})}\n\n"
+                elif "metadata" in event:
+                    usage = event["metadata"].get("usage", {})
+                    input_tokens = usage.get("inputTokens", 0)
+                    output_tokens = usage.get("outputTokens", 0)
         except Exception as e:
             yield f"event: error\ndata: {_json.dumps({'error': str(e)})}\n\n"
 
-        yield f"event: done\ndata: {_json.dumps({'citations': pre_state.citations})}\n\n"
+        yield f"event: done\ndata: {_json.dumps({'citations': pre_state.citations, 'usage': {'inputTokens': input_tokens, 'outputTokens': output_tokens}})}\n\n"
 
     return StreamingResponse(
         event_generator(),
