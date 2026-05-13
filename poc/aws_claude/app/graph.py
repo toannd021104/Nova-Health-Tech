@@ -272,10 +272,12 @@ def _node_generate(state: ChatState, *, bedrock=None) -> ChatState:
                     }
                 )
 
-    # Guardrails config — wired in if GUARDRAIL_ID is set
+    # Guardrails config
+    # Emergency lane: NO guardrails (for streaming speed — check post-hoc if needed)
+    # Complex lane: guardrails enabled (accuracy over speed)
     guardrail_id = os.environ.get("GUARDRAIL_ID", "azsgfl02i9gn")
     guardrail_config = {}
-    if guardrail_id:
+    if guardrail_id and state.lane != "emergency":
         guardrail_config = {
             "guardrailIdentifier": guardrail_id,
             "guardrailVersion": "DRAFT",

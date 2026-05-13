@@ -261,7 +261,7 @@ async def chat_stream(req: ChatRequest, request: Request):
             messages=[{"role": "user", "content": [{"text": user_message}]}],
             inferenceConfig={"maxTokens": max_tokens, "temperature": temperature},
         )
-        if guardrail_id:
+        if guardrail_id and pre_state.lane != "emergency":
             converse_kwargs["guardrailConfig"] = {
                 "guardrailIdentifier": guardrail_id,
                 "guardrailVersion": "DRAFT",
