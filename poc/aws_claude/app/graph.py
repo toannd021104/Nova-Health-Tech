@@ -190,9 +190,9 @@ def _node_retrieve(state: ChatState) -> ChatState:
 
     assert state.department is not None
 
-    # Emergency lane: Vector KB only (no GraphRAG) — saves ~900ms
-    # Emergency: top-2 for maximum speed. Complex: top-15 for recall.
-    retrieve_k = 2 if state.lane == "emergency" else 15
+    # Emergency lane: Vector KB top-3 + GraphRAG top-2 for better accuracy
+    # Complex lane: Vector KB top-15 + GraphRAG top-3 for maximum recall
+    retrieve_k = 3 if state.lane == "emergency" else 15
 
     state.retrieved = retrieve(
         query=state.masked_question,
@@ -200,11 +200,12 @@ def _node_retrieve(state: ChatState) -> ChatState:
         top_k=retrieve_k,
     )
 
-    if state.lane == "complex":
-        graph_hits = graphrag.graph_retrieve(state.masked_question, top_k=3)
-        state.graph_hits = [
-            {"source": h.source, "text": h.text, "score": h.score} for h in graph_hits
-        ]
+    # Both lanes use GraphRAG for entity-aware retrieval
+    graph_k = 2 if state.lane == "emergency" else 3
+    graph_hits = graphrag.graph_retrieve(state.masked_question, top_k=graph_k)
+    state.graph_hits = [
+        {"source": h.source, "text": h.text, "score": h.score} for h in graph_hits
+    ]
 
     state.citations = [
         {
