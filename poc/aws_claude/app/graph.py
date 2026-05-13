@@ -189,11 +189,13 @@ def _node_retrieve(state: ChatState) -> ChatState:
     assert state.department is not None
 
     # Emergency lane: Vector KB only (no GraphRAG) — saves ~900ms
-    # Complex lane: Vector KB + GraphRAG for multi-hop questions
+    # Emergency: top-3 for maximum speed. Complex: top-15 for recall.
+    retrieve_k = 3 if state.lane == "emergency" else 15
+
     state.retrieved = retrieve(
         query=state.masked_question,
         namespace=state.department.kb_namespace,
-        top_k=15,
+        top_k=retrieve_k,
     )
 
     if state.lane == "complex":
@@ -249,7 +251,7 @@ def _node_generate(state: ChatState, *, bedrock=None) -> ChatState:
 
     # Emergency forces Haiku 4.5 regardless of department default.
     model_id = CLAUDE_HAIKU if state.lane == "emergency" else state.department.model
-    max_tokens = 700 if state.lane == "emergency" else 1500
+    max_tokens = 300 if state.lane == "emergency" else 1500
     # Claude rejects sending both temperature and top_p; use temperature only.
     temperature = 0.1 if state.lane == "emergency" else 0.2
 
