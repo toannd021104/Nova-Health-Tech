@@ -38,6 +38,17 @@ log = logging.getLogger("poc.aws_claude.server")
 
 _GRAPH = None
 _BOOTSTRAP_STATS: dict[str, Any] = {"state": "pending"}
+_BEDROCK_RT_CLIENT = None
+
+
+def _get_bedrock_client():
+    """Singleton boto3 bedrock-runtime client to avoid per-request creation overhead."""
+    global _BEDROCK_RT_CLIENT
+    if _BEDROCK_RT_CLIENT is None:
+        import boto3 as _boto3
+        region = os.environ.get("AWS_REGION", "ap-southeast-1")
+        _BEDROCK_RT_CLIENT = _boto3.client("bedrock-runtime", region_name=region)
+    return _BEDROCK_RT_CLIENT
 
 
 def get_graph():
@@ -246,7 +257,7 @@ async def chat_stream(req: ChatRequest, request: Request):
         from app.graph import BEDROCK_REGION
         from app.agents import CLAUDE_HAIKU
 
-        bedrock = _boto3.client("bedrock-runtime", region_name=BEDROCK_REGION)
+        bedrock = _get_bedrock_client()
 
         context_parts = []
         for c in pre_state.citations:
@@ -281,22 +292,42 @@ async def chat_stream(req: ChatRequest, request: Request):
                 "trace": "enabled",
             }
 
+        # Use asyncio.Queue to bridge sync converse_stream to async generator
+        queue: asyncio.Queue = asyncio.Queue()
+
+        def _stream_worker():
+            try:
+                resp = bedrock.converse_stream(**converse_kwargs)
+                for event in resp.get("stream", []):
+                    if "contentBlockDelta" in event:
+                        delta = event["contentBlockDelta"].get("delta", {})
+                        text = delta.get("text", "")
+                        if text:
+                            queue.put_nowait(("token", text))
+                    elif "metadata" in event:
+                        usage = event["metadata"].get("usage", {})
+                        queue.put_nowait(("metadata", usage))
+            except Exception as e:
+                queue.put_nowait(("error", str(e)))
+            finally:
+                queue.put_nowait(("done", None))
+
+        loop.run_in_executor(None, _stream_worker)
+
         input_tokens = 0
         output_tokens = 0
-        try:
-            resp = bedrock.converse_stream(**converse_kwargs)
-            for event in resp.get("stream", []):
-                if "contentBlockDelta" in event:
-                    delta = event["contentBlockDelta"].get("delta", {})
-                    text = delta.get("text", "")
-                    if text:
-                        yield f"event: token\ndata: {_json.dumps({'text': text})}\n\n"
-                elif "metadata" in event:
-                    usage = event["metadata"].get("usage", {})
-                    input_tokens = usage.get("inputTokens", 0)
-                    output_tokens = usage.get("outputTokens", 0)
-        except Exception as e:
-            yield f"event: error\ndata: {_json.dumps({'error': str(e)})}\n\n"
+        while True:
+            msg = await queue.get()
+            if msg[0] == "token":
+                yield f"event: token\ndata: {_json.dumps({'text': msg[1]})}\n\n"
+            elif msg[0] == "metadata":
+                input_tokens = msg[1].get("inputTokens", 0)
+                output_tokens = msg[1].get("outputTokens", 0)
+            elif msg[0] == "error":
+                yield f"event: error\ndata: {_json.dumps({'error': msg[1]})}\n\n"
+                break
+            elif msg[0] == "done":
+                break
 
         yield f"event: done\ndata: {_json.dumps({'citations': pre_state.citations, 'usage': {'inputTokens': input_tokens, 'outputTokens': output_tokens}})}\n\n"
 

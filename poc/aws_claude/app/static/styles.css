@@ -215,3 +215,19 @@ form { padding: 12px 16px; border-top: 1px solid var(--border); }
   border-top: 1px solid var(--border);
   background: var(--panel);
 }
+
+/* Generating indicator */
+.generating-indicator {
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+}
+.dot-anim {
+  display: inline-block;
+  animation: dot-blink 1.4s infinite;
+}
+@keyframes dot-blink {
+  0%, 20% { opacity: 0.2; }
+  50% { opacity: 1; }
+  80%, 100% { opacity: 0.2; }
+}

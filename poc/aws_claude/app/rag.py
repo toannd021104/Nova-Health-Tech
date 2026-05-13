@@ -25,6 +25,15 @@ log = logging.getLogger(__name__)
 REGION = os.environ.get("AWS_REGION", "ap-southeast-1")
 KB_ID = os.environ.get("BEDROCK_KB_ID", "MUEEBGPRSJ")
 
+_KB_CLIENT = None
+
+
+def _get_kb_client():
+    global _KB_CLIENT
+    if _KB_CLIENT is None:
+        _KB_CLIENT = boto3.client("bedrock-agent-runtime", region_name=REGION)
+    return _KB_CLIENT
+
 
 def retrieve(query: str, namespace: str = "", top_k: int = 15, **_) -> list[dict[str, Any]]:
     """Retrieve from Bedrock Vector KB (OpenSearch Serverless).
@@ -34,7 +43,7 @@ def retrieve(query: str, namespace: str = "", top_k: int = 15, **_) -> list[dict
 
     Returns top-15 results by default for better recall across diverse data sources.
     """
-    client = boto3.client("bedrock-agent-runtime", region_name=REGION)
+    client = _get_kb_client()
 
     try:
         resp = client.retrieve(

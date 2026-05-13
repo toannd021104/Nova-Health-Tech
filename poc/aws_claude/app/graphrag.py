@@ -21,6 +21,15 @@ log = logging.getLogger(__name__)
 REGION = os.environ.get("AWS_REGION", "ap-southeast-1")
 GRAPHRAG_KB_ID = os.environ.get("BEDROCK_GRAPHRAG_KB_ID", "FU6SXD0B8B")
 
+_GRAPHRAG_CLIENT = None
+
+
+def _get_graphrag_client():
+    global _GRAPHRAG_CLIENT
+    if _GRAPHRAG_CLIENT is None:
+        _GRAPHRAG_CLIENT = boto3.client("bedrock-agent-runtime", region_name=REGION)
+    return _GRAPHRAG_CLIENT
+
 
 @dataclass
 class GraphHit:
@@ -38,7 +47,7 @@ def graph_retrieve(query: str, top_k: int = 5) -> list[GraphHit]:
         log.info("graph_retrieve: BEDROCK_GRAPHRAG_KB_ID not set; returning empty")
         return []
 
-    client = boto3.client("bedrock-agent-runtime", region_name=REGION)
+    client = _get_graphrag_client()
     try:
         resp = client.retrieve(
             knowledgeBaseId=GRAPHRAG_KB_ID,

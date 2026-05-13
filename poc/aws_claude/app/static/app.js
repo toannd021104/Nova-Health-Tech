@@ -179,6 +179,8 @@ form.addEventListener('submit', async (ev) => {
             badge.textContent = dept;
             badge.className = 'badge' + (data.lane === 'emergency' ? ' emergency' : '');
             reasonEl.textContent = 'lane: ' + data.lane + (data.preGenMs ? ' | retrieve: ' + data.retrieveMs + 'ms | pre-gen: ' + data.preGenMs + 'ms' : '');
+            // Show "generating..." after route is received (pre-gen done, waiting for model)
+            body.innerHTML = '<div class="generating-indicator">Generating<span class="dot-anim">...</span></div>';
           } else if (eventType === 'token') {
             if (!firstToken) {
               firstToken = true;
