@@ -22,10 +22,10 @@
   </defs>
 
   <text x="640" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">
-    RAG architecture — hybrid retrieval · rerank · GraphRAG · citation
+    RAG architecture: dual KB (vector + GraphRAG) on both lanes, with citation
   </text>
   <text x="640" y="44" text-anchor="middle" font-size="12" fill="#64748b">
-    Two retrieval lanes: Emergency (one-pass hybrid) · Complex (agentic tool-calling + graph traversal)
+    Two retrieval lanes, both leveraging vector + entity-aware graph traversal. Emergency uses smaller top-K for sub-2s; Complex uses larger top-K for recall.
   </text>
 
   <!-- Query entry -->
@@ -34,36 +34,36 @@
   <text x="135" y="118" text-anchor="middle" class="sm">1. PHI mask (Comprehend Medical)</text>
   <text x="135" y="134" text-anchor="middle" class="sm">2. ICD-11 silent query expansion</text>
   <text x="135" y="150" text-anchor="middle" class="sm">3. Metadata pre-filter</text>
-  <text x="135" y="166" text-anchor="middle" class="sm">  (specialty · recency · grade)</text>
+  <text x="135" y="166" text-anchor="middle" class="sm">  (specialty, recency, grade)</text>
   <text x="135" y="184" text-anchor="middle" class="sm">4. Semantic cache check (L1)</text>
 
   <!-- Emergency lane -->
   <rect x="290" y="80" width="440" height="200" class="grp"/>
-  <text x="300" y="102" class="ttl">Emergency lane — one-pass hybrid (≤ 2 s p95)</text>
+  <text x="300" y="102" class="ttl">Emergency lane: dual KB, sub-2s p95</text>
 
   <rect x="300" y="120" width="200" height="60" class="box em"/>
-  <text x="400" y="140" text-anchor="middle" class="ttl">BM25 + kNN HNSW</text>
+  <text x="400" y="140" text-anchor="middle" class="ttl">Vector kNN top-3</text>
   <text x="400" y="156" text-anchor="middle" class="sm">OpenSearch Serverless (SG)</text>
-  <text x="400" y="172" text-anchor="middle" class="sm">top-20 candidates</text>
+  <text x="400" y="172" text-anchor="middle" class="sm">Cohere Embed v3</text>
 
   <rect x="520" y="120" width="200" height="60" class="box em"/>
-  <text x="620" y="140" text-anchor="middle" class="ttl">Amazon Rerank 1.0</text>
-  <text x="620" y="156" text-anchor="middle" class="sm">Tokyo ap-northeast-1</text>
-  <text x="620" y="172" text-anchor="middle" class="sm">top-20 → top-5</text>
+  <text x="620" y="140" text-anchor="middle" class="ttl">GraphRAG top-2</text>
+  <text x="620" y="156" text-anchor="middle" class="sm">Neptune Analytics (SG)</text>
+  <text x="620" y="172" text-anchor="middle" class="sm">entity + relation traversal</text>
 
   <rect x="300" y="200" width="420" height="60" class="box em"/>
-  <text x="510" y="220" text-anchor="middle" class="ttl">Emergency agent (Haiku 4.5 / Nova Micro)</text>
-  <text x="510" y="236" text-anchor="middle" class="sm">grounded-only prompt · citation required · fixed system prefix</text>
-  <text x="510" y="252" text-anchor="middle" class="sm">Bedrock Prompt Caching hit on prefix</text>
+  <text x="510" y="220" text-anchor="middle" class="ttl">Emergency agent (Haiku 4.5)</text>
+  <text x="510" y="236" text-anchor="middle" class="sm">grounded-only prompt, citation required, fixed system prefix</text>
+  <text x="510" y="252" text-anchor="middle" class="sm">streaming SSE, max_tokens 300, no guardrails for speed</text>
 
   <!-- Complex lane -->
   <rect x="290" y="300" width="440" height="320" class="grp"/>
-  <text x="300" y="322" class="ttl">Complex lane — agentic (≤ 6 s p95)</text>
+  <text x="300" y="322" class="ttl">Complex lane: agentic, 6s p95</text>
 
   <rect x="300" y="340" width="420" height="60" class="box cp"/>
   <text x="510" y="360" text-anchor="middle" class="ttl">Router agent (Nova Micro, JSON mode)</text>
-  <text x="510" y="376" text-anchor="middle" class="sm">picks 1-of-40 specialty agents · confidence threshold 0.6</text>
-  <text x="510" y="392" text-anchor="middle" class="sm">&lt; 0.6 → General Medicine / Triage with banner</text>
+  <text x="510" y="376" text-anchor="middle" class="sm">picks 1-of-12 specialty agents, confidence threshold 0.6</text>
+  <text x="510" y="392" text-anchor="middle" class="sm">below 0.6 to General Medicine or Triage with banner</text>
 
   <rect x="300" y="410" width="200" height="60" class="box cp"/>
   <text x="400" y="430" text-anchor="middle" class="ttl">Specialty agent</text>
@@ -76,57 +76,54 @@
   <text x="620" y="462" text-anchor="middle" class="sm">Radiology (if image)</text>
 
   <rect x="300" y="480" width="420" height="130" class="box cp"/>
-  <text x="510" y="500" text-anchor="middle" class="ttl">Agent tools (Bedrock action groups · read-only)</text>
-  <text x="510" y="518" text-anchor="middle" class="sm">kb_retrieve(topic, source, max_age)</text>
-  <text x="510" y="534" text-anchor="middle" class="sm">graph_retrieve(entity, relation, hops) — Neptune Analytics GraphRAG</text>
-  <text x="510" y="550" text-anchor="middle" class="sm">icd11_lookup(term, mode) — live WHO API</text>
-  <text x="510" y="566" text-anchor="middle" class="sm">pubmed_search(query, n) — NCBI E-utilities</text>
-  <text x="510" y="582" text-anchor="middle" class="sm">retrieve_trial(doc_id) — internal KB with PHI tokens</text>
-  <text x="510" y="600" text-anchor="middle" class="sm">icd11_expand_query(term) — silent recall boost</text>
+  <text x="510" y="500" text-anchor="middle" class="ttl">Agent tools (Bedrock action groups, read-only)</text>
+  <text x="510" y="518" text-anchor="middle" class="sm">vector_retrieve(query, top_k=15) - OpenSearch</text>
+  <text x="510" y="534" text-anchor="middle" class="sm">graph_retrieve(query, top_k=3) - Neptune Analytics GraphRAG</text>
+  <text x="510" y="550" text-anchor="middle" class="sm">icd11_lookup(term, mode) - live WHO API</text>
+  <text x="510" y="566" text-anchor="middle" class="sm">pubmed_search(query, n) - NCBI E-utilities</text>
+  <text x="510" y="582" text-anchor="middle" class="sm">retrieve_trial(doc_id) - internal KB with PHI tokens</text>
+  <text x="510" y="600" text-anchor="middle" class="sm">icd11_expand_query(term) - silent recall boost</text>
 
   <!-- Post-processing -->
   <rect x="770" y="80" width="490" height="540" class="grp"/>
-  <text x="780" y="102" class="ttl">Post-processing · validation · response</text>
+  <text x="780" y="102" class="ttl">Post-processing, validation, response</text>
 
   <rect x="780" y="120" width="470" height="70" class="box svc"/>
-  <text x="1015" y="140" text-anchor="middle" class="ttl">Bedrock Guardrails</text>
-  <text x="1015" y="158" text-anchor="middle" class="sm">denied topics: self-diagnosis · dosing override · illegal synthesis</text>
-  <text x="1015" y="174" text-anchor="middle" class="sm">grounding score ≥ 0.7 · prompt-injection filter · PHI filter</text>
+  <text x="1015" y="140" text-anchor="middle" class="ttl">Bedrock Guardrails (complex lane only)</text>
+  <text x="1015" y="158" text-anchor="middle" class="sm">denied topics: self-diagnosis, dosing override, illegal synthesis</text>
+  <text x="1015" y="174" text-anchor="middle" class="sm">grounding score 0.7+, prompt-injection filter, PHI filter</text>
 
   <rect x="780" y="200" width="470" height="70" class="box svc"/>
   <text x="1015" y="220" text-anchor="middle" class="ttl">Citation validator (custom Lambda)</text>
-  <text x="1015" y="238" text-anchor="middle" class="sm">every cited chunk resolvable · URL / doc_id / section / page</text>
-  <text x="1015" y="254" text-anchor="middle" class="sm">rejects answer if unsupported · triggers rerun with narrower retrieval</text>
+  <text x="1015" y="238" text-anchor="middle" class="sm">every cited chunk resolvable, URL or doc_id, section, page</text>
+  <text x="1015" y="254" text-anchor="middle" class="sm">rejects answer if unsupported, triggers rerun with narrower retrieval</text>
 
   <rect x="780" y="280" width="470" height="60" class="box svc"/>
   <text x="1015" y="300" text-anchor="middle" class="ttl">Source traceability record</text>
-  <text x="1015" y="318" text-anchor="middle" class="sm">DynamoDB chat_trace: session · query · chunks · model · ms</text>
+  <text x="1015" y="318" text-anchor="middle" class="sm">DynamoDB chat_trace: session, query, chunks, model, ms</text>
 
   <rect x="780" y="350" width="470" height="60" class="box svc"/>
-  <text x="1015" y="370" text-anchor="middle" class="ttl">Response streaming (Converse API)</text>
-  <text x="1015" y="388" text-anchor="middle" class="sm">TTFT ~300–400 ms · Markdown + DOMPurify client-side</text>
+  <text x="1015" y="370" text-anchor="middle" class="ttl">SSE streaming (ConverseStream API)</text>
+  <text x="1015" y="388" text-anchor="middle" class="sm">async queue + thread worker, non-blocking event loop</text>
 
   <rect x="780" y="410" width="470" height="60" class="box data"/>
   <text x="1015" y="430" text-anchor="middle" class="ttl">Semantic cache populate (L1)</text>
-  <text x="1015" y="448" text-anchor="middle" class="sm">ElastiCache Redis OSS · ~30–45% hit rate observed</text>
+  <text x="1015" y="448" text-anchor="middle" class="sm">ElastiCache Redis OSS, 30-45% hit rate observed</text>
 
   <rect x="780" y="470" width="470" height="60" class="box data"/>
-  <text x="1015" y="490" text-anchor="middle" class="ttl">Knowledge freshness &amp; versioning</text>
-  <text x="1015" y="508" text-anchor="middle" class="sm">each chunk has revision · stale-doc banner if review_date expired</text>
+  <text x="1015" y="490" text-anchor="middle" class="ttl">Knowledge freshness and versioning</text>
+  <text x="1015" y="508" text-anchor="middle" class="sm">each chunk has revision, stale-doc banner if review_date expired</text>
 
   <rect x="780" y="540" width="470" height="70" class="box data"/>
   <text x="1015" y="560" text-anchor="middle" class="ttl">Why RAG + targeted fine-tune, not fine-tune alone</text>
   <text x="1015" y="578" text-anchor="middle" class="sm">RAG = freshness + citation + safety (WHO monthly refresh)</text>
-  <text x="1015" y="594" text-anchor="middle" class="sm">Fine-tune only for tone / phrasing / clinical vocabulary (not facts)</text>
+  <text x="1015" y="594" text-anchor="middle" class="sm">Fine-tune only for tone, phrasing, clinical vocabulary (not facts)</text>
 
   <!-- Edges -->
-  <path d="M245 140 L290 140" class="edge-em" marker-end="url(#a)"/>
-  <path d="M245 160 L290 360" class="edge-cp" marker-end="url(#ag)"/>
-  <path d="M500 150 L520 150" class="edge" marker-end="url(#a)"/>
-  <path d="M620 180 L510 200" class="edge-em" marker-end="url(#a)"/>
-  <path d="M510 400 L400 410" class="edge-cp" marker-end="url(#ag)"/>
-  <path d="M510 400 L620 410" class="edge-cp" marker-end="url(#ag)"/>
-  <path d="M400 470 L510 480" class="edge-cp" marker-end="url(#ag)"/>
-  <path d="M720 230 L780 155" class="edge-em" marker-end="url(#a)"/>
-  <path d="M720 540 L780 155" class="edge-cp" marker-end="url(#ag)"/>
+  <path d="M250 130 L290 145" class="edge-em" marker-end="url(#a)"/>
+  <path d="M250 165 L290 360" class="edge-cp" marker-end="url(#ag)"/>
+  <path d="M400 180 L400 200" class="edge-em" marker-end="url(#a)"/>
+  <path d="M620 180 L620 200" class="edge-em" marker-end="url(#a)"/>
+  <path d="M730 230 L780 145" class="edge-em" marker-end="url(#a)"/>
+  <path d="M730 540 L780 200" class="edge-cp" marker-end="url(#ag)"/>
 </svg>

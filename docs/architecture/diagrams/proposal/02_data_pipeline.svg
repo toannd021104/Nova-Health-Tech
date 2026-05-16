@@ -19,10 +19,10 @@
   </defs>
 
   <text x="640" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">
-    Data pipeline — ingest · parse · chunk · embed · index
+    Data pipeline: ingest, parse, multi-strategy chunk, embed, index
   </text>
   <text x="640" y="44" text-anchor="middle" font-size="12" fill="#64748b">
-    EventBridge schedules + Graph / FHIR webhooks · Step Functions orchestrates · BDA (Sydney) parse · Titan v2 (Tokyo) embed
+    EventBridge schedules + Graph or FHIR webhooks. Step Functions orchestrates. BDA (Sydney) parse. Cohere Embed Multilingual v3 (SG-native).
   </text>
 
   <!-- Sources -->
@@ -31,7 +31,7 @@
 
   <rect x="30" y="108" width="210" height="60" class="box src"/>
   <text x="135" y="128" text-anchor="middle" class="ttl">WHO guidelines (PDF)</text>
-  <text x="135" y="144" text-anchor="middle" class="sm">monthly · RSS + manual</text>
+  <text x="135" y="144" text-anchor="middle" class="sm">monthly, RSS + manual</text>
   <text x="135" y="160" text-anchor="middle" class="sm">legacy inconsistent tagging</text>
 
   <rect x="30" y="178" width="210" height="60" class="box src"/>
@@ -41,7 +41,7 @@
 
   <rect x="30" y="248" width="210" height="60" class="box src"/>
   <text x="135" y="268" text-anchor="middle" class="ttl">Internal clinical trials</text>
-  <text x="135" y="284" text-anchor="middle" class="sm">SharePoint · Graph webhook</text>
+  <text x="135" y="284" text-anchor="middle" class="sm">SharePoint, Graph webhook</text>
   <text x="135" y="300" text-anchor="middle" class="sm">PHI-containing</text>
 
   <rect x="30" y="318" width="210" height="60" class="box src"/>
@@ -56,7 +56,7 @@
 
   <rect x="30" y="458" width="210" height="60" class="box src"/>
   <text x="135" y="478" text-anchor="middle" class="ttl">Manual upload portal</text>
-  <text x="135" y="494" text-anchor="middle" class="sm">ECS Fargate · over VPN</text>
+  <text x="135" y="494" text-anchor="middle" class="sm">ECS Fargate, over VPN</text>
   <text x="135" y="510" text-anchor="middle" class="sm">clinician-initiated</text>
 
   <!-- Trigger layer -->
@@ -70,13 +70,13 @@
 
   <rect x="290" y="198" width="190" height="80" class="box svc"/>
   <text x="385" y="218" text-anchor="middle" class="ttl">Webhooks</text>
-  <text x="385" y="236" text-anchor="middle" class="sm">API GW → Lambda</text>
+  <text x="385" y="236" text-anchor="middle" class="sm">API GW to Lambda</text>
   <text x="385" y="252" text-anchor="middle" class="sm">Graph subscription (SharePoint)</text>
   <text x="385" y="268" text-anchor="middle" class="sm">WHO RSS publish-notify</text>
 
   <rect x="290" y="288" width="190" height="60" class="box svc"/>
   <text x="385" y="308" text-anchor="middle" class="ttl">Upload Portal (VPN)</text>
-  <text x="385" y="324" text-anchor="middle" class="sm">ECS Fargate · OIDC login</text>
+  <text x="385" y="324" text-anchor="middle" class="sm">ECS Fargate, OIDC login</text>
   <text x="385" y="340" text-anchor="middle" class="sm">per-tenant IAM boundary</text>
 
   <rect x="290" y="358" width="190" height="120" class="box aws"/>
@@ -85,7 +85,7 @@
   <text x="385" y="412" text-anchor="middle" class="sm">Macie PHI discovery (async)</text>
   <text x="385" y="428" text-anchor="middle" class="sm">KMS envelope encrypt in place</text>
   <text x="385" y="446" text-anchor="middle" class="sm">Comprehend Medical DetectPHI</text>
-  <text x="385" y="462" text-anchor="middle" class="sm">→ reversible tokenization</text>
+  <text x="385" y="462" text-anchor="middle" class="sm">to reversible tokenization</text>
 
   <!-- Step Functions orchestrator -->
   <rect x="520" y="70" width="250" height="500" class="grp"/>
@@ -94,83 +94,84 @@
   <circle cx="540" cy="125" r="10" class="num"/>
   <text x="540" y="129" text-anchor="middle" class="numt">1</text>
   <rect x="560" y="108" width="200" height="40" class="box svc"/>
-  <text x="660" y="132" text-anchor="middle" class="sm">S3 put → ObjectCreated event</text>
+  <text x="660" y="132" text-anchor="middle" class="sm">S3 put, ObjectCreated event</text>
 
   <circle cx="540" cy="175" r="10" class="num"/>
   <text x="540" y="179" text-anchor="middle" class="numt">2</text>
   <rect x="560" y="158" width="200" height="60" class="box aws"/>
   <text x="660" y="178" text-anchor="middle" class="ttl">Bedrock Data Automation</text>
   <text x="660" y="194" text-anchor="middle" class="sm">Sydney ap-southeast-2</text>
-  <text x="660" y="210" text-anchor="middle" class="sm">tables · figures · text blocks</text>
+  <text x="660" y="210" text-anchor="middle" class="sm">tables, figures, text blocks</text>
 
-  <circle cx="540" cy="235" r="10" class="num"/>
-  <text x="540" y="239" text-anchor="middle" class="numt">3</text>
-  <rect x="560" y="218" width="200" height="60" class="box svc"/>
-  <text x="660" y="238" text-anchor="middle" class="ttl">Chunker Lambda</text>
-  <text x="660" y="254" text-anchor="middle" class="sm">semantic chunks · overlap 10%</text>
-  <text x="660" y="270" text-anchor="middle" class="sm">rich metadata attached</text>
+  <circle cx="540" cy="245" r="10" class="num"/>
+  <text x="540" y="249" text-anchor="middle" class="numt">3</text>
+  <rect x="560" y="228" width="200" height="80" class="box svc"/>
+  <text x="660" y="248" text-anchor="middle" class="ttl">Multi-strategy chunker</text>
+  <text x="660" y="264" text-anchor="middle" class="sm">WHO: hierarchical 1500/300</text>
+  <text x="660" y="280" text-anchor="middle" class="sm">Trials: semantic max 512, 80% bp</text>
+  <text x="660" y="296" text-anchor="middle" class="sm">ICD-11: no-chunk (1 entity = 1 chunk)</text>
 
-  <circle cx="540" cy="295" r="10" class="num"/>
-  <text x="540" y="299" text-anchor="middle" class="numt">4</text>
-  <rect x="560" y="278" width="200" height="60" class="box aws"/>
-  <text x="660" y="298" text-anchor="middle" class="ttl">Titan Embed Text v2</text>
-  <text x="660" y="314" text-anchor="middle" class="sm">Tokyo ap-northeast-1</text>
-  <text x="660" y="330" text-anchor="middle" class="sm">1024-dim · $0.02/1M tok</text>
+  <circle cx="540" cy="335" r="10" class="num"/>
+  <text x="540" y="339" text-anchor="middle" class="numt">4</text>
+  <rect x="560" y="318" width="200" height="60" class="box aws"/>
+  <text x="660" y="338" text-anchor="middle" class="ttl">Cohere Embed v3</text>
+  <text x="660" y="354" text-anchor="middle" class="sm">Singapore (SG-native)</text>
+  <text x="660" y="370" text-anchor="middle" class="sm">1024-dim, multilingual</text>
 
-  <circle cx="540" cy="355" r="10" class="num"/>
-  <text x="540" y="359" text-anchor="middle" class="numt">5</text>
-  <rect x="560" y="338" width="200" height="60" class="box aws"/>
-  <text x="660" y="358" text-anchor="middle" class="ttl">Nova Multimodal Embed</text>
-  <text x="660" y="374" text-anchor="middle" class="sm">us-east-1 · figure chunks only</text>
-  <text x="660" y="390" text-anchor="middle" class="sm">emergency bypasses</text>
+  <circle cx="540" cy="395" r="10" class="num"/>
+  <text x="540" y="399" text-anchor="middle" class="numt">5</text>
+  <rect x="560" y="378" width="200" height="60" class="box aws"/>
+  <text x="660" y="398" text-anchor="middle" class="ttl">Nova Multimodal Embed</text>
+  <text x="660" y="414" text-anchor="middle" class="sm">us-east-1, figure chunks only</text>
+  <text x="660" y="430" text-anchor="middle" class="sm">emergency bypasses</text>
 
-  <circle cx="540" cy="415" r="10" class="num"/>
-  <text x="540" y="419" text-anchor="middle" class="numt">6</text>
-  <rect x="560" y="398" width="200" height="60" class="box svc"/>
-  <text x="660" y="418" text-anchor="middle" class="ttl">Bedrock KB ingest</text>
-  <text x="660" y="434" text-anchor="middle" class="sm">upsert vectors + metadata</text>
-  <text x="660" y="450" text-anchor="middle" class="sm">versioned per source</text>
+  <circle cx="540" cy="455" r="10" class="num"/>
+  <text x="540" y="459" text-anchor="middle" class="numt">6</text>
+  <rect x="560" y="438" width="200" height="60" class="box svc"/>
+  <text x="660" y="458" text-anchor="middle" class="ttl">Bedrock KB ingest</text>
+  <text x="660" y="474" text-anchor="middle" class="sm">upsert vectors + metadata</text>
+  <text x="660" y="490" text-anchor="middle" class="sm">versioned per source</text>
 
-  <circle cx="540" cy="475" r="10" class="num"/>
-  <text x="540" y="479" text-anchor="middle" class="numt">7</text>
-  <rect x="560" y="458" width="200" height="60" class="box svc"/>
-  <text x="660" y="478" text-anchor="middle" class="ttl">GraphRAG extraction</text>
-  <text x="660" y="494" text-anchor="middle" class="sm">Sonnet 4.5 · entity + relation</text>
-  <text x="660" y="510" text-anchor="middle" class="sm">upsert Neptune Analytics</text>
+  <circle cx="540" cy="515" r="10" class="num"/>
+  <text x="540" y="519" text-anchor="middle" class="numt">7</text>
+  <rect x="560" y="498" width="200" height="60" class="box svc"/>
+  <text x="660" y="518" text-anchor="middle" class="ttl">GraphRAG extraction</text>
+  <text x="660" y="534" text-anchor="middle" class="sm">Claude 3 Haiku, entity + relation</text>
+  <text x="660" y="550" text-anchor="middle" class="sm">upsert Neptune Analytics</text>
 
   <!-- Sinks -->
   <rect x="800" y="70" width="460" height="500" class="grp"/>
-  <text x="810" y="92" class="ttl">Indexes, catalog &amp; lineage</text>
+  <text x="810" y="92" class="ttl">Indexes, catalog and lineage</text>
 
   <rect x="810" y="108" width="440" height="80" class="box data"/>
   <text x="1030" y="128" text-anchor="middle" class="ttl">OpenSearch Serverless (SG)</text>
-  <text x="1030" y="146" text-anchor="middle" class="sm">vector collection · hybrid kNN + BM25</text>
-  <text x="1030" y="162" text-anchor="middle" class="sm">kb-who · kb-trials · kb-protocols · kb-icd11</text>
-  <text x="1030" y="178" text-anchor="middle" class="sm">metadata: source · doc_id · revision · specialty · evidence_grade · review_date</text>
+  <text x="1030" y="146" text-anchor="middle" class="sm">vector collection, semantic kNN</text>
+  <text x="1030" y="162" text-anchor="middle" class="sm">kb-who, kb-trials, kb-protocols, kb-icd11</text>
+  <text x="1030" y="178" text-anchor="middle" class="sm">metadata: source, doc_id, revision, specialty, evidence_grade, review_date</text>
 
   <rect x="810" y="198" width="440" height="70" class="box data"/>
-  <text x="1030" y="218" text-anchor="middle" class="ttl">Neptune Analytics — graph store</text>
-  <text x="1030" y="234" text-anchor="middle" class="sm">drug · condition · intervention · guideline nodes</text>
-  <text x="1030" y="250" text-anchor="middle" class="sm">treats · contraindicates · cites relations</text>
+  <text x="1030" y="218" text-anchor="middle" class="ttl">Neptune Analytics, graph store</text>
+  <text x="1030" y="234" text-anchor="middle" class="sm">drug, condition, intervention, guideline nodes</text>
+  <text x="1030" y="250" text-anchor="middle" class="sm">treats, contraindicates, cites relations</text>
 
   <rect x="810" y="278" width="440" height="70" class="box data"/>
   <text x="1030" y="298" text-anchor="middle" class="ttl">S3 /processed</text>
-  <text x="1030" y="314" text-anchor="middle" class="sm">chunk JSONL · original + BDA output · Object Lock</text>
-  <text x="1030" y="330" text-anchor="middle" class="sm">KMS CMK · versioning enabled</text>
+  <text x="1030" y="314" text-anchor="middle" class="sm">chunk JSONL, original + BDA output, Object Lock</text>
+  <text x="1030" y="330" text-anchor="middle" class="sm">KMS CMK, versioning enabled</text>
 
   <rect x="810" y="358" width="440" height="70" class="box aws"/>
   <text x="1030" y="378" text-anchor="middle" class="ttl">AWS Glue Data Catalog</text>
-  <text x="1030" y="394" text-anchor="middle" class="sm">schema registry · source → chunk → vector lineage</text>
+  <text x="1030" y="394" text-anchor="middle" class="sm">schema registry, source to chunk to vector lineage</text>
   <text x="1030" y="410" text-anchor="middle" class="sm">queryable via Athena for compliance reporting</text>
 
-  <rect x="810" y="420" width="440" height="70" class="box aws"/>
-  <text x="1030" y="440" text-anchor="middle" class="ttl">DynamoDB ingestion_state</text>
-  <text x="1030" y="456" text-anchor="middle" class="sm">per-source checkpoint · retry counter · dead-letter ref</text>
-  <text x="1030" y="472" text-anchor="middle" class="sm">idempotent re-ingestion</text>
+  <rect x="810" y="438" width="440" height="60" class="box aws"/>
+  <text x="1030" y="458" text-anchor="middle" class="ttl">DynamoDB ingestion_state</text>
+  <text x="1030" y="474" text-anchor="middle" class="sm">per-source checkpoint, retry counter, dead-letter ref</text>
+  <text x="1030" y="490" text-anchor="middle" class="sm">idempotent re-ingestion</text>
 
-  <rect x="810" y="500" width="440" height="60" class="box svc"/>
-  <text x="1030" y="520" text-anchor="middle" class="ttl">EventBridge → SNS → Ops channel</text>
-  <text x="1030" y="536" text-anchor="middle" class="sm">failed parse · schema drift · PHI leak detected · stale doc alarm</text>
+  <rect x="810" y="510" width="440" height="50" class="box svc"/>
+  <text x="1030" y="528" text-anchor="middle" class="ttl">EventBridge to SNS to Ops channel</text>
+  <text x="1030" y="544" text-anchor="middle" class="sm">failed parse, schema drift, PHI leak detected, stale doc alarm</text>
 
   <!-- Edges -->
   <path d="M245 138 L280 138" class="edge" marker-end="url(#a)"/>
@@ -181,7 +182,7 @@
   <path d="M485 318 L520 138" class="edge" marker-end="url(#a)"/>
   <path d="M485 418 L520 138" class="edge" marker-end="url(#a)"/>
   <path d="M760 128 L800 148" class="edge" marker-end="url(#a)"/>
-  <path d="M760 428 L810 160" class="edge" marker-end="url(#a)"/>
-  <path d="M760 488 L810 235" class="edge" marker-end="url(#a)"/>
-  <path d="M760 428 L810 310" class="edge" marker-end="url(#a)"/>
+  <path d="M760 468 L810 160" class="edge" marker-end="url(#a)"/>
+  <path d="M760 528 L810 235" class="edge" marker-end="url(#a)"/>
+  <path d="M760 468 L810 310" class="edge" marker-end="url(#a)"/>
 </svg>

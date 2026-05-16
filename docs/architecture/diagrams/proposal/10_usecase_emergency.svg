@@ -16,16 +16,16 @@
     </style>
   </defs>
   <text x="640" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">
-    Use case 1 · Emergency query (2-second path)
+    Use case 1: Emergency query (sub-2s production target, 2.5s PoC)
   </text>
   <text x="640" y="44" text-anchor="middle" font-size="12" fill="#64748b">
-    ED physician taps the emergency toggle · asks an acute-care question · expects a grounded answer in under 2 s
+    ED physician taps the emergency toggle, asks an acute-care question, expects a grounded answer in under 2s
   </text>
 
   <g>
     <circle cx="70" cy="120" r="14" class="num"/><text x="70" y="125" text-anchor="middle" class="numt">1</text>
     <rect x="100" y="95" width="250" height="60" class="box em"/>
-    <text x="225" y="115" text-anchor="middle" class="ttl">Browser · toggle ON</text>
+    <text x="225" y="115" text-anchor="middle" class="ttl">Browser, toggle ON</text>
     <text x="225" y="131" text-anchor="middle" class="sm">"STEMI with ongoing chest pain, beta-blocker dose?"</text>
     <text x="225" y="147" text-anchor="middle" class="sm">HTTPS to API GW</text>
   </g>
@@ -34,8 +34,8 @@
     <circle cx="400" cy="120" r="14" class="num"/><text x="400" y="125" text-anchor="middle" class="numt">2</text>
     <rect x="430" y="95" width="260" height="60" class="box svc"/>
     <text x="560" y="115" text-anchor="middle" class="ttl">Lambda /chat</text>
-    <text x="560" y="131" text-anchor="middle" class="sm">JWT verify · Comprehend Medical PHI mask</text>
-    <text x="560" y="147" text-anchor="middle" class="sm">emergency_toggle=True → Emergency lane</text>
+    <text x="560" y="131" text-anchor="middle" class="sm">JWT verify, Comprehend Medical PHI mask</text>
+    <text x="560" y="147" text-anchor="middle" class="sm">emergency_toggle=True to Emergency lane</text>
   </g>
 
   <g>
@@ -49,41 +49,41 @@
   <g>
     <circle cx="1080" cy="120" r="14" class="num"/><text x="1080" y="125" text-anchor="middle" class="numt">4</text>
     <rect x="1110" y="95" width="150" height="60" class="box em"/>
-    <text x="1185" y="115" text-anchor="middle" class="ttl">Retrieval</text>
-    <text x="1185" y="131" text-anchor="middle" class="sm">BM25 + kNN top-20</text>
-    <text x="1185" y="147" text-anchor="middle" class="sm">60 ms</text>
+    <text x="1185" y="115" text-anchor="middle" class="ttl">Vector kNN</text>
+    <text x="1185" y="131" text-anchor="middle" class="sm">OpenSearch top-3</text>
+    <text x="1185" y="147" text-anchor="middle" class="sm">~150 ms</text>
   </g>
 
   <g>
     <circle cx="70" cy="230" r="14" class="num"/><text x="70" y="235" text-anchor="middle" class="numt">5</text>
     <rect x="100" y="205" width="250" height="60" class="box em"/>
-    <text x="225" y="225" text-anchor="middle" class="ttl">Amazon Rerank 1.0 (Tokyo)</text>
-    <text x="225" y="241" text-anchor="middle" class="sm">top-5 grounded chunks</text>
-    <text x="225" y="257" text-anchor="middle" class="sm">co-located with Titan · +30 ms RTT</text>
+    <text x="225" y="225" text-anchor="middle" class="ttl">GraphRAG retrieval</text>
+    <text x="225" y="241" text-anchor="middle" class="sm">Neptune Analytics, top-2 entity hits</text>
+    <text x="225" y="257" text-anchor="middle" class="sm">~80 ms (parallel with vector)</text>
   </g>
 
   <g>
     <circle cx="400" cy="230" r="14" class="num"/><text x="400" y="235" text-anchor="middle" class="numt">6</text>
     <rect x="430" y="205" width="260" height="60" class="box em"/>
-    <text x="560" y="225" text-anchor="middle" class="ttl">Emergency agent — Haiku 4.5</text>
+    <text x="560" y="225" text-anchor="middle" class="ttl">Emergency agent: Haiku 4.5</text>
     <text x="560" y="241" text-anchor="middle" class="sm">Bedrock Prompt Cache hit on fixed prefix</text>
-    <text x="560" y="257" text-anchor="middle" class="sm">TTFT ~400 ms · streaming</text>
+    <text x="560" y="257" text-anchor="middle" class="sm">TTFT ~400 ms, streaming SSE</text>
   </g>
 
   <g>
     <circle cx="740" cy="230" r="14" class="num"/><text x="740" y="235" text-anchor="middle" class="numt">7</text>
     <rect x="770" y="205" width="260" height="60" class="box em"/>
     <text x="900" y="225" text-anchor="middle" class="ttl">Answer streaming</text>
-    <text x="900" y="241" text-anchor="middle" class="sm">~250 tokens · ~1.2 s</text>
+    <text x="900" y="241" text-anchor="middle" class="sm">300 tokens, ~1.2 s</text>
     <text x="900" y="257" text-anchor="middle" class="sm">with inline citation markers</text>
   </g>
 
   <g>
     <circle cx="1080" cy="230" r="14" class="num"/><text x="1080" y="235" text-anchor="middle" class="numt">8</text>
     <rect x="1110" y="205" width="150" height="60" class="box svc"/>
-    <text x="1185" y="225" text-anchor="middle" class="ttl">Guardrails</text>
-    <text x="1185" y="241" text-anchor="middle" class="sm">PHI · grounding ≥ 0.7</text>
-    <text x="1185" y="257" text-anchor="middle" class="sm">100 ms</text>
+    <text x="1185" y="225" text-anchor="middle" class="ttl">No guardrails</text>
+    <text x="1185" y="241" text-anchor="middle" class="sm">post-hoc check</text>
+    <text x="1185" y="257" text-anchor="middle" class="sm">speed priority</text>
   </g>
 
   <g>
@@ -98,7 +98,7 @@
     <circle cx="400" cy="340" r="14" class="num"/><text x="400" y="345" text-anchor="middle" class="numt">10</text>
     <rect x="430" y="315" width="260" height="60" class="box em"/>
     <text x="560" y="335" text-anchor="middle" class="ttl">Response to browser</text>
-    <text x="560" y="351" text-anchor="middle" class="sm">p95 total ≤ 1.9 s</text>
+    <text x="560" y="351" text-anchor="middle" class="sm">Target p95 less than 1.9 s</text>
     <text x="560" y="367" text-anchor="middle" class="sm">inline citations + stale-doc banner if applicable</text>
   </g>
 
@@ -106,8 +106,8 @@
     <circle cx="740" cy="340" r="14" class="num"/><text x="740" y="345" text-anchor="middle" class="numt">11</text>
     <rect x="770" y="315" width="260" height="60" class="box cache"/>
     <text x="900" y="335" text-anchor="middle" class="ttl">Cache write</text>
-    <text x="900" y="351" text-anchor="middle" class="sm">semantic cache populated · TTL 24 h</text>
-    <text x="900" y="367" text-anchor="middle" class="sm">next similar query 300–500 ms total</text>
+    <text x="900" y="351" text-anchor="middle" class="sm">semantic cache populated, TTL 24 h</text>
+    <text x="900" y="367" text-anchor="middle" class="sm">next similar query 300-500 ms total</text>
   </g>
 
   <g>
@@ -120,9 +120,9 @@
 
   <!-- Timeline summary -->
   <rect x="20" y="400" width="1240" height="80" class="box em"/>
-  <text x="640" y="420" text-anchor="middle" class="ttl">Budget summary — emergency cold path</text>
-  <text x="640" y="440" text-anchor="middle" class="sm">auth 100 · cache-miss 20 · retrieval 60 · rerank 30 · Haiku TTFT 400 · streaming 1200 · guardrails + citation 120 · network 30 ≈ 1960 ms</text>
-  <text x="640" y="458" text-anchor="middle" class="sm">Cached reply path (L1 hit) ≈ 300–500 ms · Reserved Tier guarantees no cold-start on emergency lane</text>
+  <text x="640" y="420" text-anchor="middle" class="ttl">Budget summary, emergency cold path</text>
+  <text x="640" y="440" text-anchor="middle" class="sm">auth 100 + cache-miss 20 + vector 150 + graph 80 + Haiku TTFT 400 + streaming 1200 + citation 20 + network 30 = ~2000 ms target</text>
+  <text x="640" y="458" text-anchor="middle" class="sm">PoC measured 2,463 ms (no Reserved Tier, no Prompt Cache). Cached reply path (L1 hit) ~300-500 ms.</text>
 
   <path d="M350 125 L400 125" class="edge" marker-end="url(#a)"/>
   <path d="M690 125 L740 125" class="edge" marker-end="url(#a)"/>
