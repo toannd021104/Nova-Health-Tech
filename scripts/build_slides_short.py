@@ -2,12 +2,14 @@
 
 Output: docs/Nova_Health_Tech_AWS_Claude_Presentation_3min.pptx
 
-Design rules:
-- 6 slides total, ~3 minutes speaking time
-- Slide 1: Title (mainslide.png background)
-- Slides 2-6: White background, orange accent (FF6B35)
-- Strong emphasis on Singapore healthcare compliance
-- Concise presenter notes (20-30s each)
+Flow (per user feedback):
+1. Title (10s)
+2. The Challenge: focus on PHI (25s) - hook to compliance
+3. Singapore Healthcare Compliance & Security (45s) - the answer to PHI
+4. The Challenge continued: Speed + Freshness (20s)
+5. Solution: Architecture (50s) - includes architecture path/visual
+6. PoC Results & Cost (40s) - no Reserved Tier mention
+7. Ready to Deploy (10s)
 """
 from pathlib import Path
 from pptx import Presentation
@@ -22,12 +24,12 @@ REPO = Path(__file__).resolve().parent.parent
 BG_IMAGE = str(REPO / "mainslide.png")
 OUT_PATH = str(REPO / "docs" / "Nova_Health_Tech_AWS_Claude_Presentation_3min.pptx")
 
-# Color palette
 ORANGE = RGBColor(0xFF, 0x6B, 0x35)
 ORANGE_DARK = RGBColor(0xCC, 0x4F, 0x1F)
 ORANGE_LIGHT = RGBColor(0xFF, 0xE8, 0xDA)
 GRAY_DARK = RGBColor(0x2C, 0x3E, 0x50)
 GRAY_MED = RGBColor(0x64, 0x64, 0x64)
+GRAY_LIGHT = RGBColor(0xCB, 0xD5, 0xE1)
 WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 GREEN = RGBColor(0x27, 0xAE, 0x60)
 RED = RGBColor(0xC0, 0x39, 0x2B)
@@ -172,7 +174,7 @@ prs.slide_width = SLIDE_W
 prs.slide_height = SLIDE_H
 
 # ----------------------------------------------------------------------------
-# SLIDE 1: TITLE (10 seconds)
+# SLIDE 1: TITLE (10s)
 # ----------------------------------------------------------------------------
 add_title_slide(
     prs,
@@ -180,31 +182,31 @@ add_title_slide(
     subtitle="AWS with Claude · Singapore · PDPA & HCSA compliant by design",
     notes=(
         "[10s opening]\n\n"
-        "Đề xuất kiến trúc trợ lý AI lâm sàng cho Nova Health Tech: "
-        "AWS Singapore, Claude 4.5, tuân thủ PDPA và HCSA ngay từ thiết kế."
+        "Đề xuất kiến trúc trợ lý AI lâm sàng cho Nova: AWS Singapore, "
+        "Claude 4.5, tuân thủ PDPA và HCSA ngay từ thiết kế."
     )
 )
+print("  Slide 1 (title): added")
 
 # ----------------------------------------------------------------------------
-# SLIDE 2: PAIN POINTS + REQUIREMENTS (30s)
+# SLIDE 2: THE CHALLENGE - Patient PHI (25s)
+# Highlight the PHI card to hook compliance discussion
 # ----------------------------------------------------------------------------
 slide = add_content_slide(
     prs,
     "The Challenge",
-    "[30s]\n\n"
-    "Bác sĩ Nova hiện đang mất niềm tin vào công cụ hỗ trợ lâm sàng vì câu trả lời chậm "
-    "và thiếu cụ thể. Có 3 thách thức lớn nhất.\n\n"
-    "Một, cấp cứu cần dưới 2 giây, không có chỗ cho độ trễ. Hai, dữ liệu thử nghiệm nội bộ "
-    "chứa thông tin bệnh nhân, không được rò rỉ ra ngoài Singapore. Ba, WHO cập nhật hàng tháng, "
-    "ICD-11 hàng ngày, hệ thống phải tự đồng bộ.\n\n"
-    "Cộng thêm yêu cầu tuân thủ PDPA, HCSA, và sẵn sàng cho HIPAA khi onboard khách Mỹ."
+    "[25s]\n\n"
+    "Bác sĩ Nova mất niềm tin vì câu trả lời chậm và thiếu cụ thể. Có 3 thách thức.\n\n"
+    "Đầu tiên và quan trọng nhất: dữ liệu thử nghiệm nội bộ chứa thông tin bệnh nhân "
+    "nhạy cảm, không được rò rỉ. Đây không chỉ là kỹ thuật, mà là yêu cầu pháp lý "
+    "của Singapore. Trước khi nói tiếp, để tôi giải thích tuân thủ phía Singapore."
 )
 
-# 3 main pain points (large cards)
+# 3 pain cards, PHI prominent (larger + animated highlight)
 pains = [
-    ("⚡", "Speed", "Emergency response\n< 2 seconds", RED),
-    ("🔒", "Patient PHI", "Trial data must stay\nin Singapore", ORANGE_DARK),
-    ("📅", "Freshness", "WHO monthly,\nICD-11 daily updates", ORANGE),
+    ("⚡", "Speed", "Emergency response\n< 2 seconds", ORANGE, False),
+    ("🔒", "Patient PHI", "Trial data must stay\nin Singapore", RED, True),
+    ("📅", "Freshness", "WHO monthly,\nICD-11 daily updates", ORANGE, False),
 ]
 
 card_w = Inches(3.8)
@@ -213,15 +215,20 @@ gap = Inches(0.3)
 total_w = card_w * 3 + gap * 2
 start_x = (SLIDE_W - total_w) / 2
 
-for i, (icon, title, desc, color) in enumerate(pains):
+for i, (icon, title, desc, color, highlight) in enumerate(pains):
     x = start_x + i * (card_w + gap)
     y = Inches(1.7)
     
     card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, card_w, card_h)
     card.fill.solid()
-    card.fill.fore_color.rgb = WHITE
-    card.line.color.rgb = color
-    card.line.width = Pt(2.5)
+    if highlight:
+        card.fill.fore_color.rgb = RGBColor(0xFE, 0xF2, 0xF2)
+        card.line.color.rgb = color
+        card.line.width = Pt(4)
+    else:
+        card.fill.fore_color.rgb = WHITE
+        card.line.color.rgb = GRAY_LIGHT
+        card.line.width = Pt(1.5)
     card.adjustments[0] = 0.06
     
     # Icon
@@ -242,9 +249,9 @@ for i, (icon, title, desc, color) in enumerate(pains):
     run = p.add_run()
     run.text = title
     run.font.name = "Calibri"
-    run.font.size = Pt(22)
+    run.font.size = Pt(22) if not highlight else Pt(26)
     run.font.bold = True
-    run.font.color.rgb = color
+    run.font.color.rgb = color if highlight else GRAY_DARK
     
     # Desc
     desc_tb = slide.shapes.add_textbox(x + Inches(0.2), y + Inches(2.3), card_w - Inches(0.4), Inches(1.1))
@@ -256,211 +263,76 @@ for i, (icon, title, desc, color) in enumerate(pains):
     run.text = desc
     run.font.name = "Calibri"
     run.font.size = Pt(14)
-    run.font.color.rgb = GRAY_DARK
+    run.font.color.rgb = GRAY_DARK if not highlight else color
+    run.font.bold = highlight
 
-# Bottom note
-note_y = Inches(5.5)
-note_box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(1.0), note_y, Inches(11.3), Inches(1.0))
+# Arrow pointing to PHI card
+arrow_y = Inches(5.4)
+arrow_text = slide.shapes.add_textbox(Inches(4.2), arrow_y, Inches(5.0), Inches(0.5))
+tf = arrow_text.text_frame
+p = tf.paragraphs[0]
+p.alignment = PP_ALIGN.CENTER
+run = p.add_run()
+run.text = "↑ Singapore healthcare regulation makes this non-negotiable"
+run.font.name = "Calibri"
+run.font.size = Pt(13)
+run.font.bold = True
+run.font.italic = True
+run.font.color.rgb = RED
+
+# Bottom: data sources note
+note_y = Inches(6.0)
+note_box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(1.0), note_y, Inches(11.3), Inches(0.85))
 note_box.fill.solid()
 note_box.fill.fore_color.rgb = ORANGE_LIGHT
 note_box.line.color.rgb = ORANGE
 note_box.line.width = Pt(1)
 note_box.adjustments[0] = 0.2
 
-note_tb = slide.shapes.add_textbox(Inches(1.2), note_y + Inches(0.15), Inches(10.9), Inches(0.8))
+note_tb = slide.shapes.add_textbox(Inches(1.2), note_y + Inches(0.1), Inches(10.9), Inches(0.65))
 tf = note_tb.text_frame
 tf.word_wrap = True
 p = tf.paragraphs[0]
 p.alignment = PP_ALIGN.CENTER
 run = p.add_run()
-run.text = "Plus: Singapore PDPA + HCSA compliance · auditable for 6 years · 600k calls/month at launch"
+run.text = "Data sources: Internal trial PDFs · WHO API · ICD-11 · PubMed · EHR (FHIR R4)"
 run.font.name = "Calibri"
-run.font.size = Pt(15)
+run.font.size = Pt(13)
 run.font.bold = True
 run.font.color.rgb = ORANGE_DARK
 p2 = tf.add_paragraph()
 p2.alignment = PP_ALIGN.CENTER
 run2 = p2.add_run()
-run2.text = "Internal trial PDFs · WHO API · ICD-11 · PubMed · EHR (FHIR R4)"
+run2.text = "Workload: 600k calls per month at launch"
 run2.font.name = "Calibri"
 run2.font.size = Pt(11)
 run2.font.italic = True
 run2.font.color.rgb = GRAY_MED
 
-# ----------------------------------------------------------------------------
-# SLIDE 3: SOLUTION OVERVIEW (45s)
-# ----------------------------------------------------------------------------
-slide = add_content_slide(
-    prs,
-    "Solution: Two-Lane Architecture, Singapore-Native",
-    "[45s]\n\n"
-    "Giải pháp là kiến trúc 2 luồng. Cấp cứu đi thẳng Claude Haiku 4.5 với top-3 vector và "
-    "top-2 graph, không qua router, không guardrails để đạt TTFT 2.5 giây. Phức tạp đi qua "
-    "Nova Micro phân loại 12 phòng ban, rồi Sonnet 4.5 với top-15 vector và top-3 graph, "
-    "có guardrails đầy đủ.\n\n"
-    "RAG dùng 2 loại: vector trên OpenSearch Serverless và GraphRAG trên Neptune Analytics. "
-    "Cả 2 đều ở Singapore, dùng Cohere Embed v3 SG-native. Không có cross-region hop nào "
-    "cho dữ liệu lâm sàng.\n\n"
-    "PoC đã chạy live trên EC2 Singapore, 100% pass SLA, 100% câu trả lời có citation."
-)
-
-# Two-lane comparison
-lane_y = Inches(1.4)
-lane_w = Inches(6.0)
-lane_h = Inches(4.0)
-
-# Emergency lane
-em_card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.5), lane_y, lane_w, lane_h)
-em_card.fill.solid()
-em_card.fill.fore_color.rgb = WHITE
-em_card.line.color.rgb = RED
-em_card.line.width = Pt(2.5)
-em_card.adjustments[0] = 0.04
-
-em_h = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.5), lane_y, lane_w, Inches(0.6))
-em_h.fill.solid()
-em_h.fill.fore_color.rgb = RED
-em_h.line.fill.background()
-
-em_h_tb = slide.shapes.add_textbox(Inches(0.5), lane_y, lane_w, Inches(0.6))
-tf = em_h_tb.text_frame
-tf.vertical_anchor = MSO_ANCHOR.MIDDLE
-p = tf.paragraphs[0]
-p.alignment = PP_ALIGN.CENTER
-run = p.add_run()
-run.text = "EMERGENCY · 2.5s TTFT"
-run.font.name = "Calibri"
-run.font.size = Pt(18)
-run.font.bold = True
-run.font.color.rgb = WHITE
-
-em_lines = [
-    "▸  Claude Haiku 4.5 (fast)",
-    "▸  Vector top-3 + GraphRAG top-2",
-    "▸  No router, direct to emergency agent",
-    "▸  No guardrails (speed priority)",
-    "▸  max_tokens 300, streaming SSE",
-    "▸  Target SLA: < 5 seconds",
-    "▸  PoC measured: 100% pass",
-]
-em_tb = slide.shapes.add_textbox(Inches(0.8), lane_y + Inches(0.85), lane_w - Inches(0.5), lane_h - Inches(1.0))
-tf = em_tb.text_frame
-tf.word_wrap = True
-for i, line in enumerate(em_lines):
-    if i == 0:
-        p = tf.paragraphs[0]
-    else:
-        p = tf.add_paragraph()
-    run = p.add_run()
-    run.text = line
-    run.font.name = "Calibri"
-    run.font.size = Pt(15)
-    run.font.color.rgb = GRAY_DARK
-    p.space_after = Pt(8)
-
-# Complex lane
-cx_card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(6.8), lane_y, lane_w, lane_h)
-cx_card.fill.solid()
-cx_card.fill.fore_color.rgb = WHITE
-cx_card.line.color.rgb = ORANGE_DARK
-cx_card.line.width = Pt(2.5)
-cx_card.adjustments[0] = 0.04
-
-cx_h = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(6.8), lane_y, lane_w, Inches(0.6))
-cx_h.fill.solid()
-cx_h.fill.fore_color.rgb = ORANGE_DARK
-cx_h.line.fill.background()
-
-cx_h_tb = slide.shapes.add_textbox(Inches(6.8), lane_y, lane_w, Inches(0.6))
-tf = cx_h_tb.text_frame
-tf.vertical_anchor = MSO_ANCHOR.MIDDLE
-p = tf.paragraphs[0]
-p.alignment = PP_ALIGN.CENTER
-run = p.add_run()
-run.text = "COMPLEX · 9.7s TTFT"
-run.font.name = "Calibri"
-run.font.size = Pt(18)
-run.font.bold = True
-run.font.color.rgb = WHITE
-
-cx_lines = [
-    "▸  Claude Sonnet 4.5 (deep reasoning)",
-    "▸  Vector top-15 + GraphRAG top-3",
-    "▸  Nova Micro routes to 12 departments",
-    "▸  Bedrock Guardrails enabled",
-    "▸  max_tokens 1500, streaming SSE",
-    "▸  Target SLA: < 15 seconds",
-    "▸  PoC measured: 100% pass",
-]
-cx_tb = slide.shapes.add_textbox(Inches(7.1), lane_y + Inches(0.85), lane_w - Inches(0.5), lane_h - Inches(1.0))
-tf = cx_tb.text_frame
-tf.word_wrap = True
-for i, line in enumerate(cx_lines):
-    if i == 0:
-        p = tf.paragraphs[0]
-    else:
-        p = tf.add_paragraph()
-    run = p.add_run()
-    run.text = line
-    run.font.name = "Calibri"
-    run.font.size = Pt(15)
-    run.font.color.rgb = GRAY_DARK
-    p.space_after = Pt(8)
-
-# Bottom: shared infrastructure
-shared_y = Inches(5.7)
-shared_box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.5), shared_y, Inches(12.3), Inches(1.1))
-shared_box.fill.solid()
-shared_box.fill.fore_color.rgb = ORANGE_LIGHT
-shared_box.line.color.rgb = ORANGE
-shared_box.line.width = Pt(1.5)
-shared_box.adjustments[0] = 0.1
-
-shared_tb = slide.shapes.add_textbox(Inches(0.7), shared_y + Inches(0.1), Inches(11.9), Inches(0.9))
-tf = shared_tb.text_frame
-tf.word_wrap = True
-p = tf.paragraphs[0]
-p.alignment = PP_ALIGN.CENTER
-run = p.add_run()
-run.text = "Shared Infrastructure (100% Singapore-Native)"
-run.font.name = "Calibri"
-run.font.size = Pt(15)
-run.font.bold = True
-run.font.color.rgb = ORANGE_DARK
-p2 = tf.add_paragraph()
-p2.alignment = PP_ALIGN.CENTER
-run2 = p2.add_run()
-run2.text = (
-    "OpenSearch Serverless (vector KB)  ·  Neptune Analytics (GraphRAG)  ·  Cohere Embed Multilingual v3  ·  "
-    "Bedrock Knowledge Bases  ·  Comprehend Medical (PHI mask)  ·  ElastiCache Redis (semantic cache)"
-)
-run2.font.name = "Calibri"
-run2.font.size = Pt(12)
-run2.font.color.rgb = GRAY_DARK
+print("  Slide 2 (challenge - PHI focus): added")
 
 # ----------------------------------------------------------------------------
-# SLIDE 4: SINGAPORE COMPLIANCE (45s) — KEY SLIDE
+# SLIDE 3: SINGAPORE COMPLIANCE & SECURITY (45s) — KEY SLIDE
 # ----------------------------------------------------------------------------
 slide = add_content_slide(
     prs,
-    "Singapore Healthcare Compliance: Built-In, Not Bolted-On",
+    "Singapore Compliance & Security: Built-In, Not Bolted-On",
     "[45s, KEY SLIDE]\n\n"
-    "Đây là phần Nova Health Tech cần lưu ý nhất. Singapore có 4 quy định chính áp dụng "
-    "trực tiếp cho hệ thống AI lâm sàng.\n\n"
-    "Một, PDPA do PDPC quản, bảo vệ dữ liệu cá nhân bệnh nhân, yêu cầu Data Protection Officer, "
-    "thông báo vi phạm trong 72 giờ. Hai, HCSA do MOH ban hành 2020 thay PHMC, bắt buộc license "
-    "cho dịch vụ y tế và clinical decision support. Ba, Cybersecurity Act 2018 cho Critical "
-    "Information Infrastructure trong y tế. Bốn, IMDA AI Verify framework cho AI có trách nhiệm.\n\n"
-    "Tất cả deployment ở ap-southeast-1, dữ liệu bệnh nhân không bao giờ rời Singapore. "
-    "AWS đã có signed BAA, ISO 27001, SOC 2 Type II, PDPA-compliant."
+    "Singapore có 4 quy định chính áp dụng cho hệ thống AI lâm sàng. "
+    "PDPA do PDPC quản, bảo vệ dữ liệu cá nhân, vi phạm phải báo trong 72 giờ. "
+    "HCSA 2020 do MOH ban hành thay PHMC, bắt buộc license cho clinical decision support. "
+    "Cybersecurity Act 2018 bảo vệ Critical Information Infrastructure. "
+    "IMDA AI Verify framework cho AI có trách nhiệm.\n\n"
+    "Cách triển khai: 100 phần trăm deploy ở ap-southeast-1, dữ liệu bệnh nhân không bao giờ "
+    "rời Singapore. AWS có signed BAA, ISO 27001, SOC 2 Type II, PDPA-compliant."
 )
 
-# 4 key SG regulations as prominent cards
+# 4 SG regulations as prominent cards
 sg_regs = [
     {
         "title": "PDPA",
         "subtitle": "Personal Data Protection Act",
-        "authority": "PDPC (Personal Data Protection Commission)",
+        "authority": "PDPC",
         "scope": "Patient data protection, consent, breach notification within 72 hours",
         "our_response": "Comprehend Medical PHI mask, KMS per-tenant CMK, audit trail",
         "color": ORANGE_DARK,
@@ -468,25 +340,25 @@ sg_regs = [
     {
         "title": "HCSA",
         "subtitle": "Healthcare Services Act 2020",
-        "authority": "MOH (Ministry of Health)",
+        "authority": "MOH",
         "scope": "Licensing for clinical decision support, replaces PHMC 1980",
-        "our_response": "Decision support only with human-in-the-loop, audit ready",
+        "our_response": "Decision support only, human-in-the-loop, audit ready",
         "color": ORANGE,
     },
     {
-        "title": "Cybersecurity Act",
-        "subtitle": "Critical Info Infrastructure 2018",
-        "authority": "CSA (Cyber Security Agency)",
+        "title": "Cyber Act",
+        "subtitle": "Cybersecurity Act 2018 (CII)",
+        "authority": "CSA",
         "scope": "Healthcare CII protection, incident reporting, security audits",
         "our_response": "GuardDuty + Security Hub + Macie, Security Lake aggregation",
         "color": ORANGE_DARK,
     },
     {
         "title": "AI Verify",
-        "subtitle": "Responsible AI Framework",
-        "authority": "IMDA (Infocomm Media Development)",
+        "subtitle": "IMDA Responsible AI",
+        "authority": "IMDA",
         "scope": "Transparency, fairness, accountability for AI systems",
-        "our_response": "chat_trace audit log, citation validator, Bedrock Guardrails",
+        "our_response": "chat_trace audit, citation validator, Bedrock Guardrails",
         "color": ORANGE,
     },
 ]
@@ -508,7 +380,6 @@ for i, reg in enumerate(sg_regs):
     card.line.width = Pt(2)
     card.adjustments[0] = 0.05
     
-    # Header
     header = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, x, y, cw, Inches(0.85))
     header.fill.solid()
     header.fill.fore_color.rgb = reg["color"]
@@ -532,10 +403,8 @@ for i, reg in enumerate(sg_regs):
     run2.font.size = Pt(10)
     run2.font.color.rgb = WHITE
     
-    # Body
     body_y = y + Inches(0.95)
     
-    # Authority
     auth_tb = slide.shapes.add_textbox(x + Inches(0.15), body_y, cw - Inches(0.3), Inches(0.5))
     tf = auth_tb.text_frame
     tf.word_wrap = True
@@ -550,11 +419,11 @@ for i, reg in enumerate(sg_regs):
     run2 = p2.add_run()
     run2.text = reg["authority"]
     run2.font.name = "Calibri"
-    run2.font.size = Pt(10)
+    run2.font.size = Pt(11)
+    run2.font.bold = True
     run2.font.color.rgb = GRAY_DARK
     
-    # Scope
-    scope_tb = slide.shapes.add_textbox(x + Inches(0.15), body_y + Inches(0.95), cw - Inches(0.3), Inches(1.1))
+    scope_tb = slide.shapes.add_textbox(x + Inches(0.15), body_y + Inches(0.85), cw - Inches(0.3), Inches(1.1))
     tf = scope_tb.text_frame
     tf.word_wrap = True
     p = tf.paragraphs[0]
@@ -571,7 +440,6 @@ for i, reg in enumerate(sg_regs):
     run2.font.size = Pt(10)
     run2.font.color.rgb = GRAY_DARK
     
-    # Our response
     resp_tb = slide.shapes.add_textbox(x + Inches(0.15), body_y + Inches(2.1), cw - Inches(0.3), Inches(0.9))
     tf = resp_tb.text_frame
     tf.word_wrap = True
@@ -614,29 +482,352 @@ p2.alignment = PP_ALIGN.CENTER
 run2 = p2.add_run()
 run2.text = (
     "100% deployment in ap-southeast-1 (Singapore)  ·  Patient cleartext never leaves SG  ·  "
-    "Cross-region: tokens only  ·  6-year audit retention via S3 Object Lock (HIPAA §164.530j)"
+    "Cross-region: tokens only  ·  6-year audit retention via S3 Object Lock"
 )
 run2.font.name = "Calibri"
 run2.font.size = Pt(12)
 run2.font.color.rgb = GRAY_DARK
 
+print("  Slide 3 (compliance): added")
+
 # ----------------------------------------------------------------------------
-# SLIDE 5: PERFORMANCE & COST (45s)
+# SLIDE 4: BACK TO CHALLENGE - Speed + Freshness (20s)
+# ----------------------------------------------------------------------------
+slide = add_content_slide(
+    prs,
+    "Continuing the Challenge",
+    "[20s]\n\n"
+    "Quay lại 2 thách thức còn lại. Speed: cấp cứu cần dưới 2 giây, không có chỗ "
+    "cho độ trễ, mỗi giây có thể là sống chết. Freshness: WHO cập nhật phác đồ hàng tháng, "
+    "ICD-11 cập nhật hàng ngày, hệ thống phải tự đồng bộ không cần can thiệp manual."
+)
+
+# 2 cards: Speed (left) + Freshness (right)
+cards = [
+    {
+        "icon": "⚡",
+        "title": "Speed",
+        "headline": "Emergency response < 2 seconds",
+        "details": [
+            "Every second matters in acute care",
+            "Sepsis, STEMI, anaphylaxis decisions",
+            "TTFT (time to first token) is the key metric",
+            "Streaming response to perceive answer",
+        ],
+        "color": RED,
+    },
+    {
+        "icon": "📅",
+        "title": "Freshness",
+        "headline": "WHO monthly · ICD-11 daily updates",
+        "details": [
+            "WHO publishes guideline revisions every month",
+            "ICD-11 catalog refreshes on its own cadence",
+            "Internal trial PDFs uploaded ad hoc",
+            "Auto-sync with versioning, no manual touch",
+        ],
+        "color": ORANGE_DARK,
+    },
+]
+
+cw = Inches(5.8)
+ch = Inches(4.5)
+gap = Inches(0.4)
+total_w = cw * 2 + gap
+start_x = (SLIDE_W - total_w) / 2
+
+for i, c in enumerate(cards):
+    x = start_x + i * (cw + gap)
+    y = Inches(1.6)
+    
+    card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, cw, ch)
+    card.fill.solid()
+    card.fill.fore_color.rgb = WHITE
+    card.line.color.rgb = c["color"]
+    card.line.width = Pt(2.5)
+    card.adjustments[0] = 0.04
+    
+    header = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, x, y, cw, Inches(0.7))
+    header.fill.solid()
+    header.fill.fore_color.rgb = c["color"]
+    header.line.fill.background()
+    
+    h_tb = slide.shapes.add_textbox(x, y, cw, Inches(0.7))
+    tf = h_tb.text_frame
+    tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    p = tf.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
+    run = p.add_run()
+    run.text = f"{c['icon']}  {c['title']}"
+    run.font.name = "Calibri"
+    run.font.size = Pt(22)
+    run.font.bold = True
+    run.font.color.rgb = WHITE
+    
+    # Headline
+    headline_tb = slide.shapes.add_textbox(x + Inches(0.4), y + Inches(0.95), cw - Inches(0.8), Inches(0.7))
+    tf = headline_tb.text_frame
+    tf.word_wrap = True
+    p = tf.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
+    run = p.add_run()
+    run.text = c["headline"]
+    run.font.name = "Calibri"
+    run.font.size = Pt(18)
+    run.font.bold = True
+    run.font.color.rgb = c["color"]
+    
+    # Details
+    detail_tb = slide.shapes.add_textbox(x + Inches(0.5), y + Inches(1.85), cw - Inches(1.0), Inches(2.5))
+    tf = detail_tb.text_frame
+    tf.word_wrap = True
+    for j, line in enumerate(c["details"]):
+        if j == 0:
+            p = tf.paragraphs[0]
+        else:
+            p = tf.add_paragraph()
+        bullet_run = p.add_run()
+        bullet_run.text = "▸ "
+        bullet_run.font.name = "Calibri"
+        bullet_run.font.size = Pt(14)
+        bullet_run.font.bold = True
+        bullet_run.font.color.rgb = c["color"]
+        text_run = p.add_run()
+        text_run.text = line
+        text_run.font.name = "Calibri"
+        text_run.font.size = Pt(13)
+        text_run.font.color.rgb = GRAY_DARK
+        p.space_after = Pt(8)
+
+# Bottom: tone consistency note
+tone_y = Inches(6.4)
+tone_box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(1.0), tone_y, Inches(11.3), Inches(0.6))
+tone_box.fill.solid()
+tone_box.fill.fore_color.rgb = ORANGE_LIGHT
+tone_box.line.color.rgb = ORANGE
+tone_box.line.width = Pt(1)
+tone_box.adjustments[0] = 0.2
+
+tone_tb = slide.shapes.add_textbox(Inches(1.2), tone_y + Inches(0.1), Inches(10.9), Inches(0.45))
+tf = tone_tb.text_frame
+tf.word_wrap = True
+p = tf.paragraphs[0]
+p.alignment = PP_ALIGN.CENTER
+run = p.add_run()
+run.text = "Plus: consistent clinical tone across answers · legacy PDFs with inconsistent tagging"
+run.font.name = "Calibri"
+run.font.size = Pt(12)
+run.font.italic = True
+run.font.color.rgb = ORANGE_DARK
+
+print("  Slide 4 (challenge - speed + freshness): added")
+
+# ----------------------------------------------------------------------------
+# SLIDE 5: SOLUTION ARCHITECTURE (50s)
+# ----------------------------------------------------------------------------
+slide = add_content_slide(
+    prs,
+    "Solution: Two-Lane Architecture",
+    "[50s]\n\n"
+    "Giải pháp là kiến trúc 2 luồng. Cấp cứu đi thẳng Claude Haiku 4.5 với top-3 vector "
+    "và top-2 graph, không qua router. Phức tạp đi qua Nova Micro phân loại 12 phòng ban, "
+    "rồi Sonnet 4.5 với top-15 vector và top-3 graph có guardrails.\n\n"
+    "RAG dùng 2 loại: vector trên OpenSearch Serverless và GraphRAG trên Neptune Analytics. "
+    "Cả 2 đều ở Singapore với Cohere Embed v3 SG-native. Không có cross-region hop.\n\n"
+    "Diagram chi tiết kiến trúc xem tại docs/architecture/diagrams/proposal/01_high_level.svg"
+)
+
+# Two-lane visualization
+lane_y = Inches(1.4)
+lane_w = Inches(6.0)
+lane_h = Inches(2.7)
+
+# Emergency lane
+em_card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.5), lane_y, lane_w, lane_h)
+em_card.fill.solid()
+em_card.fill.fore_color.rgb = WHITE
+em_card.line.color.rgb = RED
+em_card.line.width = Pt(2.5)
+em_card.adjustments[0] = 0.04
+
+em_h = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.5), lane_y, lane_w, Inches(0.55))
+em_h.fill.solid()
+em_h.fill.fore_color.rgb = RED
+em_h.line.fill.background()
+
+em_h_tb = slide.shapes.add_textbox(Inches(0.5), lane_y, lane_w, Inches(0.55))
+tf = em_h_tb.text_frame
+tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+p = tf.paragraphs[0]
+p.alignment = PP_ALIGN.CENTER
+run = p.add_run()
+run.text = "EMERGENCY LANE  ·  PoC TTFT 2.5s"
+run.font.name = "Calibri"
+run.font.size = Pt(16)
+run.font.bold = True
+run.font.color.rgb = WHITE
+
+em_lines = [
+    "▸  Claude Haiku 4.5 (fast model)",
+    "▸  Vector top-3 + GraphRAG top-2",
+    "▸  No router (direct emergency agent)",
+    "▸  No guardrails (speed priority)",
+    "▸  Streaming SSE, max 300 tokens",
+]
+em_tb = slide.shapes.add_textbox(Inches(0.8), lane_y + Inches(0.7), lane_w - Inches(0.5), lane_h - Inches(0.8))
+tf = em_tb.text_frame
+tf.word_wrap = True
+for i, line in enumerate(em_lines):
+    if i == 0:
+        p = tf.paragraphs[0]
+    else:
+        p = tf.add_paragraph()
+    run = p.add_run()
+    run.text = line
+    run.font.name = "Calibri"
+    run.font.size = Pt(13)
+    run.font.color.rgb = GRAY_DARK
+    p.space_after = Pt(4)
+
+# Complex lane
+cx_card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(6.8), lane_y, lane_w, lane_h)
+cx_card.fill.solid()
+cx_card.fill.fore_color.rgb = WHITE
+cx_card.line.color.rgb = ORANGE_DARK
+cx_card.line.width = Pt(2.5)
+cx_card.adjustments[0] = 0.04
+
+cx_h = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(6.8), lane_y, lane_w, Inches(0.55))
+cx_h.fill.solid()
+cx_h.fill.fore_color.rgb = ORANGE_DARK
+cx_h.line.fill.background()
+
+cx_h_tb = slide.shapes.add_textbox(Inches(6.8), lane_y, lane_w, Inches(0.55))
+tf = cx_h_tb.text_frame
+tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+p = tf.paragraphs[0]
+p.alignment = PP_ALIGN.CENTER
+run = p.add_run()
+run.text = "COMPLEX LANE  ·  PoC TTFT 9.7s"
+run.font.name = "Calibri"
+run.font.size = Pt(16)
+run.font.bold = True
+run.font.color.rgb = WHITE
+
+cx_lines = [
+    "▸  Claude Sonnet 4.5 (deep reasoning)",
+    "▸  Vector top-15 + GraphRAG top-3",
+    "▸  Nova Micro routes to 12 departments",
+    "▸  Bedrock Guardrails enabled",
+    "▸  Streaming SSE, max 1500 tokens",
+]
+cx_tb = slide.shapes.add_textbox(Inches(7.1), lane_y + Inches(0.7), lane_w - Inches(0.5), lane_h - Inches(0.8))
+tf = cx_tb.text_frame
+tf.word_wrap = True
+for i, line in enumerate(cx_lines):
+    if i == 0:
+        p = tf.paragraphs[0]
+    else:
+        p = tf.add_paragraph()
+    run = p.add_run()
+    run.text = line
+    run.font.name = "Calibri"
+    run.font.size = Pt(13)
+    run.font.color.rgb = GRAY_DARK
+    p.space_after = Pt(4)
+
+# Architecture diagram path note + simple ASCII flow
+arch_y = Inches(4.3)
+
+arch_box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.5), arch_y, Inches(12.3), Inches(2.0))
+arch_box.fill.solid()
+arch_box.fill.fore_color.rgb = ORANGE_LIGHT
+arch_box.line.color.rgb = ORANGE
+arch_box.line.width = Pt(1.5)
+arch_box.adjustments[0] = 0.05
+
+arch_label = slide.shapes.add_textbox(Inches(0.7), arch_y + Inches(0.1), Inches(11.9), Inches(0.4))
+tf = arch_label.text_frame
+p = tf.paragraphs[0]
+p.alignment = PP_ALIGN.CENTER
+run = p.add_run()
+run.text = "Shared Infrastructure (100% Singapore-Native, ap-southeast-1)"
+run.font.name = "Calibri"
+run.font.size = Pt(15)
+run.font.bold = True
+run.font.color.rgb = ORANGE_DARK
+
+# Component row 1
+comp_row1 = slide.shapes.add_textbox(Inches(0.7), arch_y + Inches(0.55), Inches(11.9), Inches(0.5))
+tf = comp_row1.text_frame
+tf.word_wrap = True
+p = tf.paragraphs[0]
+p.alignment = PP_ALIGN.CENTER
+run = p.add_run()
+run.text = "OpenSearch Serverless · Neptune Analytics · Cohere Embed v3 · Bedrock KB · Bedrock Guardrails"
+run.font.name = "Calibri"
+run.font.size = Pt(12)
+run.font.color.rgb = GRAY_DARK
+
+# Component row 2
+comp_row2 = slide.shapes.add_textbox(Inches(0.7), arch_y + Inches(0.95), Inches(11.9), Inches(0.5))
+tf = comp_row2.text_frame
+tf.word_wrap = True
+p = tf.paragraphs[0]
+p.alignment = PP_ALIGN.CENTER
+run = p.add_run()
+run.text = "Comprehend Medical (PHI mask) · ElastiCache Redis (semantic cache) · CloudFront + WAF · Cognito + Entra ID"
+run.font.name = "Calibri"
+run.font.size = Pt(12)
+run.font.color.rgb = GRAY_DARK
+
+# Diagram path
+path_label = slide.shapes.add_textbox(Inches(0.7), arch_y + Inches(1.45), Inches(11.9), Inches(0.4))
+tf = path_label.text_frame
+p = tf.paragraphs[0]
+p.alignment = PP_ALIGN.CENTER
+run = p.add_run()
+run.text = "📐  Full architecture diagram: docs/architecture/diagrams/proposal/01_high_level.svg"
+run.font.name = "Calibri"
+run.font.size = Pt(11)
+run.font.italic = True
+run.font.color.rgb = ORANGE_DARK
+
+# Bottom note
+poc_y = Inches(6.5)
+poc_tb = slide.shapes.add_textbox(Inches(0.5), poc_y, Inches(12.3), Inches(0.4))
+tf = poc_tb.text_frame
+p = tf.paragraphs[0]
+p.alignment = PP_ALIGN.CENTER
+run = p.add_run()
+run.text = "PoC live at http://47.130.120.152/ui/index.html  ·  100% SLA pass on 20 test questions"
+run.font.name = "Calibri"
+run.font.size = Pt(13)
+run.font.bold = True
+run.font.color.rgb = GREEN
+
+print("  Slide 5 (solution + architecture): added")
+
+# ----------------------------------------------------------------------------
+# SLIDE 6: PoC RESULTS & COST (40s)
+# No mention of Reserved Tier per user request
 # ----------------------------------------------------------------------------
 slide = add_content_slide(
     prs,
     "PoC Results & Cost",
-    "[45s]\n\n"
-    "PoC đã chạy live trên EC2 Singapore với WHO COVID-19 guideline 198 trang. "
-    "Test 20 câu hỏi thực tế, 100% pass SLA cả emergency và complex, 100% câu trả lời có citation.\n\n"
-    "Cấp cứu TTFT trung bình 2.5 giây, dùng Haiku 4.5 với top-3 vector và top-2 graph. "
-    "Phức tạp 9.7 giây với Sonnet 4.5 và 18 chunks context. Production thêm Reserved Tier "
-    "và Prompt Caching sẽ giảm xuống đúng 2 giây spec gốc.\n\n"
-    "Chi phí 600k calls một tháng: phương án Nova khoảng 2,800 USD, phương án Claude với "
-    "Nova Lite distilled student khoảng 5,500 USD. Sẵn sàng demo live nếu Ban lãnh đạo quan tâm."
+    "[40s]\n\n"
+    "PoC chạy live trên EC2 Singapore với WHO COVID-19 guideline 198 trang. "
+    "Test 20 câu hỏi thực tế: 100 phần trăm pass SLA cả 2 lane, 100 phần trăm câu trả lời "
+    "có citation từ nguồn gốc.\n\n"
+    "Cấp cứu 2.5 giây trung bình, complex 9.7 giây. Đã đáp ứng đề bài. "
+    "Production thêm Prompt Caching trên system prompt và ElastiCache Redis cho semantic cache "
+    "sẽ giảm thêm.\n\n"
+    "Chi phí 600,000 calls một tháng: phương án Nova khoảng 2,800 USD, phương án Claude với "
+    "student distillation khoảng 5,500 USD. Khi scale lên 3 triệu calls thì A1+ là 10,500 còn "
+    "A2 là 23,500 USD."
 )
 
-# Top: 4 key metrics
+# Top: 4 metrics
 metrics = [
     ("Emergency TTFT", "2.5s", "Haiku 4.5 + dual KB", GREEN),
     ("Complex TTFT", "9.7s", "Sonnet 4.5 + Guardrails", GREEN),
@@ -694,67 +885,74 @@ for i, (label, value, sub, color) in enumerate(metrics):
     run.font.color.rgb = GRAY_DARK
 
 # Cost table
-cost_y = Inches(3.1)
-add_text_box_func = None  # placeholder - we'll build inline
-cost_label_box = slide.shapes.add_textbox(Inches(0.5), cost_y, Inches(12.3), Inches(0.4))
+cost_label_y = Inches(3.1)
+cost_label_box = slide.shapes.add_textbox(Inches(0.5), cost_label_y, Inches(12.3), Inches(0.4))
 tf = cost_label_box.text_frame
 p = tf.paragraphs[0]
 run = p.add_run()
-run.text = "Monthly Cost Estimation (600,000 calls/month baseline)"
+run.text = "Monthly Cost (600,000 calls per month, AWS Singapore list price)"
 run.font.name = "Calibri"
 run.font.size = Pt(15)
 run.font.bold = True
 run.font.color.rgb = ORANGE_DARK
 
-headers = ["Component", "Variant A1+ (Nova)", "Variant A2 (Claude)"]
+# Verified cost numbers from proposal:
+# A1+ (Nova): Nova Micro $70 + Nova Pro $1,470 + Embed $10 + Guardrails $180 + 
+#             OpenSearch $350 + Neptune $115 + Comprehend $180 + Lambda/API/CF/WAF $150 + 
+#             S3/CloudTrail/Macie $120 + Redis $80 + VPN $80 = $2,805
+# A2 (Claude): Haiku $350 + Sonnet $5,460 + (other items same as A1+: $1,265) = $7,075
+#              + Distillation $670 - Student offset $2,200 = $5,545
+headers = ["Component", "A1+ (Nova)", "A2 (Claude with student)"]
 rows = [
-    ["LLM inference (emergency + complex)", "$1,540", "$5,810"],
+    ["LLM inference (emergency lane)", "$70", "$350"],
+    ["LLM inference (complex lane)", "$1,470", "$5,460"],
     ["Embedding (Cohere Embed v3 SG)", "$10", "$10"],
     ["OpenSearch Serverless + Neptune Analytics", "$465", "$465"],
     ["Bedrock Guardrails + Comprehend Medical", "$360", "$360"],
-    ["ElastiCache Redis + VPN + Lambda + S3", "$430", "$430"],
-    ["Distillation + Nova Lite student offset", "—", "−$1,530"],
+    ["ElastiCache Redis + VPN + Lambda + S3 + CloudTrail", "$430", "$430"],
+    ["Distillation amortized (offset by student)", "—", "−$1,530"],
     ["TOTAL / month", "$2,805", "$5,545"],
 ]
-add_table_simple(slide, Inches(0.5), Inches(3.6), Inches(12.3), Inches(2.6), headers, rows)
+add_table_simple(slide, Inches(0.5), Inches(3.6), Inches(12.3), Inches(2.7), headers, rows)
 
-# Bottom: scale + recommendation
-rec_y = Inches(6.3)
-rec_box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.5), rec_y, Inches(12.3), Inches(0.7))
+# Bottom: scale note
+rec_y = Inches(6.45)
+rec_box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.5), rec_y, Inches(12.3), Inches(0.55))
 rec_box.fill.solid()
 rec_box.fill.fore_color.rgb = ORANGE_LIGHT
 rec_box.line.color.rgb = ORANGE
 rec_box.line.width = Pt(1)
 rec_box.adjustments[0] = 0.2
 
-rec_tb = slide.shapes.add_textbox(Inches(0.7), rec_y + Inches(0.1), Inches(11.9), Inches(0.55))
+rec_tb = slide.shapes.add_textbox(Inches(0.7), rec_y + Inches(0.08), Inches(11.9), Inches(0.4))
 tf = rec_tb.text_frame
 tf.word_wrap = True
 p = tf.paragraphs[0]
 p.alignment = PP_ALIGN.CENTER
 run = p.add_run()
-run.text = "At 3M calls/month: A1+ scales to $10,500   ·   A2 to $23,500   ·   Recommended: A1+ for cost, A2 for premium tier"
+run.text = "At 3M calls/month: A1+ scales to $10,500   ·   A2 to $23,500   ·   Optimization: Prompt Caching + ElastiCache semantic cache"
 run.font.name = "Calibri"
 run.font.size = Pt(12)
 run.font.bold = True
 run.font.color.rgb = ORANGE_DARK
 
+print("  Slide 6 (PoC results + cost): added")
+
 # ----------------------------------------------------------------------------
-# SLIDE 6: CALL TO ACTION (15s)
+# SLIDE 7: READY TO DEPLOY (10s)
 # ----------------------------------------------------------------------------
 slide = add_content_slide(
     prs,
     "Ready to Deploy",
-    "[15s closing]\n\n"
-    "Tóm lại: kiến trúc đã được PoC kiểm chứng, Singapore-native, tuân thủ PDPA HCSA sẵn, "
-    "chi phí từ 2,800 USD một tháng. Lộ trình triển khai 6-10 tuần. "
-    "PoC đang chạy live, có thể demo ngay. Cảm ơn quý vị."
+    "[10s closing]\n\n"
+    "Tóm lại: kiến trúc đã PoC kiểm chứng, Singapore-native, tuân thủ PDPA HCSA. "
+    "Lộ trình 6-10 tuần. PoC đang chạy live, có thể demo ngay. Xin cảm ơn."
 )
 
 # Roadmap
 rm_y = Inches(1.4)
-add_text_box_helper = slide.shapes.add_textbox(Inches(0.5), rm_y, Inches(12.3), Inches(0.4))
-tf = add_text_box_helper.text_frame
+rm_label = slide.shapes.add_textbox(Inches(0.5), rm_y, Inches(12.3), Inches(0.4))
+tf = rm_label.text_frame
 p = tf.paragraphs[0]
 run = p.add_run()
 run.text = "Implementation Roadmap (6 to 10 weeks)"
@@ -764,7 +962,7 @@ run.font.bold = True
 run.font.color.rgb = ORANGE_DARK
 
 phases = [
-    ("Wk 1-2", "Foundation", "SG provisioning, BAA, WHO+ICD-11 ingest"),
+    ("Wk 1-2", "Foundation", "SG provisioning, BAA, WHO + ICD-11 ingest"),
     ("Wk 3-4", "Customization", "Bedrock Distillation: Nova Lite student"),
     ("Wk 5-6", "Integration", "EHR FHIR, SharePoint, Cognito federation"),
     ("Wk 7-8", "Hardening", "Red team, Guardrails tune, load test"),
@@ -814,7 +1012,7 @@ for i, (week, name, desc) in enumerate(phases):
     run.font.size = Pt(13)
     run.font.color.rgb = GRAY_DARK
 
-# Bottom: live demo
+# Live demo callout
 demo_y = Inches(5.4)
 demo_box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(1.5), demo_y, Inches(10.3), Inches(1.6))
 demo_box.fill.solid()
@@ -851,6 +1049,8 @@ run3.font.size = Pt(15)
 run3.font.italic = True
 run3.font.color.rgb = WHITE
 
+print("  Slide 7 (ready to deploy): added")
+
 prs.save(OUT_PATH)
-print(f"Saved: {OUT_PATH}")
+print(f"\nSaved: {OUT_PATH}")
 print(f"Total slides: {len(prs.slides)}")
