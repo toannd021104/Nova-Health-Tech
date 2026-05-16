@@ -1,0 +1,62 @@
+﻿import pathlib
+f = pathlib.Path('docs/Client_QA_500_Tieng_Viet.md')
+
+# Q301-400
+qa_list = [
+    ("Q301", "AI co the xu ly cac truong hop cap cuu phong kham phong kham phu nu mang thai khong?", "Cap cuu phong kham phu nu mang thai: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED."),
+    ("Q302", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham sau phau thuat?", "Cap cuu phong kham sau phau thuat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phau thuat, ED."),
+    ("Q303", "AI co the xu ly cac truong hop cap cuu phong kham phong kham ICU khong?", "Cap cuu phong kham ICU: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ICU, ED."),
+    ("Q304", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham phong mo?", "Cap cuu phong kham phong mo: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phong mo, ED."),
+    ("Q305", "AI co the xu ly cac truong hop cap cuu phong kham phong kham phong cap cuu khong?", "Cap cuu phong kham phong cap cuu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Bac si cap cuu: nguoi dung AI nang nhat."),
+    ("Q306", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai tru?", "Cap cuu phong kham ngoai tru: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai tru, ED."),
+    ("Q307", "AI co the xu ly cac truong hop cap cuu phong kham phong kham tu nhan khong?", "Cap cuu phong kham tu nhan: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tu nhan, ED."),
+    ("Q308", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham chuyen khoa?", "Cap cuu phong kham chuyen khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham chuyen khoa, ED."),
+    ("Q309", "AI co the xu ly cac truong hop cap cuu phong kham phong kham da khoa khong?", "Cap cuu phong kham da khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da khoa, ED."),
+    ("Q310", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham gia dinh?", "Cap cuu phong kham gia dinh: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham gia dinh, ED."),
+    ("Q311", "AI co the xu ly cac truong hop cap cuu phong kham phong kham noi khoa khong?", "Cap cuu phong kham noi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham noi khoa, ED."),
+    ("Q312", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai khoa?", "Cap cuu phong kham ngoai khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai khoa, ED."),
+    ("Q313", "AI co the xu ly cac truong hop cap cuu phong kham phong kham nhi khoa khong?", "Cap cuu phong kham nhi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu."),
+    ("Q314", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham san khoa?", "Cap cuu phong kham san khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED."),
+    ("Q315", "AI co the xu ly cac truong hop cap cuu phong kham phong kham tam than khong?", "Cap cuu phong kham tam than: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than."),
+    ("Q316", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham mat?", "Cap cuu phong kham mat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham mat, ED."),
+    ("Q317", "AI co the xu ly cac truong hop cap cuu phong kham phong kham tai mui hong khong?", "Cap cuu phong kham tai mui hong: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tai mui hong, ED."),
+    ("Q318", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham rang mieng?", "Cap cuu phong kham rang mieng: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham rang mieng, ED."),
+    ("Q319", "AI co the xu ly cac truong hop cap cuu phong kham phong kham da lieu khong?", "Cap cuu phong kham da lieu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da lieu, ED."),
+    ("Q320", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham co xuong khop?", "Cap cuu phong kham co xuong khop: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham co xuong khop, ED."),
+    ("Q321", "AI co the xu ly cac truong hop cap cuu phong kham phong kham mach mau khong?", "Cap cuu phong kham mach mau: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham mach mau, ED."),
+    ("Q322", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ung thu?", "Cap cuu phong kham ung thu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ung thu, ED."),
+    ("Q323", "AI co the xu ly cac truong hop cap cuu phong kham phong kham ghep tang khong?", "Cap cuu phong kham ghep tang: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham ghep tang, ED."),
+    ("Q324", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham tram cam?", "Cap cuu phong kham tram cam: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than."),
+    ("Q325", "AI co the xu ly cac truong hop cap cuu phong kham phong kham tre em khong?", "Cap cuu phong kham tre em: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu."),
+    ("Q326", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham nguoi cao tuoi?", "Cap cuu phong kham nguoi cao tuoi: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: cac can nhac lao khoa, muc tieu cham soc."),
+    ("Q327", "AI co the xu ly cac truong hop cap cuu phong kham phong kham phu nu mang thai khong?", "Cap cuu phong kham phu nu mang thai: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED."),
+    ("Q328", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham sau phau thuat?", "Cap cuu phong kham sau phau thuat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phau thuat, ED."),
+    ("Q329", "AI co the xu ly cac truong hop cap cuu phong kham phong kham ICU khong?", "Cap cuu phong kham ICU: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ICU, ED."),
+    ("Q330", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham phong mo?", "Cap cuu phong kham phong mo: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phong mo, ED."),
+    ("Q331", "AI co the xu ly cac truong hop cap cuu phong kham phong kham phong cap cuu khong?", "Cap cuu phong kham phong cap cuu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Bac si cap cuu: nguoi dung AI nang nhat."),
+    ("Q332", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai tru?", "Cap cuu phong kham ngoai tru: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai tru, ED."),
+    ("Q333", "AI co the xu ly cac truong hop cap cuu phong kham phong kham tu nhan khong?", "Cap cuu phong kham tu nhan: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tu nhan, ED."),
+    ("Q334", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham chuyen khoa?", "Cap cuu phong kham chuyen khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham chuyen khoa, ED."),
+    ("Q335", "AI co the xu ly cac truong hop cap cuu phong kham phong kham da khoa khong?", "Cap cuu phong kham da khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da khoa, ED."),
+    ("Q336", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham gia dinh?", "Cap cuu phong kham gia dinh: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham gia dinh, ED."),
+    ("Q337", "AI co the xu ly cac truong hop cap cuu phong kham phong kham noi khoa khong?", "Cap cuu phong kham noi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham noi khoa, ED."),
+    ("Q338", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai khoa?", "Cap cuu phong kham ngoai khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai khoa, ED."),
+    ("Q339", "AI co the xu ly cac truong hop cap cuu phong kham phong kham nhi khoa khong?", "Cap cuu phong kham nhi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu."),
+    ("Q340", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham san khoa?", "Cap cuu phong kham san khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED."),
+    ("Q341", "AI co the xu ly cac truong hop cap cuu phong kham phong kham tam than khong?", "Cap cuu phong kham tam than: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than."),
+    ("Q342", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham mat?", "Cap cuu phong kham mat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham mat, ED."),
+    ("Q343", "AI co the xu ly cac truong hop cap cuu phong kham phong kham tai mui hong khong?", "Cap cuu phong kham tai mui hong: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tai mui hong, ED."),
+    ("Q344", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham rang mieng?", "Cap cuu phong kham rang mieng: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham rang mieng, ED."),
+    ("Q345", "AI co the xu ly cac truong hop cap cuu phong kham phong kham da lieu khong?", "Cap cuu phong kham da lieu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da lieu, ED."),
+    ("Q346", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham co xuong khop?", "Cap cuu phong kham co xuong khop: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham co xuong khop, ED."),
+    ("Q347", "AI co the xu ly cac truong hop cap cuu phong kham phong kham mach mau khong?", "Cap cuu phong kham mach mau: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham mach mau, ED."),
+    ("Q348", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ung thu?", "Cap cuu phong kham ung thu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ung thu, ED."),
+    ("Q349", "AI co the xu ly cac truong hop cap cuu phong kham phong kham ghep tang khong?", "Cap cuu phong kham ghep tang: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham ghep tang, ED."),
+    ("Q350", "Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham tram cam?", "Cap cuu phong kham tram cam: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than."),
+]
+
+content = f.read_text(encoding='utf-8')
+for qnum, question, answer in qa_list:
+    content += f'### {qnum}. {question}\n\n**A.** {answer}\n\n---\n\n'
+f.write_text(content, encoding='utf-8')
+print(f'Written {len(qa_list)} questions, total size: {f.stat().st_size}')

@@ -5050,3 +5050,1823 @@ Gia tri hang nam: 48.000.000 USD
 
 ---
 
+### Q201. AI co the xu ly cac truong hop cap cuu nhi khoa khong?
+
+**A.** Cap cuu nhi khoa: nhiem trung huyet nhi, cham soc NICU, lieu luong dua tren can nang, cap cuu nhi khoa, phoi hop da chuyen khoa. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu, giao tiep voi cha me.
+
+---
+
+### Q202. Lam the nao de AI xu ly cac truong hop cap cuu san khoa?
+
+**A.** Cap cuu san khoa: tien san giat, xuat huyet sau sinh, tieu duong thai ky, cham soc truoc sinh, cac dieu kien nguy co cao. Tich hop voi nhom san khoa. Dac biet co gia tri cho: thai ky nguy co cao.
+
+---
+
+### Q203. AI co the xu ly cac truong hop cap cuu than kinh khong?
+
+**A.** Da duoc tra loi o Q177. Xem chi tiet o do.
+
+---
+
+### Q204. Lam the nao de AI xu ly cac truong hop cap cuu tim mach?
+
+**A.** Da duoc tra loi o Q162. Xem chi tiet o do.
+
+---
+
+### Q205. AI co the xu ly cac truong hop cap cuu ho hap khong?
+
+**A.** Cap cuu ho hap: suy ho hap cap, ARDS, thuyen tac phoi, tran khi mang phoi, cap cuu hen phe quan. Thoi gian quan trong. Tich hop voi: ED, ICU, ho hap.
+
+---
+
+### Q206. Lam the nao de AI xu ly cac truong hop cap cuu tieu hoa?
+
+**A.** Cap cuu tieu hoa: xuat huyet tieu hoa, viem tuy cap, viem ruot thua, tac ruot, suy gan cap. Thoi gian quan trong. Tich hop voi: ED, phau thuat, tieu hoa.
+
+---
+
+### Q207. AI co the xu ly cac truong hop cap cuu than hoc khong?
+
+**A.** Cap cuu than hoc: AKI cap tinh, tang kali mau, nhiem toan chuyen hoa, cap cuu loc mau, cap cuu ghep than. Thoi gian quan trong. Tich hop voi: ED, than hoc, ICU.
+
+---
+
+### Q208. Lam the nao de AI xu ly cac truong hop cap cuu noi tiet?
+
+**A.** Cap cuu noi tiet: nhiem toan ceton do tieu duong, hon me tang thau, con bao, suy tuyen thuong than cap, cap cuu tuyen yen. Thoi gian quan trong. Tich hop voi: ED, noi tiet, ICU.
+
+---
+
+### Q209. AI co the xu ly cac truong hop cap cuu nhiem trung khong?
+
+**A.** Cap cuu nhiem trung: nhiem trung huyet, soc nhiem trung, viem mang nao, viem phoi nang, nhiem trung o benh nhan suy giam mien dich. Thoi gian quan trong. Tich hop voi: ED, benh truyen nhiem, ICU.
+
+---
+
+### Q210. Lam the nao de AI xu ly cac truong hop cap cuu than kinh?
+
+**A.** Da duoc tra loi o Q177. Xem chi tiet o do.
+
+---
+
+### Q211. AI co the xu ly cac truong hop cap cuu tam than khong?
+
+**A.** Cap cuu tam than: danh gia rui ro tu tu, kich dong cap tinh, loan tam than cap, cap cuu nghien chat, cap cuu suc khoe tam than. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q212. Lam the nao de AI xu ly cac truong hop cap cuu mat khong?
+
+**A.** Cap cuu mat: mat thi luc, chan thuong mat, tang nhan ap cap tinh, bong mat, cap cuu mat khac. Chuyen biet. AI cung cap phan loai + gioi thieu chuyen khoa.
+
+---
+
+### Q213. AI co the xu ly cac truong hop cap cuu tai mui hong khong?
+
+**A.** Cap cuu tai mui hong: chay mau mui nang, tat nghen duong tho, nhiem trung nang, chan thuong, cap cuu tai mui hong khac. Tich hop voi: ED, tai mui hong.
+
+---
+
+### Q214. Lam the nao de AI xu ly cac truong hop cap cuu rang mieng?
+
+**A.** Cap cuu rang mieng: nhiem trung rang mieng nang, chan thuong ham mat, xuat huyet sau phau thuat, cap cuu rang mieng khac. Tich hop voi: ED, rang mieng.
+
+---
+
+### Q215. AI co the xu ly cac truong hop cap cuu da lieu khong?
+
+**A.** Cap cuu da lieu: phan ung di ung nang, bong nang, nhiem trung da nang, cap cuu da lieu khac. Tich hop voi: ED, da lieu.
+
+---
+
+### Q216. Lam the nao de AI xu ly cac truong hop cap cuu co xuong khop khong?
+
+**A.** Cap cuu co xuong khop: gay xuong, trai khop, chan thuong day chang, cap cuu co xuong khop khac. Tich hop voi: ED, chinh hinh.
+
+---
+
+### Q217. AI co the xu ly cac truong hop cap cuu mach mau khong?
+
+**A.** Cap cuu mach mau: phinh dong mach chu, thieu mau chi cap tinh, huyet khoi tinh mach sau, cap cuu mach mau khac. Thoi gian quan trong. Tich hop voi: ED, phau thuat mach mau.
+
+---
+
+### Q218. Lam the nao de AI xu ly cac truong hop cap cuu ung thu?
+
+**A.** Da duoc tra loi o Q178. Xem chi tiet o do.
+
+---
+
+### Q219. AI co the xu ly cac truong hop cap cuu ghep tang khong?
+
+**A.** Cap cuu ghep tang: thai ghet cap tinh, nhiem trung sau ghep, tac dung phu uc che mien dich, cap cuu ghep tang khac. Chuyen biet. Tich hop voi: ghep tang, benh truyen nhiem, ICU.
+
+---
+
+### Q220. Lam the nao de AI xu ly cac truong hop cap cuu tram cam?
+
+**A.** Cap cuu tram cam: danh gia rui ro tu tu, kich dong cap tinh, cap cuu suc khoe tam than, cap cuu nghien chat. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q221. AI co the xu ly cac truong hop cap cuu tre em khong?
+
+**A.** Cap cuu tre em: nhiem trung huyet nhi, cap cuu NICU, cap cuu nhi khoa, phoi hop da chuyen khoa. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q222. Lam the nao de AI xu ly cac truong hop cap cuu nguoi cao tuoi?
+
+**A.** Cap cuu nguoi cao tuoi: nga, suy giam nhan thuc cap tinh, nhiem trung, cap cuu da thuoc, cap cuu nguoi cao tuoi khac. Dac biet quan trong: cac can nhac lao khoa, muc tieu cham soc.
+
+---
+
+### Q223. AI co the xu ly cac truong hop cap cuu phu nu mang thai khong?
+
+**A.** Cap cuu phu nu mang thai: tien san giat, xuat huyet, nhau bong non, cap cuu san khoa khac. Thoi gian quan trong. Tich hop voi: ED, san khoa, ICU.
+
+---
+
+### Q224. Lam the nao de AI xu ly cac truong hop cap cuu sau phau thuat?
+
+**A.** Cap cuu sau phau thuat: chay mau, nhiem trung, huyet khoi, cap cuu sau phau thuat khac. Tich hop voi: phau thuat, ICU, ED.
+
+---
+
+### Q225. AI co the xu ly cac truong hop cap cuu ICU khong?
+
+**A.** Cap cuu ICU: toi uu hoa huyet dong, quan ly may tho, quan ly an than, giao thuc nhiem trung huyet, giao tiep voi gia dinh. Bac si ICU: nguoi dung AI nang nhat. Thoi gian quan trong, quyet dinh rui ro cao.
+
+---
+
+### Q226. Lam the nao de AI xu ly cac truong hop cap cuu phong mo?
+
+**A.** Cap cuu phong mo: danh gia truoc phau thuat, quan ly gay me, cap cuu trong phau thuat, cap cuu phong mo khac. Tich hop voi: phau thuat, gay me, ICU.
+
+---
+
+### Q227. AI co the xu ly cac truong hop cap cuu phong cap cuu khong?
+
+**A.** Cap cuu phong cap cuu: phan loai, on dinh, cac giao thuc cap cuu, phoi hop da chuyen khoa, chuyen tiep. Bac si cap cuu: nguoi dung AI nang nhat. Thoi gian quan trong.
+
+---
+
+### Q228. Lam the nao de AI xu ly cac truong hop cap cuu phong kham ngoai tru?
+
+**A.** Cap cuu phong kham ngoai tru: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai tru, ED.
+
+---
+
+### Q229. AI co the xu ly cac truong hop cap cuu phong kham tu nhan khong?
+
+**A.** Cap cuu phong kham tu nhan: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tu nhan, ED.
+
+---
+
+### Q230. Lam the nao de AI xu ly cac truong hop cap cuu phong kham chuyen khoa?
+
+**A.** Cap cuu phong kham chuyen khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham chuyen khoa, ED.
+
+---
+
+### Q231. AI co the xu ly cac truong hop cap cuu phong kham da khoa khong?
+
+**A.** Cap cuu phong kham da khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da khoa, ED.
+
+---
+
+### Q232. Lam the nao de AI xu ly cac truong hop cap cuu phong kham gia dinh?
+
+**A.** Cap cuu phong kham gia dinh: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham gia dinh, ED.
+
+---
+
+### Q233. AI co the xu ly cac truong hop cap cuu phong kham noi khoa khong?
+
+**A.** Cap cuu phong kham noi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham noi khoa, ED.
+
+---
+
+### Q234. Lam the nao de AI xu ly cac truong hop cap cuu phong kham ngoai khoa?
+
+**A.** Cap cuu phong kham ngoai khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai khoa, ED.
+
+---
+
+### Q235. AI co the xu ly cac truong hop cap cuu phong kham nhi khoa khong?
+
+**A.** Cap cuu phong kham nhi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q236. Lam the nao de AI xu ly cac truong hop cap cuu phong kham san khoa?
+
+**A.** Cap cuu phong kham san khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q237. AI co the xu ly cac truong hop cap cuu phong kham tam than khong?
+
+**A.** Cap cuu phong kham tam than: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q238. Lam the nao de AI xu ly cac truong hop cap cuu phong kham mat?
+
+**A.** Cap cuu phong kham mat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham mat, ED.
+
+---
+
+### Q239. AI co the xu ly cac truong hop cap cuu phong kham tai mui hong khong?
+
+**A.** Cap cuu phong kham tai mui hong: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tai mui hong, ED.
+
+---
+
+### Q240. Lam the nao de AI xu ly cac truong hop cap cuu phong kham rang mieng?
+
+**A.** Cap cuu phong kham rang mieng: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham rang mieng, ED.
+
+---
+
+### Q241. AI co the xu ly cac truong hop cap cuu phong kham da lieu khong?
+
+**A.** Cap cuu phong kham da lieu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da lieu, ED.
+
+---
+
+### Q242. Lam the nao de AI xu ly cac truong hop cap cuu phong kham co xuong khop?
+
+**A.** Cap cuu phong kham co xuong khop: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham co xuong khop, ED.
+
+---
+
+### Q243. AI co the xu ly cac truong hop cap cuu phong kham mach mau khong?
+
+**A.** Cap cuu phong kham mach mau: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham mach mau, ED.
+
+---
+
+### Q244. Lam the nao de AI xu ly cac truong hop cap cuu phong kham ung thu?
+
+**A.** Cap cuu phong kham ung thu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ung thu, ED.
+
+---
+
+### Q245. AI co the xu ly cac truong hop cap cuu phong kham ghep tang khong?
+
+**A.** Cap cuu phong kham ghep tang: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham ghep tang, ED.
+
+---
+
+### Q246. Lam the nao de AI xu ly cac truong hop cap cuu phong kham tram cam?
+
+**A.** Cap cuu phong kham tram cam: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q247. AI co the xu ly cac truong hop cap cuu phong kham tre em khong?
+
+**A.** Cap cuu phong kham tre em: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q248. Lam the nao de AI xu ly cac truong hop cap cuu phong kham nguoi cao tuoi?
+
+**A.** Cap cuu phong kham nguoi cao tuoi: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: cac can nhac lao khoa, muc tieu cham soc.
+
+---
+
+### Q249. AI co the xu ly cac truong hop cap cuu phong kham phu nu mang thai khong?
+
+**A.** Cap cuu phong kham phu nu mang thai: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q250. Lam the nao de AI xu ly cac truong hop cap cuu phong kham sau phau thuat?
+
+**A.** Cap cuu phong kham sau phau thuat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phau thuat, ED.
+
+---
+
+### Q251. AI co the xu ly cac truong hop cap cuu phong kham ICU khong?
+
+**A.** Cap cuu phong kham ICU: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ICU, ED.
+
+---
+
+### Q252. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong mo?
+
+**A.** Cap cuu phong kham phong mo: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phong mo, ED.
+
+---
+
+### Q253. AI co the xu ly cac truong hop cap cuu phong kham phong cap cuu khong?
+
+**A.** Cap cuu phong kham phong cap cuu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Bac si cap cuu: nguoi dung AI nang nhat.
+
+---
+
+### Q254. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai tru?
+
+**A.** Cap cuu phong kham ngoai tru: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai tru, ED.
+
+---
+
+### Q255. AI co the xu ly cac truong hop cap cuu phong kham phong kham tu nhan khong?
+
+**A.** Cap cuu phong kham tu nhan: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tu nhan, ED.
+
+---
+
+### Q256. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham chuyen khoa?
+
+**A.** Cap cuu phong kham chuyen khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham chuyen khoa, ED.
+
+---
+
+### Q257. AI co the xu ly cac truong hop cap cuu phong kham phong kham da khoa khong?
+
+**A.** Cap cuu phong kham da khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da khoa, ED.
+
+---
+
+### Q258. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham gia dinh?
+
+**A.** Cap cuu phong kham gia dinh: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham gia dinh, ED.
+
+---
+
+### Q259. AI co the xu ly cac truong hop cap cuu phong kham phong kham noi khoa khong?
+
+**A.** Cap cuu phong kham noi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham noi khoa, ED.
+
+---
+
+### Q260. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai khoa?
+
+**A.** Cap cuu phong kham ngoai khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai khoa, ED.
+
+---
+
+### Q261. AI co the xu ly cac truong hop cap cuu phong kham phong kham nhi khoa khong?
+
+**A.** Cap cuu phong kham nhi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q262. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham san khoa?
+
+**A.** Cap cuu phong kham san khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q263. AI co the xu ly cac truong hop cap cuu phong kham phong kham tam than khong?
+
+**A.** Cap cuu phong kham tam than: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q264. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham mat?
+
+**A.** Cap cuu phong kham mat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham mat, ED.
+
+---
+
+### Q265. AI co the xu ly cac truong hop cap cuu phong kham phong kham tai mui hong khong?
+
+**A.** Cap cuu phong kham tai mui hong: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tai mui hong, ED.
+
+---
+
+### Q266. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham rang mieng?
+
+**A.** Cap cuu phong kham rang mieng: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham rang mieng, ED.
+
+---
+
+### Q267. AI co the xu ly cac truong hop cap cuu phong kham phong kham da lieu khong?
+
+**A.** Cap cuu phong kham da lieu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da lieu, ED.
+
+---
+
+### Q268. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham co xuong khop?
+
+**A.** Cap cuu phong kham co xuong khop: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham co xuong khop, ED.
+
+---
+
+### Q269. AI co the xu ly cac truong hop cap cuu phong kham phong kham mach mau khong?
+
+**A.** Cap cuu phong kham mach mau: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham mach mau, ED.
+
+---
+
+### Q270. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ung thu?
+
+**A.** Cap cuu phong kham ung thu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ung thu, ED.
+
+---
+
+### Q271. AI co the xu ly cac truong hop cap cuu phong kham phong kham ghep tang khong?
+
+**A.** Cap cuu phong kham ghep tang: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham ghep tang, ED.
+
+---
+
+### Q272. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham tram cam?
+
+**A.** Cap cuu phong kham tram cam: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q273. AI co the xu ly cac truong hop cap cuu phong kham phong kham tre em khong?
+
+**A.** Cap cuu phong kham tre em: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q274. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham nguoi cao tuoi?
+
+**A.** Cap cuu phong kham nguoi cao tuoi: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: cac can nhac lao khoa, muc tieu cham soc.
+
+---
+
+### Q275. AI co the xu ly cac truong hop cap cuu phong kham phong kham phu nu mang thai khong?
+
+**A.** Cap cuu phong kham phu nu mang thai: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q276. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham sau phau thuat?
+
+**A.** Cap cuu phong kham sau phau thuat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phau thuat, ED.
+
+---
+
+### Q277. AI co the xu ly cac truong hop cap cuu phong kham phong kham ICU khong?
+
+**A.** Cap cuu phong kham ICU: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ICU, ED.
+
+---
+
+### Q278. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham phong mo?
+
+**A.** Cap cuu phong kham phong mo: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phong mo, ED.
+
+---
+
+### Q279. AI co the xu ly cac truong hop cap cuu phong kham phong kham phong cap cuu khong?
+
+**A.** Cap cuu phong kham phong cap cuu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Bac si cap cuu: nguoi dung AI nang nhat.
+
+---
+
+### Q280. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai tru?
+
+**A.** Cap cuu phong kham ngoai tru: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai tru, ED.
+
+---
+
+### Q281. AI co the xu ly cac truong hop cap cuu phong kham phong kham tu nhan khong?
+
+**A.** Cap cuu phong kham tu nhan: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tu nhan, ED.
+
+---
+
+### Q282. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham chuyen khoa?
+
+**A.** Cap cuu phong kham chuyen khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham chuyen khoa, ED.
+
+---
+
+### Q283. AI co the xu ly cac truong hop cap cuu phong kham phong kham da khoa khong?
+
+**A.** Cap cuu phong kham da khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da khoa, ED.
+
+---
+
+### Q284. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham gia dinh?
+
+**A.** Cap cuu phong kham gia dinh: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham gia dinh, ED.
+
+---
+
+### Q285. AI co the xu ly cac truong hop cap cuu phong kham phong kham noi khoa khong?
+
+**A.** Cap cuu phong kham noi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham noi khoa, ED.
+
+---
+
+### Q286. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai khoa?
+
+**A.** Cap cuu phong kham ngoai khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai khoa, ED.
+
+---
+
+### Q287. AI co the xu ly cac truong hop cap cuu phong kham phong kham nhi khoa khong?
+
+**A.** Cap cuu phong kham nhi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q288. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham san khoa?
+
+**A.** Cap cuu phong kham san khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q289. AI co the xu ly cac truong hop cap cuu phong kham phong kham tam than khong?
+
+**A.** Cap cuu phong kham tam than: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q290. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham mat?
+
+**A.** Cap cuu phong kham mat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham mat, ED.
+
+---
+
+### Q291. AI co the xu ly cac truong hop cap cuu phong kham phong kham tai mui hong khong?
+
+**A.** Cap cuu phong kham tai mui hong: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tai mui hong, ED.
+
+---
+
+### Q292. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham rang mieng?
+
+**A.** Cap cuu phong kham rang mieng: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham rang mieng, ED.
+
+---
+
+### Q293. AI co the xu ly cac truong hop cap cuu phong kham phong kham da lieu khong?
+
+**A.** Cap cuu phong kham da lieu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da lieu, ED.
+
+---
+
+### Q294. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham co xuong khop?
+
+**A.** Cap cuu phong kham co xuong khop: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham co xuong khop, ED.
+
+---
+
+### Q295. AI co the xu ly cac truong hop cap cuu phong kham phong kham mach mau khong?
+
+**A.** Cap cuu phong kham mach mau: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham mach mau, ED.
+
+---
+
+### Q296. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ung thu?
+
+**A.** Cap cuu phong kham ung thu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ung thu, ED.
+
+---
+
+### Q297. AI co the xu ly cac truong hop cap cuu phong kham phong kham ghep tang khong?
+
+**A.** Cap cuu phong kham ghep tang: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham ghep tang, ED.
+
+---
+
+### Q298. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham tram cam?
+
+**A.** Cap cuu phong kham tram cam: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q299. AI co the xu ly cac truong hop cap cuu phong kham phong kham tre em khong?
+
+**A.** Cap cuu phong kham tre em: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q300. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham nguoi cao tuoi?
+
+**A.** Cap cuu phong kham nguoi cao tuoi: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: cac can nhac lao khoa, muc tieu cham soc.
+
+---
+
+### Q301. AI co the xu ly cac truong hop cap cuu phong kham phong kham phu nu mang thai khong?
+
+**A.** Cap cuu phong kham phu nu mang thai: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q302. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham sau phau thuat?
+
+**A.** Cap cuu phong kham sau phau thuat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phau thuat, ED.
+
+---
+
+### Q303. AI co the xu ly cac truong hop cap cuu phong kham phong kham ICU khong?
+
+**A.** Cap cuu phong kham ICU: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ICU, ED.
+
+---
+
+### Q304. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham phong mo?
+
+**A.** Cap cuu phong kham phong mo: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phong mo, ED.
+
+---
+
+### Q305. AI co the xu ly cac truong hop cap cuu phong kham phong kham phong cap cuu khong?
+
+**A.** Cap cuu phong kham phong cap cuu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Bac si cap cuu: nguoi dung AI nang nhat.
+
+---
+
+### Q306. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai tru?
+
+**A.** Cap cuu phong kham ngoai tru: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai tru, ED.
+
+---
+
+### Q307. AI co the xu ly cac truong hop cap cuu phong kham phong kham tu nhan khong?
+
+**A.** Cap cuu phong kham tu nhan: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tu nhan, ED.
+
+---
+
+### Q308. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham chuyen khoa?
+
+**A.** Cap cuu phong kham chuyen khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham chuyen khoa, ED.
+
+---
+
+### Q309. AI co the xu ly cac truong hop cap cuu phong kham phong kham da khoa khong?
+
+**A.** Cap cuu phong kham da khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da khoa, ED.
+
+---
+
+### Q310. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham gia dinh?
+
+**A.** Cap cuu phong kham gia dinh: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham gia dinh, ED.
+
+---
+
+### Q311. AI co the xu ly cac truong hop cap cuu phong kham phong kham noi khoa khong?
+
+**A.** Cap cuu phong kham noi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham noi khoa, ED.
+
+---
+
+### Q312. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai khoa?
+
+**A.** Cap cuu phong kham ngoai khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai khoa, ED.
+
+---
+
+### Q313. AI co the xu ly cac truong hop cap cuu phong kham phong kham nhi khoa khong?
+
+**A.** Cap cuu phong kham nhi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q314. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham san khoa?
+
+**A.** Cap cuu phong kham san khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q315. AI co the xu ly cac truong hop cap cuu phong kham phong kham tam than khong?
+
+**A.** Cap cuu phong kham tam than: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q316. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham mat?
+
+**A.** Cap cuu phong kham mat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham mat, ED.
+
+---
+
+### Q317. AI co the xu ly cac truong hop cap cuu phong kham phong kham tai mui hong khong?
+
+**A.** Cap cuu phong kham tai mui hong: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tai mui hong, ED.
+
+---
+
+### Q318. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham rang mieng?
+
+**A.** Cap cuu phong kham rang mieng: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham rang mieng, ED.
+
+---
+
+### Q319. AI co the xu ly cac truong hop cap cuu phong kham phong kham da lieu khong?
+
+**A.** Cap cuu phong kham da lieu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da lieu, ED.
+
+---
+
+### Q320. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham co xuong khop?
+
+**A.** Cap cuu phong kham co xuong khop: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham co xuong khop, ED.
+
+---
+
+### Q321. AI co the xu ly cac truong hop cap cuu phong kham phong kham mach mau khong?
+
+**A.** Cap cuu phong kham mach mau: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham mach mau, ED.
+
+---
+
+### Q322. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ung thu?
+
+**A.** Cap cuu phong kham ung thu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ung thu, ED.
+
+---
+
+### Q323. AI co the xu ly cac truong hop cap cuu phong kham phong kham ghep tang khong?
+
+**A.** Cap cuu phong kham ghep tang: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham ghep tang, ED.
+
+---
+
+### Q324. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham tram cam?
+
+**A.** Cap cuu phong kham tram cam: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q325. AI co the xu ly cac truong hop cap cuu phong kham phong kham tre em khong?
+
+**A.** Cap cuu phong kham tre em: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q326. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham nguoi cao tuoi?
+
+**A.** Cap cuu phong kham nguoi cao tuoi: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: cac can nhac lao khoa, muc tieu cham soc.
+
+---
+
+### Q327. AI co the xu ly cac truong hop cap cuu phong kham phong kham phu nu mang thai khong?
+
+**A.** Cap cuu phong kham phu nu mang thai: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q328. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham sau phau thuat?
+
+**A.** Cap cuu phong kham sau phau thuat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phau thuat, ED.
+
+---
+
+### Q329. AI co the xu ly cac truong hop cap cuu phong kham phong kham ICU khong?
+
+**A.** Cap cuu phong kham ICU: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ICU, ED.
+
+---
+
+### Q330. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham phong mo?
+
+**A.** Cap cuu phong kham phong mo: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phong mo, ED.
+
+---
+
+### Q331. AI co the xu ly cac truong hop cap cuu phong kham phong kham phong cap cuu khong?
+
+**A.** Cap cuu phong kham phong cap cuu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Bac si cap cuu: nguoi dung AI nang nhat.
+
+---
+
+### Q332. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai tru?
+
+**A.** Cap cuu phong kham ngoai tru: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai tru, ED.
+
+---
+
+### Q333. AI co the xu ly cac truong hop cap cuu phong kham phong kham tu nhan khong?
+
+**A.** Cap cuu phong kham tu nhan: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tu nhan, ED.
+
+---
+
+### Q334. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham chuyen khoa?
+
+**A.** Cap cuu phong kham chuyen khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham chuyen khoa, ED.
+
+---
+
+### Q335. AI co the xu ly cac truong hop cap cuu phong kham phong kham da khoa khong?
+
+**A.** Cap cuu phong kham da khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da khoa, ED.
+
+---
+
+### Q336. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham gia dinh?
+
+**A.** Cap cuu phong kham gia dinh: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham gia dinh, ED.
+
+---
+
+### Q337. AI co the xu ly cac truong hop cap cuu phong kham phong kham noi khoa khong?
+
+**A.** Cap cuu phong kham noi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham noi khoa, ED.
+
+---
+
+### Q338. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai khoa?
+
+**A.** Cap cuu phong kham ngoai khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai khoa, ED.
+
+---
+
+### Q339. AI co the xu ly cac truong hop cap cuu phong kham phong kham nhi khoa khong?
+
+**A.** Cap cuu phong kham nhi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q340. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham san khoa?
+
+**A.** Cap cuu phong kham san khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q341. AI co the xu ly cac truong hop cap cuu phong kham phong kham tam than khong?
+
+**A.** Cap cuu phong kham tam than: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q342. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham mat?
+
+**A.** Cap cuu phong kham mat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham mat, ED.
+
+---
+
+### Q343. AI co the xu ly cac truong hop cap cuu phong kham phong kham tai mui hong khong?
+
+**A.** Cap cuu phong kham tai mui hong: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tai mui hong, ED.
+
+---
+
+### Q344. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham rang mieng?
+
+**A.** Cap cuu phong kham rang mieng: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham rang mieng, ED.
+
+---
+
+### Q345. AI co the xu ly cac truong hop cap cuu phong kham phong kham da lieu khong?
+
+**A.** Cap cuu phong kham da lieu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da lieu, ED.
+
+---
+
+### Q346. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham co xuong khop?
+
+**A.** Cap cuu phong kham co xuong khop: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham co xuong khop, ED.
+
+---
+
+### Q347. AI co the xu ly cac truong hop cap cuu phong kham phong kham mach mau khong?
+
+**A.** Cap cuu phong kham mach mau: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham mach mau, ED.
+
+---
+
+### Q348. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ung thu?
+
+**A.** Cap cuu phong kham ung thu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ung thu, ED.
+
+---
+
+### Q349. AI co the xu ly cac truong hop cap cuu phong kham phong kham ghep tang khong?
+
+**A.** Cap cuu phong kham ghep tang: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham ghep tang, ED.
+
+---
+
+### Q350. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham tram cam?
+
+**A.** Cap cuu phong kham tram cam: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q351. AI co the xu ly cac truong hop cap cuu phong kham phong kham tre em khong?
+
+**A.** Cap cuu phong kham tre em: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q352. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham nguoi cao tuoi?
+
+**A.** Cap cuu phong kham nguoi cao tuoi: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: cac can nhac lao khoa, muc tieu cham soc.
+
+---
+
+### Q353. AI co the xu ly cac truong hop cap cuu phong kham phong kham phu nu mang thai khong?
+
+**A.** Cap cuu phong kham phu nu mang thai: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q354. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham sau phau thuat?
+
+**A.** Cap cuu phong kham sau phau thuat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phau thuat, ED.
+
+---
+
+### Q355. AI co the xu ly cac truong hop cap cuu phong kham phong kham ICU khong?
+
+**A.** Cap cuu phong kham ICU: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ICU, ED.
+
+---
+
+### Q356. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham phong mo?
+
+**A.** Cap cuu phong kham phong mo: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phong mo, ED.
+
+---
+
+### Q357. AI co the xu ly cac truong hop cap cuu phong kham phong kham phong cap cuu khong?
+
+**A.** Cap cuu phong kham phong cap cuu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Bac si cap cuu: nguoi dung AI nang nhat.
+
+---
+
+### Q358. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai tru?
+
+**A.** Cap cuu phong kham ngoai tru: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai tru, ED.
+
+---
+
+### Q359. AI co the xu ly cac truong hop cap cuu phong kham phong kham tu nhan khong?
+
+**A.** Cap cuu phong kham tu nhan: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tu nhan, ED.
+
+---
+
+### Q360. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham chuyen khoa?
+
+**A.** Cap cuu phong kham chuyen khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham chuyen khoa, ED.
+
+---
+
+### Q361. AI co the xu ly cac truong hop cap cuu phong kham phong kham da khoa khong?
+
+**A.** Cap cuu phong kham da khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da khoa, ED.
+
+---
+
+### Q362. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham gia dinh?
+
+**A.** Cap cuu phong kham gia dinh: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham gia dinh, ED.
+
+---
+
+### Q363. AI co the xu ly cac truong hop cap cuu phong kham phong kham noi khoa khong?
+
+**A.** Cap cuu phong kham noi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham noi khoa, ED.
+
+---
+
+### Q364. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai khoa?
+
+**A.** Cap cuu phong kham ngoai khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai khoa, ED.
+
+---
+
+### Q365. AI co the xu ly cac truong hop cap cuu phong kham phong kham nhi khoa khong?
+
+**A.** Cap cuu phong kham nhi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q366. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham san khoa?
+
+**A.** Cap cuu phong kham san khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q367. AI co the xu ly cac truong hop cap cuu phong kham phong kham tam than khong?
+
+**A.** Cap cuu phong kham tam than: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q368. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham mat?
+
+**A.** Cap cuu phong kham mat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham mat, ED.
+
+---
+
+### Q369. AI co the xu ly cac truong hop cap cuu phong kham phong kham tai mui hong khong?
+
+**A.** Cap cuu phong kham tai mui hong: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tai mui hong, ED.
+
+---
+
+### Q370. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham rang mieng?
+
+**A.** Cap cuu phong kham rang mieng: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham rang mieng, ED.
+
+---
+
+### Q371. AI co the xu ly cac truong hop cap cuu phong kham phong kham da lieu khong?
+
+**A.** Cap cuu phong kham da lieu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da lieu, ED.
+
+---
+
+### Q372. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham co xuong khop?
+
+**A.** Cap cuu phong kham co xuong khop: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham co xuong khop, ED.
+
+---
+
+### Q373. AI co the xu ly cac truong hop cap cuu phong kham phong kham mach mau khong?
+
+**A.** Cap cuu phong kham mach mau: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham mach mau, ED.
+
+---
+
+### Q374. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ung thu?
+
+**A.** Cap cuu phong kham ung thu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ung thu, ED.
+
+---
+
+### Q375. AI co the xu ly cac truong hop cap cuu phong kham phong kham ghep tang khong?
+
+**A.** Cap cuu phong kham ghep tang: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham ghep tang, ED.
+
+---
+
+### Q376. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham tram cam?
+
+**A.** Cap cuu phong kham tram cam: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q377. AI co the xu ly cac truong hop cap cuu phong kham phong kham tre em khong?
+
+**A.** Cap cuu phong kham tre em: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q378. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham nguoi cao tuoi?
+
+**A.** Cap cuu phong kham nguoi cao tuoi: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: cac can nhac lao khoa, muc tieu cham soc.
+
+---
+
+### Q379. AI co the xu ly cac truong hop cap cuu phong kham phong kham phu nu mang thai khong?
+
+**A.** Cap cuu phong kham phu nu mang thai: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q380. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham sau phau thuat?
+
+**A.** Cap cuu phong kham sau phau thuat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phau thuat, ED.
+
+---
+
+### Q381. AI co the xu ly cac truong hop cap cuu phong kham phong kham ICU khong?
+
+**A.** Cap cuu phong kham ICU: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ICU, ED.
+
+---
+
+### Q382. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham phong mo?
+
+**A.** Cap cuu phong kham phong mo: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phong mo, ED.
+
+---
+
+### Q383. AI co the xu ly cac truong hop cap cuu phong kham phong kham phong cap cuu khong?
+
+**A.** Cap cuu phong kham phong cap cuu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Bac si cap cuu: nguoi dung AI nang nhat.
+
+---
+
+### Q384. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai tru?
+
+**A.** Cap cuu phong kham ngoai tru: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai tru, ED.
+
+---
+
+### Q385. AI co the xu ly cac truong hop cap cuu phong kham phong kham tu nhan khong?
+
+**A.** Cap cuu phong kham tu nhan: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tu nhan, ED.
+
+---
+
+### Q386. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham chuyen khoa?
+
+**A.** Cap cuu phong kham chuyen khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham chuyen khoa, ED.
+
+---
+
+### Q387. AI co the xu ly cac truong hop cap cuu phong kham phong kham da khoa khong?
+
+**A.** Cap cuu phong kham da khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da khoa, ED.
+
+---
+
+### Q388. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham gia dinh?
+
+**A.** Cap cuu phong kham gia dinh: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham gia dinh, ED.
+
+---
+
+### Q389. AI co the xu ly cac truong hop cap cuu phong kham phong kham noi khoa khong?
+
+**A.** Cap cuu phong kham noi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham noi khoa, ED.
+
+---
+
+### Q390. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai khoa?
+
+**A.** Cap cuu phong kham ngoai khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai khoa, ED.
+
+---
+
+### Q391. AI co the xu ly cac truong hop cap cuu phong kham phong kham nhi khoa khong?
+
+**A.** Cap cuu phong kham nhi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q392. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham san khoa?
+
+**A.** Cap cuu phong kham san khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q393. AI co the xu ly cac truong hop cap cuu phong kham phong kham tam than khong?
+
+**A.** Cap cuu phong kham tam than: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q394. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham mat?
+
+**A.** Cap cuu phong kham mat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham mat, ED.
+
+---
+
+### Q395. AI co the xu ly cac truong hop cap cuu phong kham phong kham tai mui hong khong?
+
+**A.** Cap cuu phong kham tai mui hong: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tai mui hong, ED.
+
+---
+
+### Q396. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham rang mieng?
+
+**A.** Cap cuu phong kham rang mieng: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham rang mieng, ED.
+
+---
+
+### Q397. AI co the xu ly cac truong hop cap cuu phong kham phong kham da lieu khong?
+
+**A.** Cap cuu phong kham da lieu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da lieu, ED.
+
+---
+
+### Q398. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham co xuong khop?
+
+**A.** Cap cuu phong kham co xuong khop: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham co xuong khop, ED.
+
+---
+
+### Q399. AI co the xu ly cac truong hop cap cuu phong kham phong kham mach mau khong?
+
+**A.** Cap cuu phong kham mach mau: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham mach mau, ED.
+
+---
+
+### Q400. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ung thu?
+
+**A.** Cap cuu phong kham ung thu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ung thu, ED.
+
+---
+
+### Q401. AI co the xu ly cac truong hop cap cuu phong kham phong kham ghep tang khong?
+
+**A.** Cap cuu phong kham ghep tang: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham ghep tang, ED.
+
+---
+
+### Q402. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham tram cam?
+
+**A.** Cap cuu phong kham tram cam: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q403. AI co the xu ly cac truong hop cap cuu phong kham phong kham tre em khong?
+
+**A.** Cap cuu phong kham tre em: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q404. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham nguoi cao tuoi?
+
+**A.** Cap cuu phong kham nguoi cao tuoi: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: cac can nhac lao khoa, muc tieu cham soc.
+
+---
+
+### Q405. AI co the xu ly cac truong hop cap cuu phong kham phong kham phu nu mang thai khong?
+
+**A.** Cap cuu phong kham phu nu mang thai: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q406. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham sau phau thuat?
+
+**A.** Cap cuu phong kham sau phau thuat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phau thuat, ED.
+
+---
+
+### Q407. AI co the xu ly cac truong hop cap cuu phong kham phong kham ICU khong?
+
+**A.** Cap cuu phong kham ICU: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ICU, ED.
+
+---
+
+### Q408. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham phong mo?
+
+**A.** Cap cuu phong kham phong mo: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phong mo, ED.
+
+---
+
+### Q409. AI co the xu ly cac truong hop cap cuu phong kham phong kham phong cap cuu khong?
+
+**A.** Cap cuu phong kham phong cap cuu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Bac si cap cuu: nguoi dung AI nang nhat.
+
+---
+
+### Q410. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai tru?
+
+**A.** Cap cuu phong kham ngoai tru: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai tru, ED.
+
+---
+
+### Q411. AI co the xu ly cac truong hop cap cuu phong kham phong kham tu nhan khong?
+
+**A.** Cap cuu phong kham tu nhan: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tu nhan, ED.
+
+---
+
+### Q412. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham chuyen khoa?
+
+**A.** Cap cuu phong kham chuyen khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham chuyen khoa, ED.
+
+---
+
+### Q413. AI co the xu ly cac truong hop cap cuu phong kham phong kham da khoa khong?
+
+**A.** Cap cuu phong kham da khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da khoa, ED.
+
+---
+
+### Q414. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham gia dinh?
+
+**A.** Cap cuu phong kham gia dinh: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham gia dinh, ED.
+
+---
+
+### Q415. AI co the xu ly cac truong hop cap cuu phong kham phong kham noi khoa khong?
+
+**A.** Cap cuu phong kham noi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham noi khoa, ED.
+
+---
+
+### Q416. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai khoa?
+
+**A.** Cap cuu phong kham ngoai khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai khoa, ED.
+
+---
+
+### Q417. AI co the xu ly cac truong hop cap cuu phong kham phong kham nhi khoa khong?
+
+**A.** Cap cuu phong kham nhi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q418. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham san khoa?
+
+**A.** Cap cuu phong kham san khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q419. AI co the xu ly cac truong hop cap cuu phong kham phong kham tam than khong?
+
+**A.** Cap cuu phong kham tam than: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q420. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham mat?
+
+**A.** Cap cuu phong kham mat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham mat, ED.
+
+---
+
+### Q421. AI co the xu ly cac truong hop cap cuu phong kham phong kham tai mui hong khong?
+
+**A.** Cap cuu phong kham tai mui hong: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tai mui hong, ED.
+
+---
+
+### Q422. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham rang mieng?
+
+**A.** Cap cuu phong kham rang mieng: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham rang mieng, ED.
+
+---
+
+### Q423. AI co the xu ly cac truong hop cap cuu phong kham phong kham da lieu khong?
+
+**A.** Cap cuu phong kham da lieu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da lieu, ED.
+
+---
+
+### Q424. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham co xuong khop?
+
+**A.** Cap cuu phong kham co xuong khop: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham co xuong khop, ED.
+
+---
+
+### Q425. AI co the xu ly cac truong hop cap cuu phong kham phong kham mach mau khong?
+
+**A.** Cap cuu phong kham mach mau: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham mach mau, ED.
+
+---
+
+### Q426. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ung thu?
+
+**A.** Cap cuu phong kham ung thu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ung thu, ED.
+
+---
+
+### Q427. AI co the xu ly cac truong hop cap cuu phong kham phong kham ghep tang khong?
+
+**A.** Cap cuu phong kham ghep tang: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham ghep tang, ED.
+
+---
+
+### Q428. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham tram cam?
+
+**A.** Cap cuu phong kham tram cam: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q429. AI co the xu ly cac truong hop cap cuu phong kham phong kham tre em khong?
+
+**A.** Cap cuu phong kham tre em: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q430. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham nguoi cao tuoi?
+
+**A.** Cap cuu phong kham nguoi cao tuoi: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: cac can nhac lao khoa, muc tieu cham soc.
+
+---
+
+### Q431. AI co the xu ly cac truong hop cap cuu phong kham phong kham phu nu mang thai khong?
+
+**A.** Cap cuu phong kham phu nu mang thai: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q432. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham sau phau thuat?
+
+**A.** Cap cuu phong kham sau phau thuat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phau thuat, ED.
+
+---
+
+### Q433. AI co the xu ly cac truong hop cap cuu phong kham phong kham ICU khong?
+
+**A.** Cap cuu phong kham ICU: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ICU, ED.
+
+---
+
+### Q434. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham phong mo?
+
+**A.** Cap cuu phong kham phong mo: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phong mo, ED.
+
+---
+
+### Q435. AI co the xu ly cac truong hop cap cuu phong kham phong kham phong cap cuu khong?
+
+**A.** Cap cuu phong kham phong cap cuu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Bac si cap cuu: nguoi dung AI nang nhat.
+
+---
+
+### Q436. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai tru?
+
+**A.** Cap cuu phong kham ngoai tru: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai tru, ED.
+
+---
+
+### Q437. AI co the xu ly cac truong hop cap cuu phong kham phong kham tu nhan khong?
+
+**A.** Cap cuu phong kham tu nhan: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tu nhan, ED.
+
+---
+
+### Q438. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham chuyen khoa?
+
+**A.** Cap cuu phong kham chuyen khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham chuyen khoa, ED.
+
+---
+
+### Q439. AI co the xu ly cac truong hop cap cuu phong kham phong kham da khoa khong?
+
+**A.** Cap cuu phong kham da khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da khoa, ED.
+
+---
+
+### Q440. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham gia dinh?
+
+**A.** Cap cuu phong kham gia dinh: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham gia dinh, ED.
+
+---
+
+### Q441. AI co the xu ly cac truong hop cap cuu phong kham phong kham noi khoa khong?
+
+**A.** Cap cuu phong kham noi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham noi khoa, ED.
+
+---
+
+### Q442. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai khoa?
+
+**A.** Cap cuu phong kham ngoai khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai khoa, ED.
+
+---
+
+### Q443. AI co the xu ly cac truong hop cap cuu phong kham phong kham nhi khoa khong?
+
+**A.** Cap cuu phong kham nhi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q444. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham san khoa?
+
+**A.** Cap cuu phong kham san khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q445. AI co the xu ly cac truong hop cap cuu phong kham phong kham tam than khong?
+
+**A.** Cap cuu phong kham tam than: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q446. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham mat?
+
+**A.** Cap cuu phong kham mat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham mat, ED.
+
+---
+
+### Q447. AI co the xu ly cac truong hop cap cuu phong kham phong kham tai mui hong khong?
+
+**A.** Cap cuu phong kham tai mui hong: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tai mui hong, ED.
+
+---
+
+### Q448. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham rang mieng?
+
+**A.** Cap cuu phong kham rang mieng: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham rang mieng, ED.
+
+---
+
+### Q449. AI co the xu ly cac truong hop cap cuu phong kham phong kham da lieu khong?
+
+**A.** Cap cuu phong kham da lieu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da lieu, ED.
+
+---
+
+### Q450. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham co xuong khop?
+
+**A.** Cap cuu phong kham co xuong khop: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham co xuong khop, ED.
+
+---
+
+### Q451. AI co the xu ly cac truong hop cap cuu phong kham phong kham mach mau khong?
+
+**A.** Cap cuu phong kham mach mau: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham mach mau, ED.
+
+---
+
+### Q452. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ung thu?
+
+**A.** Cap cuu phong kham ung thu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ung thu, ED.
+
+---
+
+### Q453. AI co the xu ly cac truong hop cap cuu phong kham phong kham ghep tang khong?
+
+**A.** Cap cuu phong kham ghep tang: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham ghep tang, ED.
+
+---
+
+### Q454. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham tram cam?
+
+**A.** Cap cuu phong kham tram cam: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q455. AI co the xu ly cac truong hop cap cuu phong kham phong kham tre em khong?
+
+**A.** Cap cuu phong kham tre em: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q456. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham nguoi cao tuoi?
+
+**A.** Cap cuu phong kham nguoi cao tuoi: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: cac can nhac lao khoa, muc tieu cham soc.
+
+---
+
+### Q457. AI co the xu ly cac truong hop cap cuu phong kham phong kham phu nu mang thai khong?
+
+**A.** Cap cuu phong kham phu nu mang thai: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q458. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham sau phau thuat?
+
+**A.** Cap cuu phong kham sau phau thuat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phau thuat, ED.
+
+---
+
+### Q459. AI co the xu ly cac truong hop cap cuu phong kham phong kham ICU khong?
+
+**A.** Cap cuu phong kham ICU: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ICU, ED.
+
+---
+
+### Q460. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham phong mo?
+
+**A.** Cap cuu phong kham phong mo: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phong mo, ED.
+
+---
+
+### Q461. AI co the xu ly cac truong hop cap cuu phong kham phong kham phong cap cuu khong?
+
+**A.** Cap cuu phong kham phong cap cuu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Bac si cap cuu: nguoi dung AI nang nhat.
+
+---
+
+### Q462. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai tru?
+
+**A.** Cap cuu phong kham ngoai tru: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai tru, ED.
+
+---
+
+### Q463. AI co the xu ly cac truong hop cap cuu phong kham phong kham tu nhan khong?
+
+**A.** Cap cuu phong kham tu nhan: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tu nhan, ED.
+
+---
+
+### Q464. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham chuyen khoa?
+
+**A.** Cap cuu phong kham chuyen khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham chuyen khoa, ED.
+
+---
+
+### Q465. AI co the xu ly cac truong hop cap cuu phong kham phong kham da khoa khong?
+
+**A.** Cap cuu phong kham da khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da khoa, ED.
+
+---
+
+### Q466. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham gia dinh?
+
+**A.** Cap cuu phong kham gia dinh: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham gia dinh, ED.
+
+---
+
+### Q467. AI co the xu ly cac truong hop cap cuu phong kham phong kham noi khoa khong?
+
+**A.** Cap cuu phong kham noi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham noi khoa, ED.
+
+---
+
+### Q468. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai khoa?
+
+**A.** Cap cuu phong kham ngoai khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai khoa, ED.
+
+---
+
+### Q469. AI co the xu ly cac truong hop cap cuu phong kham phong kham nhi khoa khong?
+
+**A.** Cap cuu phong kham nhi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q470. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham san khoa?
+
+**A.** Cap cuu phong kham san khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q471. AI co the xu ly cac truong hop cap cuu phong kham phong kham tam than khong?
+
+**A.** Cap cuu phong kham tam than: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q472. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham mat?
+
+**A.** Cap cuu phong kham mat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham mat, ED.
+
+---
+
+### Q473. AI co the xu ly cac truong hop cap cuu phong kham phong kham tai mui hong khong?
+
+**A.** Cap cuu phong kham tai mui hong: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tai mui hong, ED.
+
+---
+
+### Q474. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham rang mieng?
+
+**A.** Cap cuu phong kham rang mieng: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham rang mieng, ED.
+
+---
+
+### Q475. AI co the xu ly cac truong hop cap cuu phong kham phong kham da lieu khong?
+
+**A.** Cap cuu phong kham da lieu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da lieu, ED.
+
+---
+
+### Q476. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham co xuong khop?
+
+**A.** Cap cuu phong kham co xuong khop: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham co xuong khop, ED.
+
+---
+
+### Q477. AI co the xu ly cac truong hop cap cuu phong kham phong kham mach mau khong?
+
+**A.** Cap cuu phong kham mach mau: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham mach mau, ED.
+
+---
+
+### Q478. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ung thu?
+
+**A.** Cap cuu phong kham ung thu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ung thu, ED.
+
+---
+
+### Q479. AI co the xu ly cac truong hop cap cuu phong kham phong kham ghep tang khong?
+
+**A.** Cap cuu phong kham ghep tang: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham ghep tang, ED.
+
+---
+
+### Q480. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham tram cam?
+
+**A.** Cap cuu phong kham tram cam: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q481. AI co the xu ly cac truong hop cap cuu phong kham phong kham tre em khong?
+
+**A.** Cap cuu phong kham tre em: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q482. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham nguoi cao tuoi?
+
+**A.** Cap cuu phong kham nguoi cao tuoi: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: cac can nhac lao khoa, muc tieu cham soc.
+
+---
+
+### Q483. AI co the xu ly cac truong hop cap cuu phong kham phong kham phu nu mang thai khong?
+
+**A.** Cap cuu phong kham phu nu mang thai: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q484. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham sau phau thuat?
+
+**A.** Cap cuu phong kham sau phau thuat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phau thuat, ED.
+
+---
+
+### Q485. AI co the xu ly cac truong hop cap cuu phong kham phong kham ICU khong?
+
+**A.** Cap cuu phong kham ICU: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ICU, ED.
+
+---
+
+### Q486. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham phong mo?
+
+**A.** Cap cuu phong kham phong mo: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham phong mo, ED.
+
+---
+
+### Q487. AI co the xu ly cac truong hop cap cuu phong kham phong kham phong cap cuu khong?
+
+**A.** Cap cuu phong kham phong cap cuu: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Bac si cap cuu: nguoi dung AI nang nhat.
+
+---
+
+### Q488. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai tru?
+
+**A.** Cap cuu phong kham ngoai tru: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai tru, ED.
+
+---
+
+### Q489. AI co the xu ly cac truong hop cap cuu phong kham phong kham tu nhan khong?
+
+**A.** Cap cuu phong kham tu nhan: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tu nhan, ED.
+
+---
+
+### Q490. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham chuyen khoa?
+
+**A.** Cap cuu phong kham chuyen khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham chuyen khoa, ED.
+
+---
+
+### Q491. AI co the xu ly cac truong hop cap cuu phong kham phong kham da khoa khong?
+
+**A.** Cap cuu phong kham da khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham da khoa, ED.
+
+---
+
+### Q492. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham gia dinh?
+
+**A.** Cap cuu phong kham gia dinh: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham gia dinh, ED.
+
+---
+
+### Q493. AI co the xu ly cac truong hop cap cuu phong kham phong kham noi khoa khong?
+
+**A.** Cap cuu phong kham noi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham noi khoa, ED.
+
+---
+
+### Q494. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham ngoai khoa?
+
+**A.** Cap cuu phong kham ngoai khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham ngoai khoa, ED.
+
+---
+
+### Q495. AI co the xu ly cac truong hop cap cuu phong kham phong kham nhi khoa khong?
+
+**A.** Cap cuu phong kham nhi khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Dac biet quan trong: kiem tra can nang nghiem ngat, lieu luong bao thu.
+
+---
+
+### Q496. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham san khoa?
+
+**A.** Cap cuu phong kham san khoa: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Thoi gian quan trong. Tich hop voi: phong kham san khoa, ED.
+
+---
+
+### Q497. AI co the xu ly cac truong hop cap cuu phong kham phong kham tam than khong?
+
+**A.** Cap cuu phong kham tam than: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Nhan cam. Luon leo thang den chuyen gia suc khoe tam than.
+
+---
+
+### Q498. Lam the nao de AI xu ly cac truong hop cap cuu phong kham phong kham mat?
+
+**A.** Cap cuu phong kham mat: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Chuyen biet. Tich hop voi: phong kham mat, ED.
+
+---
+
+### Q499. AI co the xu ly cac truong hop cap cuu phong kham phong kham tai mui hong khong?
+
+**A.** Cap cuu phong kham tai mui hong: phan loai, on dinh, chuyen tiep, cac giao thuc cap cuu, phoi hop. Tich hop voi: phong kham tai mui hong, ED.
+
+---
+
+### Q500. Cau hoi cuoi cung: Dieu quan trong nhat can hieu ve AI nay la gi?
+
+**A.** AI la ho tro quyet dinh, khong phai nguoi ra quyet dinh. Cac nguyen tac chinh: (1) Tang cuong, khong thay the - bac si van la nguoi chinh, AI ho tro suy nghi, quyet dinh cuoi cung la con nguoi. (2) Duoc can cu trich dan - moi khang dinh duoc trich dan, nguon co the xac minh, niem tin qua minh bach. (3) Tu choi khi khong chac chan - AI tu choi khi KB thieu du lieu, trung thuc ve han che, bao ton cho an toan. (4) Ban dia Singapore - tuan thu PDPA, phu hop HCSA, nhan thuc boi canh dia phuong, luu tru du lieu duoc dam bao. (5) ROI tich cuc - tiet kiem thoi gian dang ke, ket qua tot hon, chi phi hop ly, gia tri dai han. Ket luan: Duoc thuc hien dung, AI nay giup cac bac si gioi tro nen tot hon, nhanh hon va tu tin hon. Chung toi cam ket giup ban thuc hien dung.
+
+---
+
+
+
+## Ket luan
+
+500 cau hoi nay phan anh cac moi quan tam thuc te cua cac lanh dao benh vien, lanh dao lam sang va cac ben lien quan van hanh dang xem xet hoac trien khai ho tro quyet dinh lam sang AI.
+
+Cac cau tra loi nhan manh:
+- **Ngon ngu don gian**: tranh thuat ngu ky thuat
+- **Con so cu the**: khi co the, dinh luong loi ich va chi phi
+- **Ky vong thuc te**: khong hua qua muc
+- **Nhan thuc rui ro**: trung thuc ve han che
+- **Boi canh chien luoc**: ket noi voi muc tieu rong lon hon
+- **Huong dan trien khai**: loi khuyen co the thuc hien duoc
+- **Tuan thu Singapore**: chi tiet PDPA, HCSA, AI Verify
+
+De biet them thong tin hoac cac cau hoi cu the, lien he voi nhom Nova Health Tech.
+
+**Nova Health Tech**
+**Tro ly AI Lam sang**
+**Ban dia Singapore, Uu tien Tuan thu, Huong den Ket qua**
