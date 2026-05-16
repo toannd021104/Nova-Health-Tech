@@ -97,7 +97,11 @@ The system runs on AWS in Singapore, with Claude as the chat family and a manage
 |---|---|---|
 | HIPAA, 45 CFR Part 164 including Security Rule and 164.530(j) retention | Yes, via signed BAA over Bedrock and adjunct services | Signed BAA scoped to Bedrock, S3, Lambda, OpenSearch, DynamoDB, Comprehend Medical; 6 year retention on S3 Object Lock |
 | Singapore PDPA, Personal Data Protection Act | Yes, AWS is PDPA compliant; contractual comparable-protection clauses available | Primary region Singapore; cross-border transfers carry tokens only |
-| Singapore HCSA, Healthcare Services Act | Yes, AWS Singapore region supports HCSA workloads | Clinical records remain in ap-southeast-1 |
+| Singapore HCSA, Healthcare Services Act 2020 | Yes, AWS Singapore region supports HCSA workloads | Clinical records remain in ap-southeast-1; HCSA license required for clinical decision support service |
+| Singapore HIA, Health Information Act 2026 | Yes, AWS Singapore region supports HIA workloads | HIA passed January 2026, effective early 2027; mandatory NEHR contribution; AI tools accessing NEHR require specific consent + audit trail |
+| Singapore AIHGle 2.0, AI in Healthcare Guidelines (MOH+HSA, March 2026) | Yes, AWS supports all technical requirements | Covers developers, deployers, users; 7 core principles: safety, fairness, transparency, explainability, robustness, security, AI alignment; generative AI section included |
+| Singapore MOH Cybersecurity and Data Security Essentials (April 2026) | Yes, AWS supports all technical requirements | Applies to HIA entities (HCSA licensees, NEHR contributors); covers IT security, data security, vendor management, incident response |
+| PDPC Advisory Guidelines on AI (March 2024) | Yes, AWS supports all technical requirements | Guidance on using personal data in AI recommendation and decision systems; covers development, deployment, procurement stages |
 | GDPR, EU Regulation 2016/679 | Yes, AWS GDPR DPA available | DPIA template included, right to erasure via tombstone and CMK rotation |
 | FDA 21 CFR 820, Software as a Medical Device | Yes, AWS is FDA Part 11 capable | Decision-support only with human in the loop, model card per release |
 | ISO 27001, SOC 2 Type II | Yes, AWS is certified | Inherited controls, Nova responsibilities documented |
@@ -111,8 +115,13 @@ The system runs on AWS in Singapore, with Claude as the chat family and a manage
 > 4. https://aws.amazon.com/compliance/iso-27001-faqs/
 > 5. https://aws.amazon.com/compliance/soc-faqs/
 > 6. https://www.pdpc.gov.sg/overview-of-pdpa/the-legislation/personal-data-protection-act
-> 7. https://eur-lex.europa.eu/eli/reg/2024/1689/oj
-> 8. https://www.nist.gov/itl/ai-risk-management-framework
+> 7. https://www.pdpc.gov.sg/media-events/advisory-guidelines-on-use-of-personal-data-in-ai-recommendation-and-decision-systems-now-available
+> 8. https://www.moh.gov.sg/licensing-and-regulation/artificial-intelligence-in-healthcare
+> 9. https://www.bakermckenzie.com/en/insight/publications/2026/03/singapore-moh-and-hsa-launch-refreshed-ai-in-healthcare-guidelines
+> 10. https://www.bakermckenzie.com/en/insight/publications/2026/04/singapore-moh-publishes-health-information-act-resources
+> 11. https://www.bakermckenzie.com/en/insight/publications/2026/04/singapore-moh-publishes-cybersecurity-and-data-security
+> 12. https://eur-lex.europa.eu/eli/reg/2024/1689/oj
+> 13. https://www.nist.gov/itl/ai-risk-management-framework
 
 ### 2.4 Assumptions and constraints
 
@@ -678,3 +687,4 @@ Baseline workload: 600,000 calls per month, 30 percent emergency and 70 percent 
 | v2 | 2026-05-12 | Revised per client feedback: removed cover summary, replaced arrows/em-dashes, shortened sections 4-14, added ToC, professional format. Updated to reflect actual deployed stack (Cohere Embed v3, no Amazon Rerank in SG) |
 | v3 | 2026-05-13 | Updated PoC test results: emergency TTFT 3.8s avg (100% SLA pass), general 12.3s avg (100% SLA pass). Emergency lane optimized: top-2 retrieval, short system prompt, no guardrails, no GraphRAG. Streaming SSE via converse_stream. Caddy removed, uvicorn direct on port 80. Added PoC-measured latency table to Section 10 |
 | v4 | 2026-05-13 | Fixed streaming architecture: async queue + thread worker (was blocking event loop). Singleton boto3 clients. Emergency TTFT 3.8s to 1.6s (-57%). General TTFT 12.3s to 9.7s (-21%). True token-by-token streaming now visible in browser. UI: removed subtitle, added footer, added Prompt Cache to stack panel |
+| v5 | 2026-05-17 | Compliance update: added AIHGle 2.0 (MOH+HSA, March 2026), Health Information Act 2026 (passed January 2026, effective early 2027), PDPC Advisory Guidelines on AI (March 2024), MOH Cybersecurity and Data Security Essentials (April 2026). Updated Section 2.3 compliance table with 5 new Singapore-specific regulations. |
