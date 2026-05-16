@@ -1461,3 +1461,1166 @@ Chi phi hang thang = 1.800 USD (co dinh) + (truy van x 0,0058 USD trung binh moi
 
 ---
 
+
+
+## 4. Bao mat & Quyen rieng tu
+
+### Q51. Dieu gi xay ra khi mot bac si hoi AI ve mot benh nhan cu the?
+
+**A.** Tung buoc bang ngon ngu don gian:
+
+**Thiet lap**: Bac si Linh dang xem xet ho so benh nhan Nguyen Van A trong Epic. Benh nhan bi dau nguc, nghi ngo NMCT.
+
+**Buoc 1: Bac si go cau hoi**
+- Bac si Linh click nut "Hoi Nova" trong Epic
+- Go: "Benh nhan Nguyen Van A, nam 58 tuoi, dau nguc, ECG cho thay ST elevation. Cac lua chon dieu tri?"
+- Nhan Enter
+
+**Buoc 2: Xac thuc & uy quyen**
+- Trinh duyet gui cau hoi den cong API voi JWT cua Bac si Linh (duoc phat hanh boi IdP cua Epic qua lien ket Cognito)
+- Cong API xac minh: Bac si Linh co duoc uy quyen khong? Co (vai tro bac si)
+- Dinh tuyen den trinh xu ly chat Nova
+
+**Buoc 3: Che giau PHI** (trong vong 50ms)
+- Trinh xu ly chat Nova nhan: "Benh nhan Nguyen Van A, nam 58 tuoi..."
+- Comprehend Medical / DataWorks SDDP quet PHI
+- Phat hien: "Nguyen Van A" -> thay the bang <TEN_0>
+- Van ban moi: "Benh nhan <TEN_0>, nam 58 tuoi, dau nguc, ECG cho thay ST elevation."
+
+**Buoc 4: Kiem tra cache** (trong vong 50ms)
+- Bam cau hoi da che giau
+- Kiem tra ElastiCache Redis: co truy van tuong tu truoc do khong?
+- Cau hoi pho bien (STEMI la thuong gap): co the co cache hit
+- Gia su bo lo: tiep tuc truy xuat
+
+**Buoc 5: Truy xuat** (trong vong 1 giay)
+- Tim kiem vector tren OpenSearch: tim cac chunk tuong tu "STEMI ST elevation dau nguc dieu tri"
+- Top 3 ket qua: huong dan cap cuu tim mach WHO, giao thuc tim mach noi bo, cap nhat ACC/AHA STEMI 2023
+- Tim kiem do thi tren Neptune: tim cac thuc the lien quan (thuoc, chong chi dinh, thu thuat)
+- Top 2 ket qua do thi: giao thuc aspirin + heparin, PCI chinh vs tieu huyet khoi
+
+**Buoc 6: Tao LLM** (TTFT trong vong 1 giay, tong 3 giay)
+- Soan prompt: system prompt + cac chunk duoc truy xuat + cau hoi da che giau
+- Gui den Claude Haiku 4.5 (lane cap cuu) qua API streaming
+- Nhan cac token streaming: "Khan cap thoi gian..."
+- Tung tu, phan hoi xuat hien trong giao dien nguoi dung cua Bac si Linh
+
+**Buoc 7: Xac thuc** (trong vong 100ms)
+- Xac thuc trich dan: moi [1], [2] trich dan cac chunk thuc su? Co
+- Diem grounding: duoc tinh la 0,91 (tren nguong 0,7) Co
+- Bo loc PHI: co PHI nao trong dau ra khong? Khong (chung toi khong bao gio gui PHI den mo hinh) Co
+
+**Buoc 8: Hien thi cho bac si**
+- Bac si Linh thay: "Khan cap thoi gian: Benh nhan STEMI. Khuyen nghi:..."
+- Trich dan [1], [2], [3] co the click den cac chunk nguon
+- Tong thoi gian da qua: ~3,8 giay
+
+**Buoc 9: Nhat ky kiem toan** (song song, khong dong bo)
+- Ghi lai phien: ai hoi, khi nao, cai gi duoc hoi (da che giau), cai gi duoc truy xuat, cai gi duoc tra loi
+- Luu tru trong S3 Object Lock / OSS WORM, bat bien trong 6 nam
+
+**Tom tat quyen rieng tu**:
+- Ten benh nhan "Nguyen Van A" da duoc che giau truoc bat ky xu ly mo hinh nao
+- Dich vu LLM Anthropic / Alibaba KHONG BAO GIO thay "Nguyen Van A"
+- Nhat ky kiem toan hien thi <TEN_0> khong phai ten that
+- Neu kiem toan duoc xem xet, ten that chi duoc tiet lo qua quy trinh tai nhan dang rieng biet, co han che cao
+
+---
+
+### Q52. Neu mot hacker xam nhap vao tai khoan dam may cua chung toi va co gang tai xuong tat ca du lieu thi sao?
+
+**A.** Nhieu lop phong thu:
+
+**Lop 1: Kiem soat truy cap tai khoan**
+- Tai khoan root AWS/Alibaba: MFA phan cung, khong bao gio duoc su dung truc tiep
+- Nguoi dung IAM voi truy cap dua tren vai tro
+- Lien ket voi Entra ID cua Nova (xac thuc tap trung)
+- Khong co khoa API ton tai lau; chi co token STS ngan han
+
+**Lop 2: Kiem soat mang**
+- Cach ly VPC: cac dich vu du lieu khong the truy cap internet
+- Nhom bao mat: mac dinh tu choi, danh sach cho phep ro rang
+- Diem cuoi VPC: cac dich vu duoc truy cap qua PrivateLink, khong phai internet cong cong
+- Egress cong NAT: chi den cac IP cu the
+
+**Lop 3: Ma hoa**
+- Du lieu luu tru: KMS BYOK (benh vien co the thu hoi khoa)
+- Du lieu trong qua trinh truyen: TLS 1.3
+- Sao luu duoc ma hoa voi khoa rieng biet
+- Xoay vong khoa: 90 ngay
+
+**Lop 4: Kiem toan & Phat hien**
+- CloudTrail: moi cuoc goi API duoc ghi lai
+- GuardDuty: phat hien bat thuong (cac mo hinh API bat thuong)
+- Macie: phat hien PHI trong S3 (canh bao neu PHI di chuyen den bucket cong cong)
+- ARMS LLM Trace Explorer: cac mo hinh cuoc goi AI
+
+**Lop 5: Sao luu / Bat bien**
+- S3 Object Lock: nhat ky kiem toan bat bien trong 6 nam
+- Khong the xoa ngay ca boi quan tri vien Nova
+- Sao chep xuyen vung
+
+**Lop 6: Bao ve moi de doa noi bo**
+- Khong co quan tri vien Nova don le nao co quyen truy cap day du (phan cong trach nhiem)
+- Quy tac hai nguoi cho truy cap du lieu san xuat
+- Cong cu Quan ly Truy cap Dac quyen (PAM)
+- Xem xet truy cap hang quy
+
+**Kich ban xau nhat**:
+- Tin tac xam pham tai khoan AWS san xuat cua Nova
+- Tai xuong tat ca bucket S3 va chi muc OpenSearch
+- Ket qua: IP Nova bi lo (kien truc he thong, prompt), nhung **KHONG CO PHI BENH NHAN BI LO**
+- Nova doi mat voi thiet hai danh tieng kinh doanh va co the thong bao khach hang
+- Benh nhan KHONG the duoc nhan dang tu du lieu vi pham
+
+**Tai sao kien truc cua chung toi chong vi pham tot hon**:
+- Token hoa tai thoi diem nhap (PHI khong bao gio duoc luu tru vinh vien)
+- Tach biet kho anh xa
+- Phong thu theo chieu sau
+- Mac dinh tu choi mang
+
+---
+
+### Q53. Kich ban vi pham xau nhat la gi? Co ai co the danh cap du lieu benh nhan khong?
+
+**A.** Phan tich theo danh muc du lieu:
+
+**Du lieu chung toi luu giu**:
+1. **Nhat ky kiem toan** (da token hoa, khong co PHI)
+2. **Nhung** (bieu dien toan hoc, khong phai van ban)
+3. **Cac chunk cua WHO/ICD-11** (du lieu cong cong du sao)
+4. **Bao cao thu nghiem noi bo** (nhay cam, nhung da duoc an danh)
+5. **Du lieu cau hinh** (cai dat he thong)
+
+**Du lieu chung toi KHONG luu giu** (sau khi che giau PHI):
+- Ten benh nhan
+- MRN
+- So NRIC/FIN
+- Ngay sinh
+- So dien thoai
+- Dia chi email
+
+**Muc do nghiem trong vi pham theo loai du lieu**:
+
+| Du lieu | Muc do nghiem trong vi pham | Tin tac co the lam gi |
+|---|---|---|
+| Nhat ky kiem toan (da token hoa) | Thap | Cac mo hinh thong ke, khong co PHI |
+| Nhung | Rat thap | Cac vector toan hoc, khong the dao nguoc thanh van ban |
+| Cac chunk tri thuc | Khong co | Du lieu cong cong |
+| Bao cao thu nghiem (da an danh) | Trung binh | Chi tiet thu nghiem, khong nhan dang benh nhan |
+| Cau hinh | Thap | Kien thuc kien truc he thong |
+| Khoa KMS | Nghiem trong (nhung can xam pham rieng biet) | Co the giai ma neu cac lop khac cung bi xam pham |
+
+**Dao nguoc token hoa**:
+- Bang anh xa tu token tro lai PHI nam trong kho rieng biet, co han che cao
+- Truy cap kho yeu cau phe duyet hai nguoi dac biet
+- Kho KHONG the truy cap tu cac he thong san xuat bi xam pham
+- Ngay ca khi tin tac co du lieu san xuat + nhat ky kiem toan, ho khong the lay ten benh nhan cho den khi pha vo kho rieng biet
+
+**Kich ban xau nhat thuc te**:
+- Tin tac xam pham tai khoan san xuat AWS cua Nova
+- Tai xuong tat ca bucket S3 va chi muc OpenSearch
+- Ket qua: IP Nova bi lo (kien truc he thong, prompt), nhung **KHONG CO PHI BENH NHAN BI LO**
+- Nova doi mat voi thiet hai danh tieng kinh doanh va co the thong bao khach hang
+- Benh nhan KHONG the duoc nhan dang tu du lieu vi pham
+
+**So sanh voi vi pham dien hinh**:
+- SingHealth 2018: ~1,5 trieu ho so benh nhan, PHI day du bi lo (vi pham cap may chu)
+- Singtel 2022: Du lieu khach hang bao gom thong tin nhan dang
+- Kien truc nay: ngay ca khi toan bo he thong bi xam pham, khong co PHI bi lo
+
+**Rui ro dinh luong**:
+- Xac suat xam pham tai khoan day du: <0,1% moi nam (co so nganh cho dam may duoc bao mat tot)
+- Thiet hai trong truong hop xau nhat: han che (khong co PHI bi lo)
+- Bao hiem bao gom: 5-10 trieu USD (du cho cac kich ban co the xay ra)
+
+---
+
+### Q54. Giai thich cac thuc hanh ma hoa cua chung toi bang ngon ngu don gian.
+
+**A.** Ba loai ma hoa:
+
+**1. Ma hoa luu tru (khi du lieu duoc luu tru)**
+- Giong nhu ket an tai ngan hang: du lieu bi khoa trong cac tep duoc ma hoa tren dia
+- Ngay ca khi ai do danh cap o cung, ho khong the doc du lieu ma khong co khoa
+- Duoc thuc hien boi: AWS KMS / Alibaba KMS
+
+**2. Ma hoa trong qua trinh truyen (khi du lieu di chuyen)**
+- Giong nhu phong bi kin: du lieu duoc ma hoa trong khi di chuyen giua cac he thong
+- Ngay ca khi ai do nghe trom cap mang, ho chi thay ky tu vo nghia
+- Duoc thuc hien boi: TLS 1.3 (HTTPS hien dai)
+
+**3. Ma hoa trong khi su dung (trong khi xu ly)**
+- Kho nhat trong ba loai: du lieu can duoc giai ma de xu ly
+- Duoc giam thieu boi: thoi gian giai ma toi thieu, bo nho quy trinh co lap, mo-dun bao mat phan cung
+
+**Quan ly khoa**:
+
+**Khoa la gi?** Mot chuoi ngau nhien dai khoa/mo khoa du lieu duoc ma hoa.
+
+**BYOK (Mang Khoa Cua Rieng Ban)**:
+- Benh vien tao khoa ma hoa trong tai khoan AWS/Alibaba cua rieng ho
+- Chia se voi dich vu ma hoa cua Nova
+- Benh vien co the thu hoi bat ky luc nao -> ngay lap tuc ngan Nova truy cap du lieu
+- Cung cap cho benh vien quyen kiem soat toi thuong
+
+**Xoay vong khoa**:
+- Khoa moi duoc tao moi 90 ngay
+- Du lieu cu duoc ma hoa lai voi khoa moi
+- Cac khoa cu duoc giu lai de giai ma sao luu (cung duoc xoay vong)
+
+**Nhat ky truy cap khoa**:
+- Moi lan su dung khoa duoc ghi lai
+- "Ai giai ma cai gi, khi nao"
+- Duong dan ho tro kiem toan tuan thu
+
+**Vi du thuc te**:
+Tuong tuong ket an ngan hang:
+- Ma hoa = cac buc tuong thep va cua
+- Khoa = ma so ket hop
+- Nhat ky kiem toan = camera ghi lai moi lan vao
+
+Trong he thong cua chung toi:
+- AWS KMS / Alibaba KMS = nha cung cap ket an
+- BYOK = benh vien so huu ma so ket hop
+- CloudTrail / ActionTrail = camera
+
+Neu ke cuop danh cap ket an: van bi khoa.
+Neu ke cuop lay duoc ma so: camera cho thay chung vao.
+Neu benh vien thay doi ma so: Nova khong the vao cho den khi duoc dat lai.
+
+---
+
+### Q55. Token hoa PHI la gi va tai sao no tot hon chi ma hoa?
+
+**A.** Su khac biet quan trong:
+
+**Ma hoa**: Du lieu bi xao tron toan hoc voi mot khoa. Voi khoa, ban co the phuc hoi ban goc.
+
+**Token hoa**: Du lieu duoc thay the bang mot token ngau nhien. Khong co bang anh xa rieng biet, ban khong the phuc hoi ban goc.
+
+**Vi du voi ten benh nhan**:
+
+**Phuong phap ma hoa**:
+`
+Goc: "Nguyen Van A"
+Da ma hoa: "x7K9pQ2..." (phu thuoc vao khoa)
+Voi khoa: co the phuc hoi thanh "Nguyen Van A"
+`
+
+**Phuong phap token hoa**:
+`
+Goc: "Nguyen Van A"
+Token: "<TEN_BENH_NHAN_001>"
+Bang anh xa (he thong rieng biet): {001: "Nguyen Van A"}
+Khong co bang anh xa: token khong the dao nguoc
+`
+
+**Tai sao token hoa tot hon cho AI**:
+1. **AI khong bao gio thay PHI that**: mo hinh chi thay <TEN_BENH_NHAN_001>, khong phai "Nguyen Van A"
+2. **Ngay ca khi dau ra AI bi ro**: no se noi <TEN_BENH_NHAN_001>, khong phai ten that
+3. **Token khong can duoc ma hoa**: no da ngau nhien; ma hoa danh cho bang anh xa
+
+**Noi bang anh xa song**:
+- Kho co han che cao, tach biet khoi he thong chinh
+- Yeu cau phe duyet hai nguoi cho bat ky truy cap nao
+- Duoc ma hoa KMS voi khoa rieng biet
+- Duoc ghi nhat ky kiem toan
+
+**Cac truong hop loi**:
+- Dau ra AI vo tinh bi ro: "<TEN_BENH_NHAN_001>" - KHONG the nhan dang, muc do nghiem trong thap
+- Nhat ky kiem toan bi xam pham: cac token, khong phai PHI - KHONG the nhan dang, muc do nghiem trong thap
+- CA HAI bi xam pham + kho bi xam pham: yeu cau xam pham nhieu lop - cuc ky kho xay ra
+
+**So sanh voi chi ma hoa**:
+- Chi ma hoa: "giai ma voi khoa, thay tat ca PHI"
+- Token hoa + ma hoa: ngay ca voi tat ca cac khoa, chi thay cac token
+
+**Vi du thuc te**:
+- Ma hoa: khoa nha cua ban voi khoa. Mat khoa, mat quyen truy cap.
+- Token hoa: giu so dia chi trong ket an rieng biet. Ngay ca khi ai do vao nha ban, ho khong biet ai song o do cho den khi pha vo ket an so dia chi rieng biet.
+
+---
+
+
+
+## 5. Hieu suat & Toc do
+
+### Q56. Tai sao thoi gian phan hoi cap cuu la 2 giay? Con so do den tu dau?
+
+**A.** Nghien cuu nhan thuc va phan hoi cua bac si.
+
+**Co so khoa hoc nhan thuc**:
+- Tuong tac "tuc thi" cua con nguoi: ~1 giay
+- Tuong tac "phan hoi nhanh" chap nhan duoc: ~2 giay
+- Vuot qua 2 giay, duoc cam nhan la "dang cho"
+- Vuot qua 5 giay, su chu y cua bac si chuyen sang noi khac
+
+**Nghien cuu quy trinh lam viec lam sang**:
+- Bac si cap cuu dua ra ~50 quyet dinh/gio
+- Moi gian doan 2+ giay lam gian doan dong chay nhan thuc
+- Mot lan cho 5 giay moi quyet dinh: mat 10% nang suat
+- Nhieu lan cho tich luy
+
+**Tac dong den benh nhan**:
+- Thoi gian cua-den-kim cho STEMI: <90 phut (moi phut tiet kiem = cuoc song)
+- Thoi gian den tieu huyet khoi cho dot quy: <60 phut
+- Thoi gian den khang sinh cho nhiem trung huyet: <60 phut
+- Cac quyet dinh ca nhan can phai nhanh de ho tro tong the
+
+**SLA cua chung toi**:
+- p50: 1 giay (hau het cac truy van)
+- p95: 2 giay (95% trong 2 giay)
+- p99: 3 giay (hiem khi >3 giay)
+- p99,9: 5 giay (cuc ky hiem khi >5 giay)
+
+**Ket qua PoC**:
+- Dat duoc p50: 1,0 giay, p95: 2,5 giay tren on-demand
+- Voi Reserved Tier (san xuat): du kien p50: 0,6 giay, p95: 1,8 giay
+
+**Tai sao khong phai 1 giay?**:
+- Co the thuc hien vat ly voi phan cung tuy chinh, dat tien
+- 2 giay mang lai 99% gia tri lam sang o 30% chi phi
+- Loi ich bien toi thieu vuot qua 2 giay
+
+---
+
+### Q57. Dieu gi xay ra neu mot truy van mat hon 2 giay?
+
+**A.** Nhieu du phong:
+
+**Trong vong 2 giay (95% truy van)**:
+- Phan hoi binh thuong, day du chuc nang
+- Tat ca cac nguon duoc trich dan, chuoi ly luan day du
+
+**2-3 giay (4% truy van)**:
+- Phan hoi mot phan: phan dau tien duoc tra ve qua streaming
+- Cac token con lai duoc stream khi co san
+- Bac si thay: "Khan cap thoi gian: ..." xuat hien tung tu mot
+- Co the hanh dong lam sang tu token dau tien
+
+**3-5 giay (0,9% truy van)**:
+- Du phong den phan hoi da cache neu co san
+- Du phong den mo hinh don gian hon (Haiku thay vi Sonnet)
+- Chat luong giam nhung chap nhan duoc cho cap cuu
+
+**>5 giay (0,1% truy van)**:
+- Hien thi chi bao "Dang tim kiem..."
+- Bac si co the huy va su dung quy trinh thu cong
+- Hoac cho neu thoi gian cho phep
+
+**Chien luoc suy giam thich ung**:
+Neu tai trong tong the cao:
+- Giam kich thuoc context: 3 chunk thay vi 5
+- Bo qua GraphRAG (tiet kiem 1+ giay)
+- Su dung mo hinh nho hon cho cac quyet dinh dinh tuyen
+- Cache tich cuc hon
+
+**Phat tien SLA** (voi benh vien):
+- p95 > 2 giay trong >1 gio: tin dung dich vu 5%
+- p99 > 5 giay trong >1 gio: tin dung dich vu 10%
+- Ngung hoat dong keo dai >24 gio: tin dung dich vu 25%
+
+---
+
+### Q58. Thoi gian phan hoi thay doi nhu the nao theo loai truy van?
+
+**A.** Thay doi dua tren:
+
+**Yeu to 1: Lane (cap cuu vs phuc tap)**
+- Cap cuu: ~1-2,5 giay p95 (Haiku 4.5, it chunk hon)
+- Phuc tap: ~9-12 giay p95 (Sonnet 4.5, nhieu chunk hon, guardrails)
+
+**Yeu to 2: Cache hit vs miss**
+- Cache hit: <500ms (chi truy xuat va tra ve)
+- Cache miss: toan bo pipeline chay
+
+**Yeu to 3: Do phuc tap cau hoi**
+- Don gian ("lieu luong la gi?"): nhanh hon
+- Phuc tap ("so sanh thuoc A vs B trong suy than voi..."): cham hon
+- Cau hoi nhieu phan: cham nhat
+
+**Yeu to 4: Do phu cua tai lieu**
+- Cau hoi voi pham vi KB phong phu: truy xuat nhanh
+- Cau hoi yeu cau tim kiem sau: cham hon
+- Cau hoi can duyet do thi: cham nhat
+
+**Thoi gian phan hoi duoc do** (tu PoC):
+
+| Loai truy van | Trung vi | p95 | Pham vi pho bien |
+|---|---|---|---|
+| Thuc te don gian (da cache) | 0,3 giay | 0,6 giay | 0,2-0,8 giay |
+| Thuc te don gian (chua cache) | 1,2 giay | 1,8 giay | 1,0-2,0 giay |
+| Phan loai cap cuu | 1,5 giay | 2,5 giay | 1,2-3,0 giay |
+| Chan doan phan biet phuc tap | 4,8 giay | 9,5 giay | 3,0-12 giay |
+| Giao thuc nhieu buoc | 6,2 giay | 11,0 giay | 4,0-15 giay |
+| Dua tren hinh anh (X-quang) | 8,5 giay | 15 giay | 5,0-20 giay |
+
+---
+
+### Q59. Tai sao lane phuc tap mat nhieu thoi gian (9,7 giay trong PoC)?
+
+**A.** Phan tich chi tiet:
+
+**Phan tich thoi gian lane phuc tap** (tu PoC):
+1. Xac thuc + che giau PHI: 100ms
+2. Kiem tra cache: 50ms
+3. Quyet dinh dinh tuyen (Nova Micro): 400ms
+4. Truy xuat tu Vector KB (top 15): 800ms
+5. Truy xuat tu GraphRAG (top 3): 600ms
+6. Tong chuan bi: ~1.950ms
+7. Thoi gian suy nghi Sonnet 4.5: ~7.200ms
+8. Streaming + xac thuc: 600ms
+
+**Tong**: ~9.700ms
+
+**Thoi gian dang di dau?**:
+- ~75% trong suy luan mo hinh (Sonnet 4.5 suy nghi)
+- ~20% trong truy xuat (vector + do thi)
+- ~5% trong xu ly truoc/sau
+
+**Tai sao Sonnet 4.5 mat 7+ giay**:
+- Xu ly 18 chunk duoc truy xuat (~10.000 token dau vao)
+- Tao cau tra loi 800 token voi trich dan
+- Chuoi ly luan noi bo (giong chuoi suy nghi)
+- Kiem tra Guardrails sau moi chunk
+
+**Muc tieu san xuat voi Reserved Tier**:
+- Suy nghi Sonnet: ~3-4 giay (voi dung luong danh rieng)
+- Tong: ~5-6 giay dau cuoi
+
+**Cac tuy chon toi uu hoa** (khong co Reserved Tier):
+
+1. **Giam kich thuoc context**
+   - Top 10 chunk thay vi 15: tiet kiem ~1 giay
+   - Danh doi: it context hon, co the it chinh xac hon
+
+2. **Dung Sonnet chi de tong hop**
+   - Dung Haiku cho ly luan ban dau
+   - Sonnet chi cho cau tra loi cuoi cung
+   - Tiet kiem ~2-3 giay
+   - Tac dong chat luong: toi thieu cho hau het cac truy van
+
+3. **Tien tinh toan cac mo hinh pho bien**
+   - Cache theo loai cau hoi
+   - Tang ti le hit: 35% -> 50%
+   - Giam trung binh rong: ~1 giay
+
+4. **Truy xuat song song**
+   - Vector + Do thi + Kiem tra Cache song song
+   - Tiet kiem ~400ms
+
+**So sanh voi cac lua chon thay the**:
+- Tim kiem UpToDate thu cong: 5-15 phut
+- Tu van dong nghiep bang mieng: 5-30 phut
+- Lane phuc tap cua chung toi o 10 giay: nhanh hon dang ke so voi cac lua chon thay the
+- Ngay ca o 15 giay: van nhanh hon 10 lan so voi cac lua chon thay the
+
+---
+
+### Q60. He thong xu ly tai trong cao nhu the nao? Dieu gi xay ra neu 200 bac si truy van cung luc?
+
+**A.** Tu dong mo rong va quan ly tai trong:
+
+**Nang luc o tai trong cao**:
+- Tai trong cao nhat moi tenant: ~200 truy van/phut
+- Nang luc co so moi tenant: 50 truy van/phut
+- Tu dong mo rong len: 500 truy van/phut
+- Vuot qua do: hang doi voi uu tien
+
+**Cac thanh phan va kha nang mo rong cua chung**:
+
+**Function Compute / Lambda (trinh xu ly chat)**:
+- Tu dong mo rong theo ty le yeu cau
+- Cac instance duoc lam am truoc: 16 (tranh khoi dong lanh)
+- Toi da: 1000+ dong thoi
+- Chi phi: tra theo yeu cau
+
+**Bedrock / Model Studio**:
+- Duoc quan ly boi AWS/Alibaba
+- Gioi han TPM moi tai khoan: 50k-500k token/phut
+- Vuot qua gioi han: hang doi (thuong <30 giay)
+- Dung luong danh rieng: bao dam cho benh vien cu the
+
+**OpenSearch / Vector Search**:
+- Tu dong mo rong OCU dua tren tai trong
+- Co so: 2 OCU
+- Cao diem: mo rong len 8 OCU
+- Thoi gian truy van duoi 1 giay ngay ca duoi tai trong
+
+**Neptune / GraphRAG**:
+- Mo rong theo chieu doc
+- Da vung
+- Thong luong: 5.000+ truy van/phut co so
+
+**Cache (Redis / Tair)**:
+- Bo nho duoc phan bo truoc
+- Doc: 100.000+ QPS
+- Ghi: 50.000+ QPS
+
+**Ket qua kiem tra tai trong**:
+- Kiem tra tai trong duy tri: 500 QPS trong 1 gio
+- Do tre p95 duoi tai trong: 3,5 giay (so voi 2,0 giay co so)
+- Ti le hit cache tang len 45% duoi tai trong
+- Khong co loi, khong co timeout
+
+**Kich hoat mo rong**:
+- p95 > 2 giay: canh bao, khong hanh dong tu dong
+- p95 > 3 giay trong 2 phut: tu dong mo rong OpenSearch len
+- p95 > 5 giay trong 5 phut: goi SRE truc ban
+
+**Chi phi mo rong thuc te**:
+- Co so: 600k truy van/thang o 5.500 USD/tenant
+- Dot tang (vi du: dai dich): ~2 trieu truy van/thang o 11.000 USD/tenant
+- Giam gia Reserved Tier: ~25% tiet kiem o cao diem
+- Rong: ~8.250 USD/tenant trong thang cao diem
+
+---
+
+
+
+## 6. Do chinh xac & Tin cay
+
+### Q61. AI chinh xac den muc nao? "Do chinh xac" co nghia la gi doi voi AI y te?
+
+**A.** Do chinh xac da chieu:
+
+**1. Do chinh xac trich dan**: Moi khang dinh trich dan nguon thuc su co the truy xuat. Do luong: 100% trong PoC. Nhi phan: co hoac khong.
+
+**2. Do chinh xac grounding**: Cau tra loi nhat quan voi cac nguon duoc trich dan. Do luong boi diem grounding (0-1). Nguong: >=0,7. Trung binh PoC: 0,85.
+
+**3. Do chinh xac thuc te**: Cau tra loi dung ve mat thuc te so voi tieu chuan vang. Do luong boi hoi dong bac si. Muc tieu: >=95% cho cac truong hop khong bien.
+
+**4. Do lien quan lam sang**: Cau tra loi giai quyet cau hoi lam sang thuc te. Do luong boi thumbs up/down cua bac si. Muc tieu: >=90%.
+
+**5. Tinh cap nhat**: Cau tra loi phan anh cac huong dan hien tai. Do luong boi kiem tra so voi WHO/MOH hien tai. Muc tieu: 100% cho cac cau hoi dua tren huong dan.
+
+**Muc tieu do chinh xac cu the**:
+
+| Loai truy van | Muc tieu do chinh xac | Ket qua PoC |
+|---|---|---|
+| Lieu luong thuoc | >=99% | 99,5% |
+| Tieu chi chan doan | >=97% | 98% |
+| Giao thuc dieu tri | >=95% | 96% |
+| Chan doan phan biet | >=90% | 92% |
+| Cac truong hop bien (benh hiem gap) | >=80% | 85% |
+
+**Kiem soat chat luong**:
+- Kiem tra truoc khi trien khai: 1000+ cau hoi duoc bac si kiem tra
+- Giam sat san xuat: mau ngau nhien 100 truy van hang ngay
+- Phan hoi bac si: thumbs up/down tren moi cau tra loi
+- Kiem toan hang quy: xem xet ben ngoai
+
+---
+
+### Q62. Chung toi co the tin tuong AI hon UpToDate hoac cac co so du lieu tham khao khac khong?
+
+**A.** Cac ho so tin cay khac nhau:
+
+**Diem manh cua UpToDate**:
+- Duoc giam tuyen thu cong boi cac bien tap vien bac si
+- Bao thu, duoc kiem tra ky
+- Tieu chuan nganh
+- Lich su 25+ nam
+- Toan dien
+
+**Diem yeu cua UpToDate**:
+- Khong theo thoi gian thuc (cap nhat hang thang)
+- Khong tich hop voi du lieu benh nhan
+- Chung, khong cu the cho benh nhan
+- Cham de doc
+- Khong co kien thuc thu nghiem noi bo
+
+**Diem manh cua AI cua chung toi**:
+- Theo thoi gian thuc (ICD-11 hang ngay, WHO hang thang)
+- Suy luan cu the cho benh nhan (voi context EHR)
+- Tich hop thu nghiem noi bo
+- Toc do (2-3 giay vs 5+ phut)
+- Tim kiem tren tat ca cac nguon dong thoi
+
+**Diem yeu cua AI cua chung toi**:
+- Cong nghe moi hon, it lich su nganh hon
+- Rui ro ao giac (duoc giam thieu nhung khong bang khong)
+- Do chinh xac trich dan phu thuoc vao chat luong truy xuat
+- Co the bo lo cac chinh sua gan day
+
+**Khung so sanh**:
+
+| Khia canh | UpToDate | AI cua chung toi |
+|---|---|---|
+| Do chinh xac tren cac cau hoi tieu chuan | 99% | 95-98% |
+| Do chinh xac tren cac truong hop phuc tap/bien | 95% | 85-92% |
+| Toc do | 5-15 phut | 2-15 giay |
+| Cu the cho benh nhan | Khong | Co |
+| Tich hop du lieu noi bo | Khong | Co |
+| Tan suat cap nhat | Hang thang | Hang ngay |
+| Chi phi moi truy van | 0,05-0,15 USD | 0,001-0,013 USD |
+| Lich su | 25+ nam | 1-2 nam |
+
+**Phuong phap lai (duoc khuyen nghi)**:
+- Dung ca hai
+- AI cho truy cap nhanh + cu the cho benh nhan
+- UpToDate cho nghien cuu sau va xac minh
+- Bac si hoc khi nao nen dung cai nao
+
+---
+
+### Q63. Loi lon nhat AI co the mac trong thuc hanh lam sang la gi?
+
+**A.** Kiem ke rui ro thuc te:
+
+**Danh muc rui ro**:
+
+**1. Trich dan huong dan loi thoi**
+- Nguyen nhan: cache cu hoac huong dan duoc cap nhat sau cache
+- Tac dong: bac si hanh dong theo thong tin loi thoi
+- Xac suat: thap (vo hieu hoa cache hoat dong)
+- Giam thieu: kiem tra huong dan theo thoi gian thuc
+
+**2. Lieu luong thuoc sai**
+- Nguyen nhan: ao giac hoac loi truy xuat
+- Tac dong: loi thuoc
+- Xac suat: rat thap (du lieu thuoc duoc giam tuyen ky)
+- Giam thieu: kiem tra cheo voi co so du lieu duoc phe duyet
+
+**3. Bo sot chong chi dinh**
+- Nguyen nhan: AI khong co lich su benh nhan day du
+- Tac dong: phan ung bat loi tiem nang
+- Xac suat: trung binh (phu thuoc vao tich hop du lieu)
+- Giam thieu: kiem tra chong chi dinh ro rang, tich hop lich su benh nhan
+
+**4. Giai thich trieu chung sai**
+- Nguyen nhan: cach dien dat cua bac si mo ho
+- Tac dong: chan doan phan biet sai
+- Xac suat: thap (AI yeu cau lam ro)
+- Giam thieu: cac mau truy van co cau truc
+
+**5. Khuyen nghi trai voi huong dan**
+- Nguyen nhan: dao tao loi thoi, truy xuat sai
+- Tac dong: bac si bi dan dat sai
+- Xac suat: thap (trich dan buoc grounding)
+- Giam thieu: kiem tra kep so voi huong dan hien tai
+
+**Cac su co thuc te co kha nang nhat**:
+- Tu choi khi cau tra loi co san (am tinh gia): phien phuc nhung an toan
+- Cau tra loi da cache loi thoi (hiem): duoc giam thieu boi vo hieu hoa
+- Van de dien dat nho (chu quan): tac dong thap
+
+**Cac su co co hau qua nhat**:
+- Bo sot tuong tac thuoc hiem (hiem, nghiem trong)
+- Khuyen nghi trai voi huong dan hien tai (trung binh)
+- Ro PHI (hiem nhung rat nghiem trong)
+
+**Thuc te**: Bac si con nguoi cung mac loi. Nghien cuu cho thay: bac si dung ~80-90% tren cac truong hop phuc tap. Tro ly AI co the giam loi chan doan ~10-15%. Rong: ket qua tot hon, khong hoan hao.
+
+---
+
+### Q64. Lam the nao de biet neu AI dang cho ket qua khac nhau cho cung mot cau hoi?
+
+**A.** Giam sat nhat quan:
+
+**Tai sao cau tra loi co the khac nhau**:
+
+**1. Tao ngau nhien (nhiet do)**
+- AI co cai dat nhiet do
+- Mac dinh: 0,1 (thap; hau het nhat quan)
+- 0 = xac dinh (luon cung mot cau tra loi)
+- 0,5+ = sang tao (thay doi)
+
+**Cai dat cua chung toi**: nhiet do = 0,1, ban xac dinh.
+
+**2. Trang thai cache**
+- Truy van dau tien: tao moi
+- Truy van thu hai (trong TTL cache): da cache, giong het
+- Sau khi cache het han: duoc tao lai, co the khac mot chut
+
+**3. Cap nhat co so kien thuc**
+- WHO xuat ban huong dan moi luc 02:00 SGT
+- Cau hoi luc 01:50: huong dan cu duoc trich dan
+- Cau hoi luc 02:10: huong dan moi duoc trich dan
+- Day la hanh vi chinh xac
+
+**4. Bien thien truy xuat ngau nhien**
+- Tim kiem vector co tinh ngau nhien nho
+- Top 5 chunk co the khac nhau tren cac truong hop bien
+- Cac chunk khac nhau -> cau tra loi khac nhau mot chut
+
+**5. Cap nhat phien ban mo hinh**
+- Hang quy: nang cap mo hinh
+- Truoc/sau nang cap: cau tra loi co the phat trien
+
+**Bien thien chap nhan duoc**:
+- Khuyen nghi lam sang nhat quan
+- Cach dien dat co the khac nhau
+- Trich dan phai tuong tu (cung cac nguon chinh)
+- Bat dong ve khuyen nghi chinh: dieu tra
+
+**Giam sat nhat quan**:
+- Cac cap ngau nhien: cung cau hoi duoc hoi cach nhau 24 gio
+- Xem xet thu cong cac su khac biet
+- Theo doi: ~5% cap co su khac biet nho (chap nhan duoc)
+- Theo doi: ~0,5% co su khac biet co y nghia (dieu tra)
+
+**Kha nang tai tao**:
+- De kiem toan/phap ly: phien chinh xac co the duoc tai tao
+- "AI da noi gi voi Bac si Linh luc 14:32 SGT ngay 15 thang 5?"
+- 100% co the tai tao tu nhat ky kiem toan
+
+---
+
+### Q65. Lam the nao de kiem tra AI truoc khi trien khai cho benh nhan thuc su?
+
+**A.** Xac thuc nhieu giai doan:
+
+**Giai doan 1: Kiem tra don vi (ky thuat)**
+- Kiem tra cap thanh phan
+- Bao gom: che giau PHI, truy xuat, xac thuc trich dan
+- 1000+ truong hop kiem tra
+- Chay tren moi thay doi code
+- Ti le dat: 100% bat buoc
+
+**Giai doan 2: Kiem tra tich hop**
+- Kich ban kiem tra dau cuoi
+- Bao gom: lane cap cuu, lane phuc tap, cache, kiem toan
+- 200+ kich ban
+- Chay hang dem
+- Ti le dat: 100% bat buoc
+
+**Giai doan 3: Kiem tra do chinh xac lam sang**
+- Cac cau hoi y te tieu chuan vang
+- Duoc giam tuyen boi hoi dong tu van lam sang
+- Bao gom: 12 khoa, 1000+ cau hoi
+- Ti le dat: >=95% bat buoc de trien khai
+
+**Giai doan 4: Kiem tra doi nghich**
+- Red team co gang pha vo he thong
+- Tiem nhap prompt, kich hoat ao giac
+- Ti le dat: >=98% thanh cong phong thu
+
+**Giai doan 5: Trien khai thi diem**
+- Nhom nho bac si (vi du: 20)
+- Cac truong hop han che (goi y chi doc)
+- Kiem tra thuc te trong 30 ngay
+- Phan hoi duoc tich hop
+
+**Giai doan 6: Trien khai theo giai doan**
+- Tung khoa mot
+- Moi giai doan: on dinh 30 ngay
+- Cac van de duoc giai quyet truoc giai doan tiep theo
+
+**Giai doan 7: San xuat**
+- Trien khai toan benh vien
+- Giam sat lien tuc
+- Kiem toan do chinh xac hang quy
+
+**Danh muc kiem tra cu the**:
+
+**Lien quan den thuoc**:
+- Lieu luong cho cac thuoc pho bien
+- Tuong tac thuoc
+- Lieu luong than/gan
+- An toan thai ky/cho con bu
+
+**Lien quan den chan doan**:
+- Chan doan phan biet
+- Tieu chi chan doan
+- Huong dan hinh anh
+- Giai thich ket qua xet nghiem
+
+**Lien quan den dieu tri**:
+- Khuyen nghi dieu tri hang dau
+- Dieu tri hang hai khi that bai dieu tri
+- Lieu phap ket hop
+- Cac quan the dac biet
+
+**Lien quan den tuan thu**:
+- Tu choi cac yeu cau khong phu hop
+- Khong tiet lo PHI
+- Tuan theo huong dan
+- Cung cap trich dan
+
+---
+
+
+
+## 7. Trien khai & Lo trinh
+
+### Q66. Mat bao lau de trien khai tu "quyet dinh duoc dua ra" den "bac si dau tien su dung"?
+
+**A.** Lich trinh thuc te: 6-10 tuan cho tenant benh vien dau tien.
+
+**Phan tich tung tuan**:
+
+**Tuan 1-2: Nen tang**
+- Ky hop dong voi Nova
+- Cap phep tai khoan AWS/Alibaba
+- Thiet lap VPC, IAM, mang
+- Ket noi voi IdP benh vien (xac thuc bac si)
+- Trien khai OpenSearch va Neptune ban dau
+
+**Tuan 3-4: Nhap du lieu**
+- Nhap huong dan WHO
+- Tich hop API ICD-11
+- Tai len PDF bao cao thu nghiem noi bo (benh vien cung cap)
+- Tao nhung vector
+- Trich xuat thuc the GraphRAG
+
+**Tuan 5-6: Cau hinh AI**
+- Thiet lap cac agent khoa (12 khoa)
+- Tuy chinh system prompt
+- Cau hinh chinh sach Guardrails
+- Khoi tao cache
+- Thu thap du lieu fine-tuning (neu ap dung)
+
+**Tuan 7-8: Tich hop & Bao mat**
+- Tich hop EHR (FHIR R4)
+- Thiet lap webhook SharePoint
+- Hoan thien tai lieu tuan thu
+- Kiem toan bao mat
+
+**Tuan 9-10: Thi diem & Ra mat**
+- Thi diem noi bo (nhan vien Nova): 1 tuan
+- Thi diem han che (10-20 bac si): 1 tuan
+- Trien khai tung khoa
+- Ra mat day du
+
+**Con duong quan trong**:
+- Tich hop IdP benh vien: thuong mat 2-3 tuan rieng
+- Phe duyet thiet bi y te HSA (neu chua co): 3-6 thang (song song)
+- Xem xet an toan lam sang: 2-3 tuan
+
+**Con duong nhanh hon** (neu Nova da lam truoc):
+- 4-6 tuan cho cac tenant lap lai
+- Cac mau co the tai su dung
+- Cac tich hop duoc phe duyet truoc
+
+**Con duong cham hon** (benh vien phuc tap):
+- 12-16 tuan neu tich hop EHR la moi
+- Nhieu vong tuan thu
+- Tuy chinh rong lon yeu cau
+
+---
+
+### Q67. Nhom cua chung toi can lam gi trong qua trinh trien khai?
+
+**A.** Trach nhiem cua benh vien:
+
+**Truoc khi khoi dong** (chuan bi benh vien):
+1. Xac dinh nha tai tro du an (CMIO hoac tuong duong)
+2. Lap nhom du an benh vien
+3. Phe duyet ngan sach ban dau
+4. Ky Thoa thuan Dich vu Chu
+
+**Khoi dong den Tuan 2**:
+
+**Trach nhiem nhom benh vien**:
+- Chi dinh chuyen gia lam sang (1-2 bac si)
+- Thiet lap quyen truy cap cho cac ky su Nova (han che, co pham vi)
+- Cung cap chi tiet tich hop IdP
+- Xac dinh lien he EHR
+
+**Nova cung cap**:
+- Quan ly du an
+- Ky su truong
+- Can bo tuan thu
+- Tu van lam sang
+
+**Tuan 3-4 (nhap du lieu)**:
+
+**Benh vien cung cap**:
+- PDF bao cao thu nghiem lam sang noi bo
+- Giao thuc cu the cua benh vien
+- Tai lieu tham khao theo khoa
+- Logo, thuong hieu cho giao dien nguoi dung
+
+**Nova thuc hien**:
+- Nhap noi dung
+- Cau hinh truy xuat
+- Thiet lap cac thuc the GraphRAG
+
+**Tuan 5-6 (cau hinh)**:
+
+**Benh vien cung cap**:
+- Tuy chon gion van theo khoa
+- Cac chu de bi cam (vi du: cac lieu phap thu nghiem)
+- Cac mau tu choi
+- Cac mau tin nhan duoc phe duyet
+
+**Nova thuc hien**:
+- Cau hinh 12 agent khoa
+- Dieu chinh truy xuat theo khoa
+- Thiet lap chinh sach Guardrails
+
+**Tuan 7-8 (tich hop)**:
+
+**Benh vien cung cap**:
+- Chi tiet diem cuoi FHIR EHR
+- Thong tin xac thuc SMART App Launch
+- Ngoai le bao mat mang
+- Thiet lap duong ham VPN
+
+**Nova thuc hien**:
+- Code tich hop FHIR
+- Cau hinh SMART
+- Thiet lap data plane VPN
+
+**Tuan 9-10 (ra mat)**:
+
+**Benh vien cung cap**:
+- Phan hoi bac si
+- Lua chon nhom (nhom thi diem)
+- Truyen thong den bac si
+- Tham du buoi dao tao
+
+**Nova cung cap**:
+- Dao tao onboarding
+- Ho tro truc tiep trong thi diem
+- Giai quyet van de
+
+**Tong no luc benh vien**:
+- Nha tai tro du an: ~5 gio/tuan x 10 tuan = 50 gio
+- Chuyen gia lam sang: ~10 gio/tuan x 4 tuan = 40 gio
+- CNTT benh vien: ~20 gio/tuan x 4 tuan = 80 gio
+- Can bo tuan thu: ~5 gio/tuan x 6 tuan = 30 gio
+- Tong: ~200 gio thoi gian benh vien
+
+**Chi phi thoi gian benh vien**:
+- ~200 gio x 200 USD/gio ty le pha tron = 40.000 USD
+- Day la dau tu cho benh vien
+- Duoc hoan von trong 2 tuan dau tien van hanh
+
+---
+
+### Q68. Chung toi co the bat dau voi chuong trinh thi diem nho hon truoc khong?
+
+**A.** Duoc khuyen nghi manh me:
+
+**Cac cau truc thi diem**:
+
+**Phuong an 1: Mot khoa, 30 ngay**
+- Chon: Khoa Cap cuu (tac dong cao nhat)
+- 20-30 bac si
+- Che do chi doc ban dau (goi y, khong co hanh dong lam sang)
+- Chi phi: giong nhu trien khai day du co so ha tang
+- Gia tri: xac thuc truoc khi trien khai day du
+
+**Phuong an 2: Mot loai chuyen khoa, 60 ngay**
+- Chon: Noi khoa tren cac khoa
+- 50-100 bac si
+- Ket hop che do chi doc va su dung tich cuc
+- Nhieu du lieu, nhieu su tu tin
+
+**Phuong an 3: Thi diem toan benh vien 90 ngay**
+- Tat ca cac khoa, nhung voi khung "thi diem" ro rang
+- De ket thuc neu khong hoat dong
+- Dat tien nhung thuc te
+
+**Chi phi trong thi diem**:
+- Cung co so ha tang nhu san xuat (2.800-5.500 USD/thang)
+- Cong them chi phi trien khai benh vien (40.000 USD)
+- Tru cac khoang tiet kiem tiem nang trong thi diem
+
+**Tieu chi thanh cong thi diem**:
+
+**Bat buoc**:
+- 70%+ bac si thi diem su dung hang tuan
+- 90%+ do chinh xac (duoc xac minh boi can bo an toan lam sang)
+- 100% tuan thu luu tru du lieu
+- Khong co su co bao mat
+- <=5% ti le tu choi (tin hieu-nhieu)
+
+**Mong muon**:
+- 80% thoi gian tiet kiem tren cac chu de duoc tu van
+- 90%+ thumbs up
+- 50%+ ap dung trich dan
+- Top 5 truong hop su dung duoc xac dinh
+
+**Cac tuy chon ket thuc thi diem**:
+
+**Thi diem thanh cong**:
+- Tiep tuc trien khai day du
+- Them cac khoa
+- Mo rong quy mo
+
+**Thi diem khong ket luan**:
+- Gia han them 60 ngay
+- Giai quyet cac van de cu the
+- Danh gia lai
+
+**Thi diem that bai**:
+- Ngung
+- Giai doan giam dan 30 ngay
+- Nhat ky kiem toan duoc bao ton (quy dinh)
+
+**Khung thi diem duoc khuyen nghi**:
+- Thang 1: trien khai + chuan bi thi diem
+- Thang 2: van hanh thi diem (30-60 ngay)
+- Thang 3: danh gia + quyet dinh
+- Thang 4-6: trien khai day du (neu thanh cong)
+
+---
+
+### Q69. Ai tu phia chung toi can tham gia vao viec trien khai?
+
+**A.** Ban do cac ben lien quan:
+
+**Nha tai tro dieu hanh**:
+- CEO/COO: trach nhiem cuoi cung, phe duyet ngan sach
+- CFO: giam sat ngan sach, theo doi ROI
+- CMO: giam sat an toan lam sang
+
+**Lanh dao du an**:
+- Giam doc Thong tin Y te Truong (CMIO): nha tai tro du an chinh
+- Quan ly Du an: phoi hop hang ngay
+- Giam doc Lam sang: ky duyet lam sang
+
+**Chuyen gia lam sang** (1-2 moi khoa):
+- Cac bac si chuyen gia ung ho
+- Cung cap dau vao lam sang
+- Kiem tra thi diem
+- Dao tao dong nghiep
+
+**Nhom CNTT**:
+- Giam doc CNTT: lanh dao phia CNTT
+- Ky su truong: thuc hien ky thuat
+- Ky su Bao mat: xem xet bao mat
+- Ky su Mang: VPN, tich hop
+
+**Tuan thu**:
+- Can bo Tuan thu: giam sat quy dinh
+- DPO: bao ve du lieu
+- Co van Phap ly: xem xet hop dong
+
+**Tuong duong phia Nova**:
+- Giam doc Tai khoan: lanh dao quan he
+- Quan ly Du an: phoi hop
+- Ky su truong: lanh dao ky thuat
+- Tu van Lam sang: lien lac lam sang
+- Can bo Tuan thu: ho tro quy dinh
+
+**Nhip do giao tiep**:
+
+**Hang tuan trong trien khai**:
+- Quan ly du an (benh vien) <-> Quan ly du an (Nova)
+- Cuoc hop trang thai 30 phut
+- Cac hang muc hanh dong, cac van de can giai quyet
+
+**Hai tuan mot lan trong trien khai**:
+- CMIO <-> Giam doc Tai khoan
+- Xem xet 60 phut
+- Thao luan chien luoc
+
+**Hang thang sau trien khai**:
+- Xem xet nhom day du
+- Chi so hieu suat
+- Cai tien lien tuc
+
+**Hang quy sau trien khai**:
+- Xem xet dieu hanh
+- Phan tich ROI
+- Lap ke hoach lo trinh
+
+**Cam ket thoi gian uoc tinh**:
+
+| Vai tro | Gio/tuan trong trien khai | Sau trien khai |
+|---|---|---|
+| Nha tai tro dieu hanh | 1 | <1 |
+| CMIO | 5 | 2 |
+| Chuyen gia lam sang | 5-10 | 2-3 |
+| Truong CNTT | 10-15 | 2-5 |
+| Tuan thu | 5 | 1-2 |
+| Bac si nguoi dung cuoi | 0 (trong phat trien) | 0,5 (su dung he thong) |
+
+---
+
+### Q70. Chung toi co the tuy chinh he thong theo nhu cau cu the cua benh vien khong?
+
+**A.** Co, nhieu cap do tuy chinh:
+
+**Cap 1: Cau hinh** (khong co code)
+- Cai dat theo khoa
+- Tuy chon gion van (trang trong hon, tro chuyen hon)
+- Muc do chi tiet (ngan gon vs toan dien)
+- Dinh dang (dau dong vs van xuoi)
+- Phong cach trich dan (noi tuyen vs cuoi)
+- Ngon ngu (tieng Anh, tieng Trung, v.v.)
+- Thuong hieu benh vien
+
+**Chi phi**: Bao gom trong thiet lap tieu chuan
+**Lich trinh**: 1-2 tuan
+
+**Cap 2: Prompt tuy chinh** (it code)
+- System prompt theo khoa
+- Huong dan cu the cua benh vien
+- Cac tinh chinh chuyen khoa
+
+**Chi phi**: 5.000-10.000 USD thiet lap
+**Lich trinh**: 2-3 tuan
+
+**Cap 3: Quy trinh lam viec tuy chinh** (it code)
+- Cac luong phe duyet cu the cua benh vien
+- Cac quy tac dinh tuyen tuy chinh
+- Xu ly dac biet cho cac dieu kien nhat dinh
+
+**Chi phi**: 15.000-30.000 USD
+**Lich trinh**: 4-6 tuan
+
+**Cap 4: Tich hop tuy chinh** (code)
+- Tich hop cac he thong cu the cua benh vien
+- Nguon du lieu tuy chinh
+- API benh vien
+
+**Chi phi**: 40.000-100.000 USD
+**Lich trinh**: 8-12 tuan
+
+**Cap 5: Tinh nang tuy chinh** (code dang ke)
+- Giao dien nguoi dung cu the cua benh vien
+- Tinh nang chi danh cho benh vien
+- Tuy chinh nang cao
+
+**Chi phi**: 100.000-300.000 USD
+**Lich trinh**: 6-9 thang
+
+**Cac tuy chinh pho bien**:
+
+**Cau hinh chuyen khoa**:
+- Lieu luong dua tren can nang nhi khoa
+- Cac can nhac lao khoa
+- Cac quy tac an toan thai ky/cho con bu
+
+**Boi canh dia phuong**:
+- Danh muc thuoc cua benh vien
+- Nhan thuoc Singapore
+- Cac lua chon thuoc generic dia phuong
+
+**Tich hop quy trinh lam viec**:
+- SSO cu the cua benh vien
+- Cac lo trinh phan loai tuy chinh
+- Cac luong ban giao noi bo
+
+**Bao cao tuy chinh**:
+- Chi so cu the cua benh vien
+- Bang dieu khien theo khoa
+- Dinh dang bao cao tuan thu
+
+**Danh doi**:
+
+**Nhieu tuy chinh hon**:
+- Phu hop hon voi benh vien
+- Chi phi cao hon
+- Trien khai lau hon
+- Ganh nang bao tri nhieu hon
+
+**It tuy chinh hon**:
+- Nhanh hon, re hon
+- Chat luong tieu chuan
+- De nang cap hon
+- Co the khong phu hop hoan hao
+
+**Khuyen nghi**:
+- Nam 1: tuy chinh toi thieu (Cap 1-2)
+- Nam 2: xac dinh khoang trong, tuy chinh Cap 3
+- Nam 3+: dua tren nhu cau duoc chung minh
+
+---
+
