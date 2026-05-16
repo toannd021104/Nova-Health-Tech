@@ -3786,3 +3786,1267 @@ Chung toi cam ket giup ban thuc hien tot.
 
 ---
 
+
+
+## 13. So sanh & Lua chon thay the
+
+### Q101. He thong nay so sanh nhu the nao voi viec su dung ChatGPT truc tiep?
+
+**A.** Su khac biet dang ke:
+
+**ChatGPT** (AI tieu dung chung):
+- Kien thuc rong
+- Co the rat huu ich
+- Re hoac mien phi cho su dung ca nhan
+
+**AI cua chung toi** (cu the cho y te):
+- Tap trung vao y te
+- Duoc can cu trich dan
+- Ho tro quyet dinh lam sang cu the
+
+**Tai sao ChatGPT khong phu hop cho su dung lam sang**:
+1. **Khong bao ve PHI**: ChatGPT ghi lai cac cuoc tro chuyen, co the dao tao tren dau vao. Rui ro quyen rieng tu. Khong tuan thu HIPAA.
+2. **Khong co grounding trich dan**: Nghe co ve hop ly nhung khong the xac minh. Rui ro ao giac cao.
+3. **Khong duoc quy dinh**: Khong duoc dang ky HSA. Khong duoc cap phep HCSA. Khong the su dung hop phap cho cac quyet dinh lam sang.
+4. **Khoang trong cu the Singapore**: Khong biet cac huong dan MOH cu the. Co the khong phan anh thuc hanh dia phuong. Thuoc Singapore khong co trong danh muc thuoc.
+5. **Khong co nhat ky kiem toan**: Cac cuoc tro chuyen khong duoc bao ton de tuan thu. Khong the ho tro bao cao HCSA. Khong the tai tao cac phien.
+6. **Khong co tich hop EHR**: Nhap context thu cong. Khong co du lieu benh nhan. Khong the su dung FHIR.
+
+**So sanh chi phi**:
+- ChatGPT Pro: 20 USD/nguoi dung/thang = 10.000 USD/thang cho 500 bac si
+- AI cua chung toi: 5.500 USD/thang cho 500 bac si
+- Cong them AI cua chung toi duoc xay dung co muc dich va tuan thu
+
+**Khi ChatGPT co the chap nhan duoc**:
+- Giao duc lien tuc ca nhan (khong phai cham soc benh nhan)
+- Cac cau hoi nghien cuu (khong phai cac quyet dinh lam sang)
+- Cac nhiem vu hanh chinh (khong phai lam sang)
+- Chi tham khao phu (khong phai lam sang)
+
+**Ket luan**: ChatGPT la cong cu cho ca nhan; AI cua chung toi la AI y te cap doanh nghiep.
+
+---
+
+### Q102. Su khac biet giua he thong nay va Microsoft Copilot hoac Google Gemini la gi?
+
+**A.** Cac truong hop su dung khac nhau:
+
+**Microsoft Copilot cho Y te** (duoc thong bao 2024):
+- AI nang suat chung
+- Tich hop Microsoft Office
+- Tom tat email
+- Soan thao tai lieu
+- Ho tro quyet dinh lam sang han che
+
+**Google Gemini cho Y te**:
+- Tuong tu Copilot
+- Tich hop Google Workspace
+- Tap trung hon vao nghien cuu
+- Ho tro quyet dinh lam sang han che
+
+**AI cua chung toi**:
+- Duoc xay dung co muc dich cho ho tro quyet dinh lam sang
+- Chuyen khoa tu ngay dau
+- Tuan thu Singapore duoc tich hop san
+- Thiet ke nhan thuc chuyen khoa
+
+**So sanh**:
+
+| Khia canh | Copilot/Gemini | AI cua chung toi |
+|---|---|---|
+| Muc dich su dung chinh | Nang suat | Quyet dinh lam sang |
+| Cu the cho y te | Mot so | Co |
+| Tuan thu Singapore | Chung | Duoc tich hop san |
+| Trich dan lam sang | Mot so | Bat buoc |
+| Dang ky HSA | Khong | Co |
+| Tich hop EHR | Dua tren Office | FHIR truc tiep |
+| Nhan thuc chuyen khoa | Khong | Co |
+
+**Cac truong hop su dung so sanh**:
+
+**Nhiem vu nang suat** (Copilot/Gemini tot hon):
+- Soan thao thu lam sang
+- Tom tat email
+- Ghi chu cuoc hop
+- Tao tai lieu
+
+**Ho tro quyet dinh lam sang** (AI cua chung toi tot hon):
+- Suy luan chan doan
+- Khuyen nghi dieu tri
+- Tuong tac thuoc
+- Tu van chuyen khoa
+
+**Phuong phap lai**:
+- Dung Copilot cho nang suat
+- Dung AI cua chung toi cho lam sang
+- Ca hai co the cung ton tai
+
+**So sanh chi phi**:
+- Microsoft Copilot: 30 USD/nguoi dung/thang + 30 USD/nguoi dung/thang cho tinh nang Y te
+- Cho 500 bac si: 30.000 USD/thang
+- AI cua chung toi: 5.500 USD/thang cho 500 bac si
+- Ti le chi phi: 5x dat hon cho Copilot
+
+**Khuyen nghi**:
+- AI cua chung toi cho cac quyet dinh lam sang
+- Copilot/Gemini cho nang suat (giay phep rieng biet)
+- Khong thay the cai nay bang cai kia
+
+---
+
+### Q103. Dieu gi xay ra neu chung toi muon chuyen sang nha cung cap khac?
+
+**A.** Tinh linh hoat thap, co the quan ly:
+
+**Cac kich ban chuyen doi**:
+
+**Chuyen tu AWS sang Alibaba (hoac nguoc lai)**:
+- Code ung dung co the chuyen: cung Python, cung mo hinh RAG
+- Nhap lai: 2-4 tuan de nhung lai corpus tren vector store moi
+- Chi phi chuyen doi: ~50-100k USD ky thuat
+- Khong co khoa du lieu: corpus la cua ban; cac nhung co the duoc tao lai
+
+**Chuyen sang nha cung cap AI khac hoan toan**:
+- Ke hoach di cu
+- Xuat du lieu o dinh dang tieu chuan
+- Trien khai lai: 6-12 thang
+- Chi phi: 300.000-800.000 USD
+
+**Mang ve noi bo**:
+- Tu luu tru tren Kubernetes cua benh vien
+- Thay the cac dich vu quan ly AWS bang nguon mo: Qdrant cho vector, Neo4j cho do thi, vLLM cho phuc vu
+- Thoi gian chuyen doi 6 thang voi van hanh song song
+- Chi phi: 200.000-500.000 USD thiet lap
+
+**Muc do khoa nha cung cap**: Thap. IP quan trong (to chuc corpus, prompt, khai thac danh gia) nam trong code Nova so huu. Cac bit cu the cho dam may (Bedrock, Model Studio) co cac tuong duong hang hoa.
+
+**Cac dieu khoan hop dong bao ve**:
+- Quyen xuat du lieu (dinh dang tieu chuan)
+- Quyen so huu code (lop ung dung)
+- Kha nang chuyen doi (su dung giao dien tuong thich OSS khi co the)
+- Thong bao ket thuc 90 ngay
+
+**Chi phi chuyen doi thuc te**:
+- Chuyen doi AWS-Alibaba: 50-100k USD, 2-4 tuan
+- Chuyen doi sang nha cung cap khac: 300-800k USD, 6-12 thang
+- Mang ve noi bo: 200-500k USD, 6 thang
+- Chuyen doi gian doan: 500-1.200k USD, 12 thang
+
+**Khuyen nghi**: Chon nha cung cap de quan he doi tac, khong chi vi gia. Chi phi chuyen doi thuong thap. Gia tri quan he dai han thuong cao hon.
+
+---
+
+### Q104. Chung toi nen chon AWS hay Alibaba?
+
+**A.** Ca hai deu co the cung cap giai phap. Cac yeu to quyet dinh:
+
+**Chon AWS neu**:
+- Benh vien uu tien Claude cua Anthropic (chat luong suy luan cao cap)
+- Can phu hop quy dinh My/EU (HIPAA BAA, HITRUST)
+- Doi ngu CNTT hien co quen thuoc voi AWS
+- Uu tien thuong hieu cao cap
+
+**Chon Alibaba neu**:
+- Uu tien chi phi (re hon ~10-20%)
+- Ho tro ngon ngu chau A manh hon (Qwen duoc dao tao tren du lieu chau A)
+- Tich hop Singapore International tot hon
+- Uu tien mo hinh Qwen
+
+**So sanh chi phi** (cung tai trong):
+
+| Thanh phan | AWS (A1+ Nova) | Alibaba (Qwen) |
+|---|---|---|
+| Mo hinh cap cuu | 70 USD | 47 USD |
+| Mo hinh phuc tap | 1.470 USD | 1.160 USD |
+| Nhung | 10 USD | 35 USD |
+| Vector store | 350 USD | 180 USD |
+| GraphRAG | 115 USD | 300 USD |
+| Tong | **2.805 USD** | **~2.272 USD** |
+
+**Chenh lech**: Alibaba re hon ~500 USD/thang (~6.000 USD/nam).
+
+**Thuc te Singapore**: Hau het cac benh vien Singapore: AWS chiem uu the. Doi moi AI y te: Alibaba dang tang truong. Xu huong: da dam may pho bien.
+
+**Khuyen nghi**: Chon dua tren uu tien mo hinh (Claude vs Qwen), moi quan he dam may hien co, va nhu cau tuan thu. Chenh lech chi phi hiem khi la yeu to quyet dinh.
+
+---
+
+### Q105. Chung toi co nen su dung ca AWS va Alibaba dong thoi khong?
+
+**A.** Da dam may: cac can nhac:
+
+**Tai sao da dam may**:
+1. **Giam rui ro nha cung cap**: Khong co diem that bai don le. Don bay dam phan voi nha cung cap. Doc lap chien luoc.
+2. **Tot nhat trong loai**: AWS cho cot loi. Alibaba cho cac dich vu cu the chau A. Su dung diem manh cua moi nha cung cap.
+3. **Phuc hoi tham hoa**: Chu dong-bi dong xuyen nha cung cap. Tinh san sang toi da.
+4. **Toi uu hoa dia ly**: Cac nha cung cap khac nhau manh o cac vung khac nhau. Chau A: Alibaba. My: AWS.
+
+**Tai sao khong da dam may**:
+1. **Phuc tap van hanh**: Hai bo dich vu de quan ly. Hai API de duy tri. Gap doi chi phi van hanh.
+2. **Tang chi phi**: Mot so dich vu bi nhan doi. Egress mang giua cac dam may. Tong: 1,5-2x dam may don.
+3. **Thoi gian ky thuat**: Nhieu cong viec tich hop. Nhieu kiem tra. Nhieu tai lieu.
+4. **Phuc tap tuan thu**: Hai bo kiem toan. Hai bo chung nhan. Nhieu tai lieu.
+
+**Cac mo hinh da dam may pho bien**:
+
+**Chu dong-chu dong** (chi phi cao nhat, tinh san sang toi da):
+- Cung tai trong chay tren ca hai
+- Can bang tai
+- Chi phi: 2x dam may don
+
+**Chu dong-bi dong** (duoc khuyen nghi):
+- Chinh tren mot dam may
+- Sao luu tren dam may kia
+- Chuyen doi cho DR
+- Chi phi: 1,3-1,5x
+
+**Lai** (su dung moi nha cung cap cho diem manh):
+- AWS cho tinh toan cot loi
+- Alibaba cho cac dich vu cu the
+- Trien khai hon hop
+- Chi phi: thay doi
+
+**Mot dam may** (don gian nhat):
+- Chon mot
+- Tich hop sau
+- Chi phi thap hon
+- Phu thuoc nha cung cap cao hon
+
+**Khuyen nghi**:
+- Hau het benh vien: Mot dam may (AWS hoac Alibaba)
+- Benh vien e ngai rui ro: Chu dong-bi dong da dam may
+- Nghien cuu cap: Lai cho tot nhat trong loai
+- Chi phi khoi dau: Mot dam may, mo rong sau
+
+---
+
+
+
+## 14. Van hanh dai han
+
+### Q106. "Van hanh Ngay 2" co nghia la gi va tai sao no quan trong?
+
+**A.** "Ngay 1" = ra mat, "Ngay 2" = van hanh lien tuc.
+
+Ngay 2 bao gom: giam sat hieu suat, giai quyet van de, cai tien lien tuc, duy tri tuan thu, xu ly phan hoi nguoi dung, toi uu hoa chi phi, lap ke hoach nang luc, van hanh bao mat.
+
+**Tai sao Ngay 2 quan trong hon Ngay 1**:
+- Ngay 1: su kien 1 lan
+- Ngay 2: 6 nam (luu giu HCSA) va hon nua
+- Hau het chi phi: Ngay 2
+- Hau het gia tri: Ngay 2
+
+**Nang luc Ngay 2 Nova cung cap**:
+- Giam sat 24/7 (SRE)
+- Kiem tra suc khoe hang ngay
+- Xem xet hieu suat hang tuan
+- Bao cao tuan thu hang thang
+- Cap nhat he thong hang quy
+- Kiem toan bao mat hang nam
+
+**Cam ket Ngay 2 cua benh vien**:
+- Ho tro nguoi dung
+- Tuan thu noi bo
+- Duy tri su tham gia
+- Phu hop chien luoc
+
+**Chat luong Ngay 2 = chat luong dich vu tong the**.
+
+---
+
+### Q107. Loai giam sat nao chay lien tuc tren he thong?
+
+**A.** Stack giam sat toan dien:
+
+**Giam sat theo thoi gian thuc** (moi giay):
+- Thoi gian phan hoi API
+- Ti le loi
+- Suc khoe dich vu
+- Ti le hit cache
+- Chi phi moi truy van
+
+**Giam sat chat luong** (moi phut):
+- Do chinh xac trich dan
+- Diem grounding
+- Ti le tu choi
+- Chat luong phan hoi
+
+**Giam sat tuan thu** (moi gio):
+- Tinh toan ven cua nhat ky kiem toan
+- Luu tru du lieu
+- Thanh cong che giau PHI
+- Cac mo hinh truy cap
+
+**Giam sat kinh doanh** (hang ngay):
+- Nguoi dung hoat dong
+- Ti le ap dung
+- Phan bo theo khoa
+- Xu huong chi phi
+
+**Cong cu cu the**:
+- ARMS LLM Trace Explorer (Alibaba) / X-Ray (AWS): theo doi phan tan, phan tich do tre moi yeu cau, phan bo loi, toi uu hoa hieu suat
+- SLS / CloudWatch Logs: nhat ky ung dung, su kien he thong, nhat ky kiem toan, co the tim kiem
+- Giam sat ung dung ARMS: bang dieu khien theo thoi gian thuc, nguong canh bao, theo doi SLO
+- Bang dieu khien tuy chinh: KPI cu the cua benh vien, phan tich theo khoa, phan tich xu huong
+
+**Minh bach giam sat**:
+- Benh vien thay cung bang dieu khien chung toi thay
+- Truy cap theo thoi gian thuc
+- Chi so chi tiet co san
+
+---
+
+### Q108. Ai chiu trach nhiem giu he thong cap nhat va hien tai?
+
+**A.** Trach nhiem chung:
+
+**Trach nhiem cua Nova**:
+- **Cap nhat phan mem**: sua loi (lien tuc), va lap bao mat (trong vong 24 gio ke tu CVE), phat hanh tinh nang (hang thang), nang cap phien ban chinh (hang quy)
+- **Co so kien thuc**: WHO ICD-11 hang ngay, huong dan WHO hang thang, dong bo thu nghiem noi bo hang tuan, them nguon moi (khi can)
+- **Cap nhat mo hinh**: dao tao lai mo hinh sinh vien hang quy, phien ban chinh hang nam (Sonnet/Plus), tinh chinh prompt lien tuc
+- **Tuan thu**: theo doi quy dinh moi, chung nhan duoc cap nhat, duy tri nhat ky kiem toan
+
+**Trach nhiem cua benh vien**:
+- **Du lieu noi bo**: cung cap bao cao thu nghiem duoc cap nhat, cap nhat giao thuc benh vien, noi dung cu the theo khoa
+- **Quan ly nguoi dung**: onboarding bac si moi, thu hoi quyen truy cap khi roi, thay doi vai tro
+- **Cau hinh**: tuy chinh theo khoa, tuy chon chuyen khoa, chinh sach noi bo
+- **Su tham gia**: ap dung nguoi dung, tham gia dao tao, cung cap phan hoi
+
+**Nhip do cap nhat**:
+- **Hang ngay**: dong bo ICD-11
+- **Hang tuan**: dong bo SharePoint
+- **Hang thang**: lam moi WHO, trien khai tinh nang
+- **Hang quy**: dao tao lai mo hinh, kiem toan bao mat
+- **Hang nam**: phien ban chinh, kiem toan tuan thu
+
+**Giao tiep ve cap nhat**:
+- Ban tin (Nova -> Benh vien)
+- Trang trang thai (truc tiep)
+- Hoi thao web (hang quy)
+- Xem xet 1:1 (moi tenant)
+
+---
+
+### Q109. He thong co bao gio ngung hoat dong de bao tri khong?
+
+**A.** Duoc thiet ke de giam thieu thoi gian ngung hoat dong:
+
+**Cua so bao tri**:
+- Co lich: Thu 7 dau tien 2-6 SA SGT (4 gio)
+- Thong bao: 7 ngay truoc
+- Tan suat: ~2 lan moi nam (dien hinh)
+
+**Hau het cap nhat: khong co thoi gian ngung hoat dong**:
+- Trien khai cuon
+- Phat hanh canary
+- Trien khai xanh-xanh la
+- Khong gian doan dich vu
+
+**Cac kich ban bao tri cu the**:
+1. **Cap nhat phan mem (thuong xuyen)**: Khong co thoi gian ngung hoat dong qua trien khai cuon. Duoc xac minh lien tuc. Tu dong rollback neu co van de.
+2. **Di cu co so du lieu**: Di cu truc tuyen. Cac ban sao doc trong khi di cu. Duoc xac minh sau di cu.
+3. **Nang cap co so ha tang**: Co lich truoc. Thong bao benh vien. Gian doan ngan (5-30 phut).
+4. **Nang cap phien ban chinh**: Hang quy. Duoc kiem tra truoc. Phoi hop voi benh vien. Thoi gian ngung hoat dong ngan chap nhan duoc.
+
+**Tac dong SLA**:
+- Bao tri co lich: bi loai tru khoi SLA
+- Ngung hoat dong khong co lich: SLA ap dung
+- Tin dung dich vu theo SLA
+
+**Giao tiep benh vien**:
+- **Truoc bao tri**: thong bao 7 ngay, ke hoach chi tiet, huong dan quy trinh lam viec thay the
+- **Trong bao tri**: cap nhat trang trang thai, tien do theo thoi gian thuc, FAQ nhanh
+- **Sau bao tri**: bao cao xac minh, xac nhan suc khoe dich vu, cac van de neu co
+
+**Lich su thuc te**:
+- Dat duoc thoi gian hoat dong 99,9%+
+- <5 gio tong thoi gian ngung hoat dong hang nam
+- Hau het bao tri co lich: khong co tac dong
+
+---
+
+### Q110. Dieu gi xay ra neu Nova phat trien mot tinh nang moi anh huong den cach chung toi su dung he thong?
+
+**A.** Quan ly tinh nang:
+
+**Vong doi tinh nang**:
+1. **Khai niem**: Duoc xac dinh tu phan hoi. Duoc xac thuc voi cac ben lien quan. Xem xet lo trinh.
+2. **Phat trien**: Xay dung ky thuat. Kiem tra noi bo. 4-12 tuan dien hinh.
+3. **Beta**: Cac benh vien duoc chon. Kiem tra thuc te. Phan hoi duoc thu thap.
+4. **GA (Tinh san sang chung)**: Phat hanh cho tat ca. Duoc ghi lai. Duoc dao tao.
+5. **Ap dung**: Benh vien danh gia. Quyet dinh su dung. Trien khai khi san sang.
+
+**Kiem soat benh vien doi voi cac tinh nang**:
+- **Bat buoc vs Tuy chon**: Bat buoc: cap nhat bao mat, tuan thu. Tuy chon: hau het cac tinh nang moi. Benh vien chon.
+- **Cai dat moi tenant**: Bat tat moi tinh nang. Tuy chinh moi khoa. Trien khai dan.
+- **Co hieu tinh nang**: Kiem soat chi tiet. Thi diem tren mot phan nguoi dung. Rollback neu co van de.
+
+**Giao tiep ve cac tinh nang moi**:
+- **Truoc khi phat hanh**: Hien thi lo trinh, bai dang blog, ban tin
+- **Beta**: Hoi dong tu van khach hang, cac benh vien duoc chon, tai lieu chi tiet
+- **GA**: Thong bao email, bai viet ban tin, hoi thao web duoc cung cap
+
+**Danh gia moi benh vien**:
+- **Tinh nang tieu chuan**: Duoc bao gom trong dang ky. Su dung theo y muon. Khong co chi phi bo sung.
+- **Tinh nang cao cap**: Chi phi bo sung. Benh vien quyet dinh. Thanh toan rieng.
+- **Tinh nang tuy chinh**: Cu the cho benh vien. Phat trien tuy chinh. Gia theo du an.
+
+---
+
+## 15. Tuong lai & Kha nang mo rong
+
+### Q111. Tiem nang tang truong cua chung toi la gi? Chung toi co the mo rong len 50 benh vien khong?
+
+**A.** Lo trinh kha nang mo rong:
+
+**Nang luc hien tai**:
+- Moi tenant: 500-1000 bac si
+- Da tenant: mo rong tuyen tinh
+- Ly thuyet: hang nghin tenant
+
+**Cac kich ban tang truong**:
+- Nam 1: 1-3 tenant (thiet lap nen tang)
+- Nam 2: 5-10 tenant (truong thanh van hanh)
+- Nam 3: 15-30 tenant (mo rong thi truong)
+- Nam 4: 30-50 tenant (mo rong ASEAN)
+- Nam 5+: 50-100 tenant (doanh nghiep truong thanh)
+
+**Kinh te van hanh**:
+- Chi phi bien moi tenant bo sung: ~30.000-50.000 USD/nam
+- Doanh thu moi tenant: 100.000-400.000 USD/nam
+- Bien loi nhuan: 60-80% o quy mo
+
+**Bao hoa thi truong Singapore**:
+- ~60 benh vien tai Singapore
+- Chiem duoc thuc te: 15-30 benh vien
+- Benh vien lon: 5-10 toi da
+- Hang trung: 10-20
+
+**Mo rong ASEAN**:
+- Indonesia: 200+ benh vien
+- Thai Lan: 150+
+- Viet Nam: 100+
+- Tong: 1.000+ benh vien
+- Chiem duoc thuc te: 100-300 trong 10 nam
+
+**Cac can nhac chien luoc**:
+- Giao duc thi truong
+- Dia phuong hoa quy dinh
+- Thich ung van hoa
+- Ung pho canh tranh
+
+---
+
+### Q112. Tam nhin dai han cho AI trong y te la gi?
+
+**A.** Trien vong chien luoc:
+
+**Tam nhin 5 nam**:
+1. **Tieu chuan y te duoc tang cuong AI**: Hau het bac si su dung AI hang ngay. Tieu chuan duoc can cu trich dan. Ket qua benh nhan duoc cai thien. Chi phi cham soc suc khoe giam.
+2. **Xuat sac chuyen khoa cu the**: AI chuyen biet moi chuyen khoa. Chuyen mon linh vuc sau. Tich hop voi quy trinh lam viec lam sang.
+3. **AI lay benh nhan lam trung tam**: Cac cong cu huong den benh nhan (voi cac bien phap bao ve). Giao duc benh nhan. Dong y co thong tin. Quyet dinh duoc trao quyen.
+4. **Suc khoe cong dong**: AI cho suc khoe cong cong. Phat hien dich benh. Phan bo nguon luc. Cai thien chat luong.
+5. **Tich hop nghien cuu**: Thu nghiem lam sang duoc ho tro boi AI. Tao bang chung the gioi thuc. Y hoc ca nhan hoa. Kham pha dieu tri moi.
+
+**Tam nhin 10 nam**:
+1. **Cham soc suc khoe hoc lien tuc**: Tich hop ket qua theo thoi gian thuc. Huong dan thich ung. Phan tich du doan. Thuc su ca nhan hoa.
+2. **Tri tue da phuong thuc**: Van ban + hinh anh + giong noi. Du lieu gen. Du lieu cam bien. Goc nhin toan dien.
+3. **Cong bang suc khoe toan cau**: AI dan chu hoa chuyen mon. Co san moi noi. Nhieu ngon ngu. Nhan cam van hoa.
+4. **Y hoc phong ngua**: Du doan rui ro. Can thiep som. Toi uu hoa loi song. Mo rong suc khoe.
+
+**Thach thuc dai han**:
+- Ky thuat: bao mat khang luong tu, hoc bao ton quyen rieng tu, hieu biet da phuong thuc, cai thien lien tuc
+- Quy dinh: tien hoa AI Verify, hoa hop quoc te, mo rong quyen benh nhan, khung trach nhiem phap ly
+- Dao duc: trach nhiem giai trinh thuat toan, giam thieu thien vi, yeu cau minh bach, giam sat cua con nguoi
+- Kinh te: chi phi vs gia tri, bat binh dang cham soc suc khoe, mo hinh bao hiem, cau truc boi thuong
+
+**Dinh vi cua Nova**:
+- Nen tang: chuyen mon ky thuat sau, tap trung vao y te Singapore, lanh dao tuan thu, thanh cong khach hang
+- Doi moi: ap dung cong nghe moi noi, phat trien truong hop su dung moi, quan he doi tac nghien cuu, cai thien lien tuc
+- Mo rong thi truong: tang truong dia ly, chieu sau chuyen khoa, huong den benh nhan (can than), suc khoe cong dong
+
+---
+
+### Q113. AI co bao gio thay the bac si khong?
+
+**A.** Khong, mo hinh tang cuong:
+
+**Tai sao AI se khong thay the bac si**:
+1. **Phan xet lam sang la khong the giam thieu**: Context benh nhan quan trong. Can nhan cam van hoa. Tri tue cam xuc la thiet yeu. Ly luan dao duc can thiet.
+2. **Kham benh ly**: AI khong the soi. AI khong the nghe phoi. AI khong the kham. Can cham soc truc tiep.
+3. **Moi quan he bac si-benh nhan**: Niem tin mat nhieu nam de xay dung. Phong cach giuong benh khong the thay the. Su dong cam la bat buoc. Tiep noi cham soc.
+4. **Trach nhiem phap ly va trach nhiem giai trinh**: Trach nhiem phap ly thuoc ve bac si. Khung bao hiem. Uy quyen quy dinh. Cap phep nghe nghiep.
+5. **Tuy chon cua benh nhan**: Hau het benh nhan thich ket noi con nguoi. AI nhu cong cu, khong phai nguoi thay the. Phan cap niem tin ro rang.
+
+**Nhung gi AI co the lam**:
+1. **Tang cuong truy cap kien thuc**: Truy xuat bang chung tuc thi. Tham khao cheo nhieu nguon. Cap nhat voi tai lieu.
+2. **Giam ganh nang nhan thuc**: Tim kiem thong tin thuong xuyen. Ho tro tai lieu. Cac quyet dinh thuong xuyen.
+3. **Cai thien tinh nhat quan**: Tieu chuan hoa tren thuc hanh tot nhat. Giam bien thien. Dam bao chat luong.
+4. **Mo rong nang luc**: Tiet kiem thoi gian. Xu ly khoi luong. Bao phu ngoai gio.
+5. **Ho tro giao duc**: Hoc lien tuc. Phat trien ky nang. Chuyen giao kien thuc.
+
+**Vai tro cua bac si phat trien**:
+- **It thoi gian hon cho**: Ghi nho su kien, truy xuat thong tin, tai lieu thuong xuyen, phan tich lap di lap lai
+- **Nhieu thoi gian hon cho**: Tuong tac benh nhan, ra quyet dinh phuc tap, ky nang thu thuat, giang day va co van, nghien cuu va doi moi, tu duy chien luoc
+
+**Tac dong viec lam**:
+- **Nhu cau tang**: Nhieu benh nhan duoc phuc vu, nhieu bac si duoc phuc vu, cac loai thuc hanh moi (tin hoc lam sang AI)
+- **Nhan manh ky nang**: Tu duy phan bien, giao tiep benh nhan, phan xet lam sang, ky nang thu thuat, tu duy chien luoc
+- **Boi thuong**: Khong nen giam. Co the tang khi cac nhiem vu chuyen biet.
+
+**Ket luan**: May tinh khong thay the nha toan hoc. Ho so benh an dien tu khong thay the bac si. Tro ly AI: cung mo hinh. Cong cu tang cuong, khong thay the.
+
+---
+
+### Q114. Chung toi co the mo rong sang cac ngon ngu hoac quoc gia khac khong?
+
+**A.** Mo rong quoc te:
+
+**Cac ngon ngu hien duoc ho tro**:
+- Tieng Anh (chinh)
+- Tieng Trung Quoc pho thong
+- Bahasa Malaysia
+- Tieng Viet
+- Bahasa Indonesia
+
+**Sap co**:
+- Tieng Tamil
+- Tieng Thai
+- Tieng Han Quoc
+
+**Mo rong quoc gia**:
+
+**Singapore**: Nen tang
+**Malaysia**: Moi truong quy dinh tuong tu, de dang hon
+**Indonesia**: Can dia phuong hoa, thi truong lon
+**Viet Nam**: Dia phuong hoa nghiem ngat hon, thi truong nho hon
+**Thai Lan**: Thich ung van hoa, thi truong lon
+
+**Moi quoc gia mo rong bao gom**:
+1. **Dia phuong hoa quy dinh**: Tuan thu cu the theo quoc gia. Luat y te dia phuong. Khung bao ve du lieu. Khung quan tri AI.
+2. **Dia phuong hoa ngon ngu**: Thuat ngu y te. Sac thai van hoa. Thanh ngu dia phuong. Dam bao chat luong.
+3. **Dia phuong hoa lam sang**: Huong dan dia phuong (tuong duong MOH). Danh muc thuoc dia phuong. Du lieu thu nghiem dia phuong. Thuc hanh cham soc suc khoe van hoa.
+4. **Dia phuong hoa co so ha tang**: Cac vung dam may dia phuong. Luu tru du lieu. Do tre mang. Ho tro dia phuong.
+5. **Dia phuong hoa van hanh**: Nhom dia phuong. Quan he doi tac dia phuong. Ban hang dia phuong. Ho tro dia phuong.
+
+**Chi phi moi quoc gia**:
+- Thiet lap ban dau: 200.000-500.000 USD
+- Van hanh hang nam: 200.000-500.000 USD
+- Gia moi tenant: 80-90% gia Singapore
+
+**Khuyen nghi**: Bat dau voi Singapore. Mo rong sang Malaysia (de nhat). Sau do Indonesia/Viet Nam (nam 2-3). Cac quoc gia khac dua tren co hoi.
+
+---
+
+### Q115. Cac tinh nang moi nao chung toi co the mong doi trong nhung nam toi?
+
+**A.** Hien thi lo trinh:
+
+**Nam 1 (nen tang)**:
+- Nang cao ho tro da ngon ngu
+- Ung dung di dong (ban de)
+- Mo rong nhap bang giong noi
+- Cai thien tich hop quy trinh lam viec
+
+**Nam 2 (chieu sau chuyen khoa)**:
+- **AI chuyen khoa**: Chuyen mon chuyen khoa sau hon. Suy luan cap nghien cuu. Cac agent chuyen khoa phu.
+- **Tich hop lam sang**: Nhieu he thong EHR hon. Cac cong cu quy trinh lam viec tuy chinh. Ho tro tai lieu tu dong.
+- **Giam sat chat luong**: Theo doi do chinh xac tot hon. Phat hien troi. Hoc thich ung.
+
+**Nam 3 (tinh nang nang cao)**:
+- **AI da phuong thuc**: Phan tich hinh anh tot hon. Phan tich am thanh (tim, phoi). Tich hop du lieu cam bien.
+- **Phan tich du doan**: Du doan rui ro. Du bao ket qua. Lap ke hoach nguon luc.
+- **Y hoc ca nhan hoa**: Tich hop gen. Cac yeu to loi song. Phu hop dieu tri.
+
+**Nam 4-5 (doi moi)**:
+- **Tich hop nghien cuu**: Thiet ke thu nghiem duoc ho tro boi AI. Bang chung the gioi thuc. Nghien cuu ket qua.
+- **Suc khoe cong dong**: Thong tin chi tiet tong hop. Xu huong suc khoe cong cong. Chuan mo chat luong.
+- **Cong cu huong den benh nhan**: Chatbot giao duc. Ho tro tu quan ly. Ho tro phan loai.
+
+**Nam 5+ (bien gioi)**:
+- **Kha nang AI nang cao**: Suy luan o cap chuyen gia. Thich ung lien tuc. Phoi hop da agent.
+- **Mo hinh trien khai moi**: Tinh toan bien. Hoc lien ket. Dao tao bao ton quyen rieng tu.
+- **Cong nghe moi noi**: Ung dung tinh toan luong tu. Sinh trac hoc nang cao. Hop nhat cam bien.
+
+**Lo trinh duoc thuc day boi khach hang**:
+- Phan hoi khach hang: 60% uu tien
+- Xu huong nganh: 30%
+- Kham pha chien luoc: 10%
+
+**Giao tiep**:
+- Lo trinh hang nam (cap cao)
+- Xem truoc hang quy
+- Chuong trinh beta
+- Hoi dong tu van khach hang
+
+---
+
+
+
+### Q116. Lam the nao de do luong neu AI thuc su tiet kiem tien cho chung toi?
+
+**A.** Khung do luong ROI:
+
+**Tiet kiem chi phi truc tiep**:
+`
+Thoi gian tiet kiem moi truy van: 5 phut
+Truy van moi thang: 600.000
+Tong thoi gian tiet kiem: 50.000 gio/thang
+Chi phi bac si: 80 USD/gio
+Gia tri hang thang: 4.000.000 USD
+Gia tri hang nam: 48.000.000 USD
+`
+
+**Tiet kiem gian tiep**:
+- Giam loi: uoc tinh giam 10-15% loi chan doan
+- Ket qua tot hon: it bien chung hon, nam vien ngan hon
+- Giu chan nhan tai: moi truong lam viec hien dai
+- Danh tieng: vi tri chat luong hang dau
+
+**Phuong phap do luong**:
+1. **So sanh truoc-sau**: Thiet lap co so truoc khi trien khai. So sanh cung ky sau khi trien khai. Kiem soat cac yeu to gay nhieu.
+2. **Thi nghiem gan nhu**: Cac khoa AI vs khoa khong AI. Kiem soat su khac biet. Phan tich thong ke.
+3. **Cac truong hop su dung cu the**: Thoi gian danh cho cac cuoc tu van. Thoi gian quyet dinh. Toc do tai lieu.
+4. **Dieu tra**: Bao cao tu bac si. Uoc tinh thoi gian tiet kiem. Danh gia chat luong.
+
+**KPI tai chinh**:
+- Chi phi moi truy van (muc tieu: giam theo thoi gian)
+- Chi phi moi benh nhan (muc tieu: giam)
+- Doanh thu moi bac si (muc tieu: tang)
+- Bien loi nhuan (muc tieu: tang)
+
+**Bao cao**:
+- Hang thang: chi so van hanh
+- Hang quy: tinh toan ROI
+- Hang nam: danh gia toan dien
+- Theo yeu cau: phan tich cu the
+
+---
+
+### Q117. Tac dong den ket qua benh nhan dai han la gi?
+
+**A.** Trien vong nhieu nam:
+
+**Cac linh vuc ket qua**:
+1. **Ket qua chan doan**: Chan doan nhanh hon. Chan doan chinh xac hon. Giam loi chan doan. Tac dong benh nhan: dieu tri tot hon kip thoi.
+2. **Ket qua dieu tri**: Lua chon dieu tri dua tren bang chung. Giam cham soc khong phu hop. Tuan thu huong dan tot hon. Tac dong benh nhan: ket qua duoc cai thien.
+3. **Ket qua quy trinh**: Quay vong nhanh hon. Giam thoi gian cho. Phoi hop cham soc tot hon. Tac dong benh nhan: trai nghiem tot hon.
+4. **Ket qua an toan**: Giam su kien bat loi. Nhan dang rui ro tot hon. Can thiep som. Tac dong benh nhan: it tac hai hon.
+5. **Ket qua cong bang**: Chat luong cham soc duoc tieu chuan hoa. Giam bat binh dang. Chuyen mon co the truy cap rong hon. Tac dong benh nhan: cham soc cong bang.
+
+**Cai thien co the do luong**:
+- Nam 1: Giam 5-10% thoi gian den chan doan. Giam 5-15% xet nghiem khong can thiet. Cai thien 2-5% tuan thu huong dan. Giam 3-7% su kien bat loi.
+- Nam 3: Giam 10-20% loi chan doan. Tuan thu dieu tri tot hon 15-25%. Giam 5-10% thoi gian nam vien. Giam 10-15% su kien bat loi.
+- Nam 5: Cai thien chat luong tong the 20-30%. Ket qua tot hon dang ke cho cac truong hop phuc tap. Duoc cong nhan la nguoi dan dau chat luong. Chuan mo nganh.
+
+**Vi du cu the**:
+- **Goi sepsis**: Truoc AI: tuan thu 60-70%. Sau AI: tuan thu 85-95%. Giam tu vong: 5-10%. So mang duoc cuu: 5-15/nam moi benh vien.
+- **Quan ly khang sinh**: Truoc AI: khang sinh phu hop 60%. Sau AI: khang sinh phu hop 85%. Giam khang thuoc: dang ke. Tiet kiem chi phi: 200-500k USD/nam.
+- **Do chinh xac chan doan**: Truoc AI: chan doan bi bo sot 8-10%. Sau AI: chan doan bi bo sot 5-7%. Cai thien: giam 30-40% chan doan bi bo sot. Tac dong benh nhan: dang ke.
+
+**Tac dong tich luy** (tren cac benh vien):
+- 10 benh vien x 10 mang/nam = 100 mang
+- 50 benh vien x 100 mang = 5.000 mang
+- Quy mo ASEAN: 10.000+ mang tiem nang
+
+---
+
+### Q118. He thong nay anh huong den danh tieng benh vien dai han nhu the nao?
+
+**A.** Tac dong danh tieng:
+
+**Tac dong tich cuc**:
+1. **Nguoi dan dau doi moi**: "Dau tien tai Singapore" co trang thai. Duoc cong nhan nganh. Co hoi noi chuyen. Giai thuong va danh hieu.
+2. **Nguoi dan dau chat luong**: Ket qua tot hon duoc chung minh. Chuan mo chat luong. Xep hang nganh. Tuy chon benh nhan.
+3. **Thu hut nhan tai**: Moi truong lam viec hien dai. Cong cu tien tien. Phat trien nghe nghiep. Quan tam cua bac si hang dau.
+4. **Su tin tuong cua benh nhan**: Niem tin vao cham soc dua tren bang chung. Giam lo lang. Benh nhan duoc giao duc. Truyen mieng.
+5. **Quan he doi tac nganh**: Hoi dong AI Verify. Quan he doi tac IMDA. Hop tac nghien cuu. Trinh bay hoi nghi.
+
+**Dinh vi thuong hieu**:
+- **Dinh vi cao cap**: Benh vien hang dau. Cham soc tien tien. Ket qua tot nhat. Gia cao cap duoc ho tro.
+- **Dinh vi doi moi**: Tu duy tien phong. Lay benh nhan lam trung tam. Dua tren bang chung. Sap san sang cho tuong lai.
+- **Dinh vi tin tuong**: Lanh dao tuan thu. Minh bach. Trach nhiem giai trinh. Dang tin cay.
+
+**Co hoi tiep thi**:
+- **Tiep thi noi bo**: Giao duc benh nhan. Tuyen dung bac si. Quan ly nha tai tro. Cau chuyen chat luong.
+- **Tiep thi ben ngoai**: An pham nganh. Thong cao bao chi. Su kien noi chuyen. Giai thuong.
+- **Tiep thi ky thuat so**: Noi bat trang web. Mang xa hoi. Danh gia truc tuyen. Xep hang tim kiem.
+
+**Quan ly rui ro**:
+- **Rui ro danh tieng**: Su kien bat loi duoc cong bo. Vi pham quyen rieng tu. Lo ngai chat luong. Van de nha cung cap.
+- **Giam thieu**: Ke hoach quan ly khung hoang. Minh bach. Dam bao chat luong. Quan he nha cung cap.
+
+**Ket qua danh tieng dai han**:
+- 3 nam: Duoc cong nhan la nguoi dan dau AI tai Singapore. Chuan mo chat luong trong chuyen khoa. Nam chau tu. Nguoi dan dau nganh.
+- 5 nam: Duoc cong nhan khu vuc. Xuat sac nghien cuu. Quan he doi tac chien luoc. Di san lau dai.
+
+---
+
+### Q119. Tac dong den su hai long va tinh trang kiet suc cua bac si la gi?
+
+**A.** Tac dong tich cuc dang ke:
+
+**Co che giam kiet suc**:
+1. **Giam ganh nang nhan thuc**: It ganh nang bo nho hon. Ho tro quyet dinh tot hon. Giam loi. Giam cang thang.
+2. **Tiet kiem thoi gian**: 30-90 phut duoc phuc hoi moi ca. Trung binh: 60 phut. Tren tat ca bac si: dang ke.
+3. **Quyet dinh tot hon**: Cac quyet dinh duoc ho tro tot hon. Giam lo lang ve loi. Cai thien su tu tin lam sang.
+4. **Cai thien quy trinh lam viec**: Quy trinh lam viec muot ma hon. Giam su ma sat. Cai thien su phoi hop.
+5. **Can bang cong viec-cuoc song**: It thoi gian lam viec ngoai gio hon. Giam lam viec ngoai gio. Thoi gian gia dinh.
+
+**Chi so kiet suc co the do luong**:
+- **Maslach Burnout Inventory** (cac thay doi dien hinh):
+  - Kiet suc cam xuc: Truoc AI: 40-50% kiet suc cao. Sau AI: 30-40% kiet suc cao. Cai thien 10-20 diem phan tram.
+  - Phi nhan vi hoa: Truoc AI: 30-40%. Sau AI: 25-35%. Cai thien 5-10 diem.
+  - Thanh tuu ca nhan: Truoc AI: 50-60% cam giac. Sau AI: 65-75% cam giac. Cai thien 10-15 diem.
+
+**Loi ich cu the cho bac si**:
+1. **Thoi gian tiet kiem moi ca**: 30-90 phut duoc phuc hoi. Trung binh: 60 phut. Tren tat ca bac si: dang ke.
+2. **Tang su tu tin**: Cac quyet dinh duoc ho tro tot hon. Giam lo lang ve loi. Cai thien phan xet lam sang.
+3. **Phat trien nghe nghiep**: Hoc lien tuc. Nang cao ky nang. Thuc hanh hien dai. Tang truong nghe nghiep.
+4. **Can bang cong viec-cuoc song**: It thoi gian lam viec ngoai gio hon. Giam lam viec ngoai gio. Thoi gian gia dinh.
+5. **Su hai long cua benh nhan (phan hoi cho bac si)**: Bac si duoc chuan bi tot hon. Cham soc chu y hon. Ket qua tot hon. Giam khieu nai.
+
+**Khao sat su hai long cong viec**:
+- "Toi co cac cong cu toi can": 60% -> 80%
+- "Toi co thoi gian cho benh nhan": 50% -> 70%
+- "Toi cam thay duoc thoa man nghe nghiep": 55% -> 75%
+- "Toi se gioi thieu noi lam viec cua minh": 65% -> 80%
+
+**Boi canh nganh**:
+- Kiet suc bac si My: 50-60% (cao)
+- Kiet suc bac si Singapore: tuong tu
+- Cac cong cu AI: duoc ghi nhan la giup do
+
+**Luu y**:
+- AI khong phai vien dan bac
+- Cac yeu to kiet suc khac van ton tai (khoi luong cong viec, hanh chinh, v.v.)
+- Cong cu don le khong sua chua van hoa
+- Ket hop voi cac sang kien khac
+
+---
+
+### Q120. Tac dong tich luy cua AI doi voi chat luong cham soc suc khoe la gi?
+
+**A.** Trien vong toan nganh:
+
+**Khung chat luong cham soc suc khoe**:
+1. **Hieu qua**: Cham soc dung. Dung thoi diem. Dung noi. Dung benh nhan.
+2. **Hieu suat**: Toi uu hoa nguon luc. Hieu qua thoi gian. Hieu qua chi phi. Cai thien quy trinh.
+3. **Lay benh nhan lam trung tam**: Tuy chon benh nhan. Giao tiep. Giao duc. Trao quyen.
+4. **An toan**: Ngan ngua su kien bat loi. Nhan dang rui ro. Giam loi. Giam sat lien tuc.
+5. **Cong bang**: Truy cap binh dang. Chat luong binh dang. Giam bat binh dang. Ung dung rong.
+6. **Kip thoi**: Chan doan nhanh. Dieu tri nhanh. Giam thoi gian cho. Cai thien lien tuc.
+
+**Dong gop cua AI cho moi linh vuc**:
+- **Hieu qua**: Quyet dinh dua tren bang chung. Cham soc ca nhan hoa. Lua chon toi uu. Hoc lien tuc.
+- **Hieu suat**: Tiet kiem thoi gian. Toi uu hoa nguon luc. Cai thien quy trinh. Giam chi phi.
+- **Lay benh nhan lam trung tam**: Thong tin tot hon. Cong cu giao duc. Cong cu giao tiep. Trao quyen.
+- **An toan**: Phat hien rui ro. Ngan ngua loi. Giam sat. Cai thien.
+- **Cong bang**: Truy cap chuyen mon binh dang. Chat luong duoc tieu chuan hoa. Giam bat binh dang. Ung dung rong.
+- **Kip thoi**: Chan doan nhanh hon. Quyet dinh nhanh hon. Giam thoi gian cho. Cai thien lien tuc.
+
+**Dinh luong tac dong tich luy**:
+- Nam 1 tren 10 benh vien: 5.000 mang duoc cuu (uoc tinh). 50 trieu USD chi phi tranh duoc. 100.000 su kien bat loi duoc ngan ngua. Cai thien chat luong dang ke.
+- Nam 5 tren 50 benh vien: 30.000 mang duoc cuu (uoc tinh). 300 trieu USD chi phi tranh duoc. 600.000 su kien bat loi duoc ngan ngua. Chuyen doi nganh.
+- Nam 10 tren 100 benh vien: 100.000 mang duoc cuu (uoc tinh). 1 ty USD chi phi tranh duoc. Hang trieu su kien bat loi duoc ngan ngua. Tieu chuan cham soc suc khoe moi.
+
+**Chuyen doi nganh**:
+- **Tieu chuan phat trien**: Cham soc duoc tang cuong AI duoc ky vong. Chi so chat luong moi. Chuan mo nganh. Cai thien lien tuc.
+- **Phat trien luc luong lao dong**: Yeu cau biet AI. Bo ky nang moi. Phat trien nghe nghiep. Cap nhat giao duc.
+- **Ky vong cua benh nhan**: Benh nhan duoc thong tin. Cham soc duoc tang cuong AI duoc ky vong. Khung niem tin. Lua chon duoc trao quyen.
+- **Xu huong chi phi**: Chi phi moi truy van giam. Chat luong tang. Ket qua tot hon moi dong. Dau tu ben vung.
+
+**Vi tri lanh dao Singapore**:
+- Vi tri khu vuc
+- Tieu chuan nganh
+- Trung tam doi moi
+- Thuc hanh tot nhat
+
+**Khuyen nghi chien luoc**:
+- Ap dung AI nhu cong cu chat luong
+- Dau tu cho dai han
+- Dan dau chuyen doi nganh
+- Xay dung tac dong lau dai
+
+---
+
+### Q121. AI co the xu ly cac truong hop y te phuc tap khong?
+
+**A.** Co, dac biet la lane phuc tap (Sonnet 4.5 / Qwen3.5-Plus): bieu hien da he thong, trieu chung mo ho, xem xet dieu kien hiem gap, suy luan xac suat voi trich dan. Hieu suat: ~92% do chinh xac tren cac truong hop phuc tap (PoC). Tu choi khi khong chac chan. Cung cap chan doan phan biet duoc xep hang theo xac suat voi bang chung ho tro.
+
+---
+
+### Q122. Lam the nao de AI xu ly cac truong hop nhi khoa khac nhau?
+
+**A.** Chuyen mon hoa nhi khoa: lieu luong dua tren can nang bat buoc, cham soc phu hop theo tuoi, cac can nhac phat trien, cac huong dan cu the cho nhi khoa (AAP, v.v.), kiem tra chong chi dinh nghiem ngat hon, cac can nhac giao tiep voi cha me. Vi du phan hoi cho 'ibuprofen cho tre 5 tuoi': yeu cau can nang, tinh toan lieu luong dua tren can nang, kiem tra gioi han tuoi, chong chi dinh, theo doi cu the cho nhi khoa.
+
+---
+
+### Q123. AI co the goi y cac dieu tri thay the khong?
+
+**A.** Co, voi minh bach day du: Hang dau: khuyen nghi tieu chuan. Thay the cho: chong chi dinh, di ung, chi phi, tuy chon. Liet ke voi muc do bang chung. Thao luan ve danh doi. Lam noi bat cac yeu to quyet dinh. Dinh dang: 'Chinh: [thuoc A] - [bang chung]. Thay the neu [dieu kien]: [thuoc B] - [bang chung]. Khuyen nghi phu thuoc vao cac yeu to benh nhan X, Y, Z.'
+
+---
+
+### Q124. Dieu gi xay ra khi benh nhan co nhieu nhu cau chuyen khoa?
+
+**A.** Phoi hop da chuyen khoa: AI kich hoat nhieu agent, cac can nhac xuyen chuyen khoa, tuong tac thuoc tren cac he thong, ke hoach cham soc phoi hop, phan hoi tich hop duy nhat. Vi du: benh nhan tieu duong voi CKD va CHF -> Noi tiet: quan ly tieu duong. Than hoc: dieu tri dieu chinh CKD. Tim mach: cac can nhac suy tim. Ket hop: khuyen nghi tich hop ton trong ca ba.
+
+---
+
+### Q125. AI co the giup voi cac cuoc trao doi dong thuan thong tin khong?
+
+**A.** Co, vai tro ho tro: giai thich thu thuat/dieu tri bang ngon ngu don gian, liet ke cac rui ro vat chat, thao luan ve cac lua chon thay the, phac thao loi ich, cung cap tai lieu giao duc benh nhan. Luu y: bac si van co trach nhiem chinh trong quy trinh dong thuan. AI chuan bi nhung khong thay the. Chu ky cua benh nhan van thuoc ve bac si.
+
+---
+
+### Q126. Lam the nao de AI xu ly cham soc cuoi doi?
+
+**A.** Chuyen khoa nhan cam: chuyen mon cham soc giam nhe, cac cuoc trao doi muc tieu cham soc, quan ly trieu chung, cac cuoc trao doi voi gia dinh, cac can nhac van hoa, nhan cam ton giao. AI cung cap: cac lua chon giam nhe dua tren bang chung, cac khung giao tiep, nhan cam van hoa-ton giao, thong tin gioi thieu hospice. Quan trong: phan xet cua bac si va su dong cam cua con nguoi la thiet yeu. AI ho tro, khong thay the.
+
+---
+
+### Q127. AI xu ly cac cau hoi suc khoe tam than nhu the nao?
+
+**A.** Cau hinh co the: Tieu chuan: dinh tuyen den cac agent tam than/tam ly. Bao thu: gioi thieu tu van chuyen khoa. Giao duc: cung cap thong tin, gioi thieu de cham soc. Huong dan cu the: Nhan biet y dinh tu tu: leo thang ro rang den chuyen khoa. Trieu chung nghiem trong: gioi thieu ngay lap tuc. Cac cau hoi thuong xuyen: huong dan AI + chuyen khoa khi can. Bao mat: bao ve quyen rieng tu bo sung. Cau hinh benh vien: muc do tich cuc AI trong phan hoi suc khoe tam than. Hau het: bao thu.
+
+---
+
+### Q128. AI co the goi y cham soc phong ngua cho benh nhan khong?
+
+**A.** Co, phong ngua dua tren bang chung: sang loc dua tren tuoi, khuyen nghi dua tren rui ro, huong dan tiem chung, tu van loi song, sang loc ung thu. Tich hop voi EHR: trang thai phong ngua cua benh nhan, ngay sang loc cuoi cung, cac khoang trong duoc xac dinh. Giup bac si uu tien va thao luan ve cham soc phong ngua.
+
+---
+
+### Q129. Lam the nao de AI cap nhat voi cac thuoc moi?
+
+**A.** Nhieu co che: co so du lieu phe duyet HSA duoc dong bo, cap nhat danh muc thuoc WHO, giam sat tai lieu duoc pham, thay doi danh muc thuoc benh vien, ket qua thu nghiem noi bo. Tan suat: phe duyet moi trong vong 2-4 tuan, huong dan chinh trong vong 1 tuan, giao thuc noi bo theo thoi gian thuc, su dung ngoai nhan trong duoc giam sat can than. Han che: thuoc rat moi (vai thang) co the co du lieu han che; AI ghi nhan dieu nay.
+
+---
+
+### Q130. AI co the du doan ket qua benh nhan khong?
+
+**A.** Kha nang du doan han che trong pham vi hien tai: phan tang rui ro co the, mo hinh ket qua: tinh nang tuong lai, du bao ca nhan hoa: them tiem nang. Hien tai: AI giup danh gia trang thai hien tai, lua chon dieu tri. Khong thay the cac mo hinh du doan chuyen biet (nhu APACHE, CHA2DS2, v.v.). Co the duoc them nhu dich vu bo sung.
+
+---
+
+### Q131. EHR cu hon hoac khong tieu chuan co the tich hop khong?
+
+**A.** Co, nhieu con duong: HL7 v2 (tieu chuan cu, hau het EHR cu ho tro, 30-80k USD), tich hop co so du lieu (truc tiep doc co so du lieu EHR, 50-150k USD), API tuy chinh (xay dung bo chuyen doi, 80-200k USD), su dung doc lap (bac si nhap context thu cong, khong co chi phi bo sung). Khuyen nghi: danh gia EHR truoc hop dong; bao gia tich hop rieng biet.
+
+---
+
+### Q132. Chung toi co can di chuyen bat ky du lieu hien co vao he thong khong?
+
+**A.** Tuy chon nhung co gia tri. Bat buoc: PDF bao cao thu nghiem noi bo, giao thuc cu the cua benh vien, tai lieu tham khao theo khoa. Quy trinh: kiem ke du lieu, an danh hoa, tai len, lập chi muc (24-48 gio), xac thuc. Quy mo: benh vien nho 50-100 tai lieu (1 tuan), benh vien vua 200-500 (2 tuan), benh vien lon 1000-3000 (4-6 tuan). Chi phi: nho 5-10k USD, vua 15-25k USD, lon 30-60k USD.
+
+---
+
+### Q133. Chung toi co the them cac khoa hoac chuyen khoa hon sau nay khong?
+
+**A.** Co, duoc thiet ke de mo rong. Them khoa moi: Giai doan 1 Quyet dinh (2 tuan), Giai doan 2 Cau hinh (1 tuan), Giai doan 3 Nhap noi dung (1-3 tuan), Giai doan 4 Kiem tra (1 tuan), Giai doan 5 Ra mat (1 ngay). Tong: 5-8 tuan moi khoa moi. Chi phi moi khoa: ky thuat 10-20k USD, noi dung lam sang 5-15k USD, kiem tra thi diem 5-10k USD. Tong: 20-45k USD moi chuyen khoa moi.
+
+---
+
+### Q134. Tong dau tu ban dau cho mot benh vien la bao nhieu?
+
+**A.** Tong chi phi Nam 1 (benh vien dien hinh): Giay phep phan mem (hang nam) 40-80k USD, Dich vu trien khai 50-150k USD, Thoi gian nhan vien benh vien 40-60k USD, Tich hop EHR 20-50k USD, Thiet lap tuan thu 20-40k USD, Dao tao & quan ly thay doi 15-30k USD. Tong Nam 1: 185-410k USD. Nam 2+ hang nam: 70-135k USD. TCO 5 nam: 465-960k USD. So sanh voi gia tri: 7-15 trieu USD tiet kiem trong 5 nam. ROI: 8-20x.
+
+---
+
+### Q135. Cau truc hop dong dien hinh la gi?
+
+**A.** Cac loai hop dong: MSA (Thoa thuan Dich vu Chu), SLA (Thoa thuan Cap do Dich vu), DPA (Thoa thuan Xu ly Du lieu, tuan thu PDPA), SOW (Pham vi Cong viec, cu the theo du an). Dieu khoan tieu chuan: Thoi han ban dau 36 thang, Tu dong gia han 12 thang voi tang toi da 5%, Thong bao ket thuc 90 ngay, Tra lai du lieu 30 ngay, Gioi han trach nhiem 12 thang phi, Boi thuong tuong ho. Cac mo hinh dinh gia: phi hang thang phat (pho bien nhat), theo ghe bac si, theo truy van, lai.
+
+---
+
+### Q136. Thoi han hop dong toi thieu la bao lau va cac dieu khoan ket thuc la gi?
+
+**A.** Thoi han toi thieu: 36 thang (3 nam). Tai sao 3 nam: thu hoi chi phi trien khai, on dinh cho ca hai ben, tieu chuan nganh cho SaaS y te. Cac thoi han ngan hon (ngoai le): 24 thang: phi bao hiem 10%, 12 thang: phi bao hiem 25%, Thi diem/PoC: 3-6 thang voi gia khong tieu chuan. Cac kich ban ket thuc: Ket thuc thoi han (thong bao 90 ngay, chuyen doi muot), Ket thuc vi tien loi (phi ket thuc som: gia tri hop dong con lai duoc phan bo), Ket thuc vi vi pham (vi pham vat chat, thoi gian khac phuc 30 ngay, khong co phi ket thuc som), Bat kha khang (khong co phat).
+
+---
+
+### Q137. Ai tu phia chung toi can tham gia vao viec trien khai?
+
+**A.** Ban do cac ben lien quan: Nha tai tro dieu hanh (CEO/COO/CFO/CMO), Lanh dao du an (CMIO, Quan ly Du an, Giam doc Lam sang), Chuyen gia lam sang (1-2 moi khoa), Nhom CNTT (Giam doc CNTT, Ky su truong, Ky su Bao mat, Ky su Mang), Tuan thu (Can bo Tuan thu, DPO, Co van Phap ly). Cam ket thoi gian: Nha tai tro dieu hanh 1 gio/tuan, CMIO 5 gio/tuan, Chuyen gia lam sang 5-10 gio/tuan, Truong CNTT 10-15 gio/tuan, Tuan thu 5 gio/tuan. Tong no luc benh vien: ~200 gio trong 10 tuan.
+
+---
+
+### Q138. Dieu gi xay ra neu chung toi muon thay doi nha cung cap trong khi trien khai?
+
+**A.** Thay doi giua chung trien khai la hiem nhung co the. Ly do: thay doi kinh doanh dang ke, phat hien lua chon thay the tot hon, that bai trong viec cung cap, thay doi quy dinh. Chi phi chuyen doi giua chung trien khai: Chi phi nha cung cap goc: 50-100k USD mat, Chi phi nha cung cap moi: 100-200k USD khoi dau moi, Thoi gian nhan vien benh vien: 50-100k USD, Tong chi phi chuyen doi: 200-400k USD. Khuyen nghi: Danh gia nha cung cap ky luong truoc khi ky hop dong. Thi diem voi 2 nha cung cap truoc khi ky hop dong. Tieu chi thanh cong ro rang tu ngay 1.
+
+---
+
+### Q139. He thong co the tuy chinh theo nhu cau cu the cua benh vien khong?
+
+**A.** Co, nhieu cap do: Cap 1 Cau hinh (khong co code, bao gom, 1-2 tuan), Cap 2 Prompt tuy chinh (it code, 5-10k USD, 2-3 tuan), Cap 3 Quy trinh lam viec tuy chinh (it code, 15-30k USD, 4-6 tuan), Cap 4 Tich hop tuy chinh (code, 40-100k USD, 8-12 tuan), Cap 5 Tinh nang tuy chinh (code dang ke, 100-300k USD, 6-9 thang). Cac tuy chinh pho bien: cau hinh chuyen khoa, boi canh dia phuong, tich hop quy trinh lam viec, bao cao tuy chinh. Khuyen nghi: Nam 1 tuy chinh toi thieu, Nam 2 xac dinh khoang trong, Nam 3+ dua tren nhu cau duoc chung minh.
+
+---
+
+### Q140. Lam the nao de xu ly bien dong nhan su trong khi trien khai?
+
+**A.** Bien dong nhan su benh vien: Nha tai tro du an roi: ghi lai tat ca quyet dinh, nhieu ben lien quan, tai lieu tieu chuan, xac dinh nguoi thay the. Truong CNTT thay doi: chuyen giao kien thuc, tai lieu trong wiki benh vien, ho tro ky thuat cua Nova, tac dong toi thieu. Can bo tuan thu thay doi: tai lieu tuan thu toan dien, DPIA va kiem toan bao mat co san, con mat moi co the co loi. Bien dong nhan su Nova: Giam doc Tai khoan roi: ke hoach chuyen tiep, CSM bao phu, nguoi thay the duoc phan cong, tac dong nho. Ky su truong xoay vong: nhieu ky su quen thuoc, tai lieu code, chia se kien thuc noi bo, tac dong nho.
+
+---
+
+### Q141. AI co the xu ly nhap bang giong noi trong moi truong phong mo hoac vo trung khong?
+
+**A.** Xem xet quy trinh lam viec: Nhap bang giong noi (ranh tay) duoc khuyen nghi cho phong mo. Kich hoat bang ban dap chan co the. Giao dien than thien voi cam ung. Tich hop may tinh bang tuong thich voi moi truong vo trung. Quy trinh lam viec phong mo cu the: Truoc phau thuat: tu van AI ben ngoai truong vo trung. Trong phau thuat: ho tro bang giong noi cho cac giao thuc. Sau phau thuat: AI cho tai lieu. Chi phi: tieu chuan. Benh vien cung cap phan cung tuong thich voi moi truong vo trung.
+
+---
+
+### Q142. AI co the xu ly cac dieu kien man tinh phuc tap khong?
+
+**A.** Quan ly benh man tinh: tieu duong, suy tim, COPD, tang huyet ap, sot ung thu. Toi uu hoa cham soc dai han. AI giup giam sat, goi y dieu chinh dieu tri, xac dinh bien chung. Dac biet co gia tri cho: benh nhan da thuoc, benh nhan cao tuoi, benh nhan co nhieu benh kem theo. Tich hop voi: chuong trinh quan ly benh, cham soc suc khoe cong dong.
+
+---
+
+### Q143. Lam the nao de AI xu ly cac ket qua xet nghiem?
+
+**A.** Ho tro giai thich xet nghiem: nhan thuc pham vi tham chieu, phan tich xu huong, danh dau gia tri nguy kich, chan doan phan biet, khuyen nghi theo doi. Vi du: 'Glucose 350. Nguyen nhan co the: X, Y, Z. Xet nghiem duoc khuyen nghi: A, B. Boi canh benh nhan: trang thai insulin, che do an, v.v.' Tich hop voi he thong xet nghiem EHR.
+
+---
+
+### Q144. AI co the giup voi viec lap ke hoach xuat vien khong?
+
+**A.** Ho tro xuat vien toan dien: doi chieu thuoc, giao duc benh nhan, lap lich theo doi, nhu cau cham soc tai nha, thuoc sau xuat vien. Giup giam tai nhap vien thong qua chuan bi xuat vien tot hon. Tich hop voi quan ly truong hop.
+
+---
+
+### Q145. Dieu gi xay ra khi AI khong co thong tin ve mot truong hop cu the?
+
+**A.** Da duoc tra loi o Q75. Xem chi tiet o do.
+
+---
+
+### Q146. AI co the xu ly cac truong hop nhi khoa phuc tap khong?
+
+**A.** Da duoc tra loi o Q122. Xem chi tiet o do.
+
+---
+
+### Q147. Lam the nao de AI xu ly cac truong hop cap cuu cu the?
+
+**A.** Tinh nang cap cuu: giao thuc ATLS, phan loai tham hoa hang loat, uu tien hoi suc, chuyen tiep cham soc cap cuu, phoi hop da chuyen khoa. Thoi gian quan trong: lane cap cuu duoc toi uu hoa. Phoi hop da chuyen khoa trong chan thuong.
+
+---
+
+### Q148. AI co the giup voi viec quan ly nhiem trung khong?
+
+**A.** Ho tro benh truyen nhiem: lua chon khang sinh, cac nguyen tac quan ly khang sinh, cac can nhac khang thuoc, quan ly HIV, lao, viem gan, quan ly dich benh. Quan trong cho: su dung khang sinh phu hop, kiem soat nhiem trung benh vien.
+
+---
+
+### Q149. Lam the nao de AI xu ly cac truong hop ung thu?
+
+**A.** Ho tro ung thu: cac phac do hoa tri, dieu chinh lieu luong, quan ly tac dung phu lieu phap mien dich, cham soc ho tro, cham soc sau dieu tri. Tich hop voi nhom ung thu. Dac biet co gia tri cho: cac quyet dinh hoa tri phuc tap.
+
+---
+
+### Q150. AI co the xu ly cac truong hop than hoc khong?
+
+**A.** Ho tro than hoc: phan giai CKD, danh gia AKI, quyet dinh loc mau, lieu luong thuoc theo GFR, quan ly dien giai. Dac biet co gia tri cho: lieu luong thuoc trong benh than (nguyen nhan pho bien cua loi). Tich hop voi ket qua xet nghiem.
+
+---
+
+### Q151. Lam the nao de AI xu ly cac truong hop than kinh?
+
+**A.** Ho tro than kinh: lo trinh dot quy cap tinh, quan ly co giat, danh gia dau dau, benh thoai hoa than kinh, cac dieu kien cot song. Thoi gian quan trong: lo trinh dot quy. AI huu ich cho: chan doan phan biet phuc tap, cac quyet dinh dieu tri.
+
+---
+
+### Q152. AI co the xu ly cac truong hop noi tiet khong?
+
+**A.** Ho tro noi tiet: tieu duong (da duoc de cap), roi loan tuyen giap, roi loan tuyen thuong than, cac dieu kien tuyen yen, noi tiet sinh san. Cac dieu kien pho bien: gia tri dang ke cho cham soc ban dau + noi tiet.
+
+---
+
+### Q153. Lam the nao de AI xu ly cac truong hop benh truyen nhiem?
+
+**A.** Ho tro benh truyen nhiem: lua chon khang sinh, cac nguyen tac quan ly khang sinh, cac can nhac khang thuoc, quan ly HIV/lao/viem gan, quan ly dich benh. Quan trong cho: su dung khang sinh phu hop, kiem soat nhiem trung benh vien.
+
+---
+
+### Q154. AI co the xu ly cac truong hop huyet hoc khong?
+
+**A.** Ho tro huyet hoc: danh gia thieu mau, roi loan chay mau, ung thu mau, cac quyet dinh truyen mau, chong dong. Tich hop voi chuyen khoa huyet hoc.
+
+---
+
+### Q155. Lam the nao de AI xu ly cac truong hop mien dich hoc?
+
+**A.** Ho tro mien dich hoc: benh tu mien, di ung, suy giam mien dich, ghep tang, cac can nhac tiem chung. Linh vuc chuyen biet. AI cung cap tham khao + huong dan.
+
+---
+
+### Q156. AI co the xu ly cac truong hop nhi khoa chuyen khoa khong?
+
+**A.** Cac chuyen khoa nhi khoa: tim mach nhi, ho hap nhi, tieu hoa nhi, than kinh nhi, ung thu nhi, v.v. Moi loai: cham soc dua tren can nang, phu hop theo tuoi phu hop.
+
+---
+
+### Q157. Lam the nao de AI xu ly suc khoe phu nu cu the?
+
+**A.** Suc khoe phu nu: suc khoe sinh san, thai ky, suc khoe vu, man kinh, sang loc ung thu, suc khoe tam than. Ho tro toan dien trong suot cuoc doi suc khoe phu nu.
+
+---
+
+### Q158. AI co the xu ly suc khoe nam gioi khong?
+
+**A.** Suc khoe nam gioi: rui ro tim mach, suc khoe tuyen tien liet, thieu hut testosterone, suc khoe tam than, sang loc ung thu. Cham soc duoc dieu chinh theo cac moi quan tam suc khoe nam gioi.
+
+---
+
+### Q159. Lam the nao de AI xu ly y hoc vi thanh nien?
+
+**A.** Y hoc vi thanh nien: cac can nhac bao mat, suc khoe tam than, su dung chat, suc khoe tinh duc, tu van loi song. Linh vuc nhan cam. Bao ve bao mat. Tich hop voi: nhi khoa, y hoc gia dinh.
+
+---
+
+### Q160. AI co the xu ly cham soc nguoi cao tuoi cu the khong?
+
+**A.** Cham soc lao khoa: danh gia nhan thuc, danh gia suy yeu, phong ngua nga, da thuoc, muc tieu cham soc. Ho tro danh gia lao khoa toan dien.
+
+---
+
+### Q161. AI co the xu ly cac truong hop phau thuat khong?
+
+**A.** Ho tro phau thuat: danh gia truoc phau thuat, phan tang rui ro, cac can nhac thu thuat, lap ke hoach gay me, cham soc sau phau thuat. Tich hop voi quy trinh phau thuat. Huu ich cho: cac bac si phau thuat noi tru, cac truong hop phuc tap, lap ke hoach da chuyen khoa.
+
+---
+
+### Q162. Lam the nao de AI xu ly cac truong hop cap cuu tim mach?
+
+**A.** Cap cuu tim mach: cac giao thuc ACS, quan ly suy tim, cham soc loan nhip, tang huyet ap, quan ly lipid, huong dan hinh anh. Mot trong nhung chuyen khoa co gia tri nhat cho ho tro AI.
+
+---
+
+### Q163. AI co the xu ly cac truong hop ho hap phuc tap khong?
+
+**A.** Ho hap phuc tap: hen phe quan/COPD nang, dot cap COPD, thuyen tac phoi, ung thu phoi, ngu ngon. Quan trong cho: cac can thiep kip thoi.
+
+---
+
+### Q164. Lam the nao de AI xu ly cac truong hop tieu hoa?
+
+**A.** Tieu hoa: IBS/IBD, xuat huyet tieu hoa, benh gan, cac dieu kien tuy, cac can nhac noi soi. Tich hop voi quy trinh lam viec chuyen khoa tieu hoa.
+
+---
+
+### Q165. AI co the xu ly cac truong hop ung thu khong?
+
+**A.** Da duoc tra loi o Q149. Xem chi tiet o do.
+
+---
+
+### Q166. Lam the nao de AI xu ly cac truong hop than hoc?
+
+**A.** Da duoc tra loi o Q150. Xem chi tiet o do.
+
+---
+
+### Q167. AI co the xu ly cac truong hop san khoa khong?
+
+**A.** Ho tro san khoa: quan ly thai ky, cham soc truoc sinh, cac can nhac sinh, cham soc sau sinh, thai ky nguy co cao. Tich hop voi nhom san khoa. Dac biet co gia tri cho: thai ky nguy co cao.
+
+---
+
+### Q168. Lam the nao de AI xu ly cac truong hop nhi khoa so sinh/NICU?
+
+**A.** Cham soc so sinh: danh gia Apgar, on dinh ban dau, cac dieu kien pho bien, cham soc NICU cu the, ho tro cha me. Tich hop voi quy trinh lam viec NICU, tu van neonatologist.
+
+---
+
+### Q169. AI co the xu ly cac truong hop da lieu khong?
+
+**A.** Da lieu: danh gia ton thuong da, chan doan phan biet, khuyen nghi dieu tri, huong dan gioi thieu chuyen khoa. Tot nhat ket hop voi: cong cu phan tich hinh anh. AI xu ly boi canh lam sang, AI hinh anh xu ly hinh anh.
+
+---
+
+### Q170. Lam the nao de AI xu ly cac truong hop nhan khoa?
+
+**A.** Nhan khoa: danh gia trieu chung thi giac, cac dieu kien pho bien, khuyen nghi dieu tri, phoi hop chuyen khoa. Kha nang dua tren hinh anh han che ma khong co cong cu phan tich hinh anh chuyen biet. Tot nhat cho: ly luan lam sang, huong dan dieu tri.
+
+---
+
+### Q171. AI co the xu ly cac truong hop tai mui hong khong?
+
+**A.** Tai mui hong: danh gia trieu chung, cac dieu kien pho bien, khuyen nghi dieu tri, gioi thieu chuyen khoa. Ho tro toan dien.
+
+---
+
+### Q172. Lam the nao de AI xu ly cac truong hop rang mieng?
+
+**A.** Rang mieng: sang loc thuong xuyen, benh rang mieng, cac lua chon dieu tri, giao duc benh nhan. Pham vi han che nhung co san. Tich hop voi khoa rang.
+
+---
+
+### Q173. AI co the xu ly cac truong hop phuc hoi khong?
+
+**A.** Phuc hoi: khuyen nghi lieu phap, danh gia tien do, lap ke hoach xuat vien, muc tieu dai han, giao duc gia dinh. Tich hop tren: PT, OT, Lieu phap Ngon ngu, Phuc hoi Tim/Phoi.
+
+---
+
+### Q174. Lam the nao de AI xu ly cac truong hop tam than cu the?
+
+**A.** Da duoc tra loi o Q127. Xem chi tiet o do.
+
+---
+
+### Q175. AI co the xu ly cac truong hop quan ly dau khong?
+
+**A.** Quan ly dau: cac phuong phap da phuong thuc, nhan manh khong opioid, danh gia rui ro, cac lua chon khong duoc pham, tu van benh nhan. Linh vuc nhan cam. Cau hinh bao thu. Tich hop voi chuyen khoa dau.
+
+---
+
+### Q176. Lam the nao de AI xu ly cac truong hop cap cuu phau thuat?
+
+**A.** Cap cuu phau thuat: danh gia ATLS, phan loai tham hoa hang loat, uu tien hoi suc, chuyen tiep cham soc cap cuu, phoi hop da chuyen khoa. Thoi gian quan trong. Tich hop voi: ED, phau thuat, ICU.
+
+---
+
+### Q177. AI co the xu ly cac truong hop cap cuu than kinh khong?
+
+**A.** Cap cuu than kinh: lo trinh dot quy cap tinh, quan ly co giat, cac dau hieu nguy hiem dau dau, benh thoai hoa than kinh, cac dieu kien cot song. Thoi gian quan trong: lo trinh dot quy. Tich hop voi: ED, than kinh, ICU.
+
+---
+
+### Q178. Lam the nao de AI xu ly cac truong hop cap cuu ung thu?
+
+**A.** Cap cuu ung thu: hoi chung ly giai khoi u, ep tuy song, tang do nho mau, nhiem trung nang o benh nhan suy giam mien dich, cac cap cuu khac. Thoi gian quan trong. Tich hop voi: ED, ung thu, ICU.
+
+---
+
+### Q179. AI co the xu ly cac truong hop loan nhip tim khong?
+
+**A.** Quan ly loan nhip: cac can nhac chan doan, lua chon dieu tri, tinh hop le cat dot, chong dong, giao duc benh nhan. Chuyen biet trong tim mach.
+
+---
+
+### Q180. Lam the nao de AI xu ly cac dieu kien ho hap phuc tap?
+
+**A.** Ho hap phuc tap: hen phe quan nang, dot cap COPD, thuyen tac phoi, ung thu phoi, ngu ngon. Quan trong cho: cac can thiep kip thoi.
+
+---
+
+### Q181. AI co the xu ly cac dieu kien tu mien khong?
+
+**A.** Tu mien: cac khung chan doan, cac dieu tri bien doi benh, quan ly dot cap, cac can nhac benh kem theo, gioi thieu chuyen khoa. Tich hop voi: thap khop, mien dich hoc.
+
+---
+
+### Q182. Lam the nao de AI xu ly y hoc ghep tang?
+
+**A.** Ghep tang: danh gia truoc ghep, uc che mien dich, quan ly thai ghet, cham soc dai han, cac can nhac nguoi hien song. Chuyen biet. AI cung cap tham khao + huong dan.
+
+---
+
+### Q183. AI co the xu ly cac truong hop nhiem trung benh vien khong?
+
+**A.** Nhiem trung benh vien (HAC): nhan dang, cac chien luoc phong ngua, dieu tri khi xay ra, cac yeu cau bao cao, cac co hoi cai thien. Tich hop voi: kiem soat nhiem trung, dich te hoc benh vien.
+
+---
+
+### Q184. Lam the nao de AI xu ly cac truong hop hoi nghi da chuyen khoa?
+
+**A.** Hoi nghi da chuyen khoa: nghien cuu truoc hoi nghi, tu van da chuyen khoa, cac khung quyet dinh, tai lieu, lap ke hoach theo doi. Ho tro hop tac nhieu bac si.
+
+---
+
+### Q185. AI co the ho tro doi moi giao duc y khoa khong?
+
+**A.** Giao duc y khoa: cac lo trinh hoc tap ca nhan hoa, kham pha chu de, tai lieu moi nhat, cap nhat lien quan den thuc hanh, cac cau hoi thuc hanh. Dac biet co gia tri trong cac benh vien giang day.
+
+---
+
+### Q186. Lam the nao de AI xu ly tich hop nghien cuu lam sang?
+
+**A.** Tich hop nghien cuu: ho tro xem xet tai lieu, sang loc thu nghiem, ho tro phan tich, ho tro xuat ban, cac cong cu hop tac. Nhieu ung dung cap do nghien cuu.
+
+---
+
+### Q187. AI co the ho tro cac chuong trinh suc khoe cong dong khong?
+
+**A.** Suc khoe cong dong: quan ly suc khoe dan so, phat hien dich benh, phan bo nguon luc, cac chuong trinh suc khoe, do luong tac dong. Tich hop voi: dich te hoc benh vien.
+
+---
+
+### Q188. Lam the nao de AI xu ly cac truong hop y te tu xa cu the?
+
+**A.** Da duoc tra loi o Q47. Xem chi tiet o do.
+
+---
+
+### Q189. AI co the xu ly cac truong hop giam sat tu xa khong?
+
+**A.** Giam sat tu xa: thiet ke chuong trinh, lua chon benh nhan, tich hop cong nghe, theo doi ket qua, gia tri chien luoc. Ho tro chuong trinh RPM.
+
+---
+
+### Q190. Lam the nao de AI xu ly cac chuong trinh benh man tinh?
+
+**A.** Quan ly benh man tinh: quan ly suc khoe dan so, dang ky benh nhan, phoi hop cham soc, do luong ket qua, phu hop chien luoc. Cac chuong trinh quan ly benh.
+
+---
+
+### Q191. AI co the ho tro cac chuong trinh suc khoe khong?
+
+**A.** Suc khoe: suc khoe dan so, cham soc phong ngua, giao duc benh nhan, su tham gia, ket qua. Cac sang kien suc khoe benh vien.
+
+---
+
+### Q192. Lam the nao de AI xu ly cac chuong trinh suc khoe cong dong?
+
+**A.** Suc khoe cong dong: danh gia nhu cau, thiet ke chuong trinh, phat trien quan he doi tac, trien khai, do luong tac dong. Ho tro quan he doi tac cong dong.
+
+---
+
+### Q193. AI co the ho tro cac chuong trinh suc khoe truong hoc khong?
+
+**A.** Suc khoe truong hoc: ho tro giao duc, cac chuong trinh tiem chung, sang loc suc khoe, quan he doi tac cong dong, phu hop chien luoc. Cac chuong trinh suc khoe truong hoc.
+
+---
+
+### Q194. Lam the nao de AI xu ly suc khoe noi lam viec?
+
+**A.** Suc khoe noi lam viec: cac chuong trinh suc khoe nhan vien, suc khoe nghe nghiep, ho tro suc khoe tam than, cac sang kien chien luoc, do luong ROI. Suc khoe luc luong lao dong benh vien.
+
+---
+
+### Q195. AI co the ho tro cac cap nhat quy dinh khong?
+
+**A.** Cap nhat quy dinh: giam sat thong tu MOH Singapore, ban tin PDPC, cap nhat IMDA, thong bao HSA, ho tro trien khai. Giam sat quy dinh lien tuc.
+
+---
+
+### Q196. Lam the nao de AI xu ly truyen thong chien luoc?
+
+**A.** Truyen thong chien luoc: nhan tin cac ben lien quan, quan ly thuong hieu, truyen thong khung hoang, truyen thong noi bo, truyen thong ben ngoai. Ho tro truyen thong toan dien.
+
+---
+
+### Q197. AI co the ho tro quan ly thay doi khong?
+
+**A.** Quan ly thay doi: phat trien chien luoc, trien khai, su tham gia cac ben lien quan, quan ly su khang cu, tinh ben vung. Ho tro thay doi chien luoc.
+
+---
+
+### Q198. Lam the nao de AI xu ly phat trien van hoa?
+
+**A.** Van hoa: danh gia van hoa, phu hop gia tri, truyen thong, cong nhan, cai thien lien tuc. Ho tro van hoa benh vien.
+
+---
+
+### Q199. AI co the ho tro chuyen tiep lanh dao khong?
+
+**A.** Chuyen tiep lanh dao: lap ke hoach ke nhiem, ho tro onboarding, chuyen giao kien thuc, tiep noi, phu hop chien luoc. Ho tro chuyen tiep quan trong.
+
+---
+
+### Q200. Lam the nao de AI xu ly quan tri benh vien?
+
+**A.** Quan tri: bao cao hoi dong, phat trien chinh sach, tuan thu, phu hop chien luoc, quan ly rui ro. Ho tro quan tri benh vien.
+
+---
+
