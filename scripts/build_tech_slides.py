@@ -1,4 +1,4 @@
-﻿"""Build technology explanation slides + RAG vs Fine-tuning comparison slide."""
+"""Build technology explanation slides + RAG vs Fine-tuning comparison slide."""
 from pathlib import Path
 from pptx import Presentation
 from pptx.util import Inches, Pt
@@ -76,6 +76,16 @@ def card(slide, left, top, width, height, fill, border, radius=0.06, border_pt=1
     s.line.color.rgb = border; s.line.width = Pt(border_pt)
     s.adjustments[0] = radius
     return s
+
+
+def solid(shape, color):
+    shape.fill.solid(); shape.fill.fore_color.rgb = color; shape.line.fill.background()
+
+
+def bordered(shape, fill_color, line_color, line_pt=1.5, radius=0.06):
+    shape.fill.solid(); shape.fill.fore_color.rgb = fill_color
+    shape.line.color.rgb = line_color; shape.line.width = Pt(line_pt)
+    shape.adjustments[0] = radius
 
 
 def header_card(slide, left, top, width, height, title, fill_color, text_color=None):
@@ -244,157 +254,196 @@ bullet_list(slide, Inches(6.8), Inches(4.37), Inches(5.8), ali_graph, size=10.5,
 print("  Slide 2 (GraphRAG): done")
 
 
-# =============================================================================
-# SLIDE 3: Multi-Agent Architecture
-# =============================================================================
-slide = new_slide(prs)
-slide_title(slide, "Multi-Agent Architecture")
-
-# Left: concept
-card(slide, Inches(0.5), Inches(1.1), Inches(5.8), Inches(5.5), ORANGE_LIGHT, ORANGE, radius=0.05)
-header_card(slide, Inches(0.5), Inches(1.1), Inches(5.8), Inches(0.5), "Why Multiple Agents?", ORANGE)
-
-add_text(slide, Inches(0.7), Inches(1.72), Inches(5.4), Inches(1.0),
-    "A single general AI gives generic answers. Specialty agents are trained "
-    "with department-specific context, terminology, and protocols. "
-    "A router agent classifies the question and dispatches to the right specialist.",
-    size=11, color=GRAY_DARK)
-
-# Agent topology diagram
-# Router
-router = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
-    Inches(2.0), Inches(2.9), Inches(2.0), Inches(0.55))
-router.fill.solid(); router.fill.fore_color.rgb = ORANGE_DARK; router.line.fill.background()
-router.adjustments[0] = 0.1
-tb = slide.shapes.add_textbox(Inches(2.0), Inches(2.9), Inches(2.0), Inches(0.55))
-tf = tb.text_frame; tf.vertical_anchor = MSO_ANCHOR.MIDDLE
-p = tf.paragraphs[0]; p.alignment = PP_ALIGN.CENTER
-run = p.add_run(); run.text = "Router Agent\n(Nova Micro / Qwen Flash)"
-run.font.name = "Calibri"; run.font.size = Pt(9); run.font.bold = True
-run.font.color.rgb = WHITE
-
-# Specialty agents
-specialties = [
-    (Inches(0.6), Inches(4.1), "Emergency\nHaiku 4.5"),
-    (Inches(1.7), Inches(4.1), "Cardiology\nSonnet 4.5"),
-    (Inches(2.8), Inches(4.1), "Infectious\nDisease"),
-    (Inches(3.9), Inches(4.1), "Oncology"),
-    (Inches(5.0), Inches(4.1), "+36 more\nspecialties"),
-]
-for sx, sy, slabel in specialties:
-    sp = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, sx, sy, Inches(0.95), Inches(0.65))
-    sp.fill.solid(); sp.fill.fore_color.rgb = ORANGE; sp.line.fill.background()
-    sp.adjustments[0] = 0.1
-    tb = slide.shapes.add_textbox(sx, sy, Inches(0.95), Inches(0.65))
-    tf = tb.text_frame; tf.vertical_anchor = MSO_ANCHOR.MIDDLE
-    p = tf.paragraphs[0]; p.alignment = PP_ALIGN.CENTER
-    run = p.add_run(); run.text = slabel
-    run.font.name = "Calibri"; run.font.size = Pt(8); run.font.bold = True
-    run.font.color.rgb = WHITE
-
-# Side-channel agents
-add_text(slide, Inches(0.7), Inches(5.0), Inches(5.4), Inches(0.35),
-    "Side-channel agents (auto-invoked):", size=10, bold=True, color=ORANGE_DARK)
-side_agents = ["Clinical Pharmacy (on any prescribing question)",
-               "Radiology (when image attached)"]
-bullet_list(slide, Inches(0.7), Inches(5.38), Inches(5.4), side_agents, size=10, spacing=0.28)
-
-# Right: AWS vs Alibaba
-card(slide, Inches(6.6), Inches(1.1), Inches(6.2), Inches(2.5), ORANGE_LIGHT, ORANGE, radius=0.05)
-header_card(slide, Inches(6.6), Inches(1.1), Inches(6.2), Inches(0.5), "AWS with Claude", ORANGE)
-aws_agents = [
-    "Bedrock Agents: managed tool-calling runtime",
-    "40 specialty agents + 1 emergency + 1 router",
-    "Router: Nova Micro (JSON mode, 150-200ms)",
-    "Emergency: Claude Haiku 4.5 (direct, no router)",
-    "Complex: Claude Sonnet 4.5 per specialty",
-    "Vision: Sonnet 4.5 (Radiology, image input)",
-]
-bullet_list(slide, Inches(6.8), Inches(1.72), Inches(5.8), aws_agents, size=10.5, bullet_color=ORANGE)
-
-card(slide, Inches(6.6), Inches(3.75), Inches(6.2), Inches(2.85), PURPLE_LIGHT, PURPLE, radius=0.05)
-header_card(slide, Inches(6.6), Inches(3.75), Inches(6.2), Inches(0.5), "Alibaba Cloud", PURPLE)
-ali_agents = [
-    "Model Studio Agent Applications (per department)",
-    "40 Agent apps + 1 emergency Workflow Application",
-    "Router: Qwen3.5-Flash JSON mode (150-200ms)",
-    "Emergency: Qwen3.5-Flash (deterministic DAG)",
-    "Complex: 60% Qwen3-8B student / 40% Qwen3.5-Plus",
-    "Vision: Qwen3-VL-Plus (Radiology, forced on image)",
-]
-bullet_list(slide, Inches(6.8), Inches(4.37), Inches(5.8), ali_agents, size=10.5, bullet_color=PURPLE)
-
-print("  Slide 3 (Multi-Agent): done")
 
 # =============================================================================
-# SLIDE 4: Agentic RAG
+# SLIDE 3: Multi-Agent Architecture (12 departments in PoC)
 # =============================================================================
 slide = new_slide(prs)
-slide_title(slide, "Agentic RAG: Tools + Retrieval in a Loop")
+slide_title(slide, 'Multi-Agent Architecture: 12 Specialty Agents (PoC)')
 
-# Left: concept
-card(slide, Inches(0.5), Inches(1.1), Inches(5.8), Inches(5.5), ORANGE_LIGHT, ORANGE, radius=0.05)
-header_card(slide, Inches(0.5), Inches(1.1), Inches(5.8), Inches(0.5), "Standard RAG vs Agentic RAG", ORANGE)
+RED_COLOR = RGBColor(0xC0, 0x39, 0x2B)
+
+left_card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
+    Inches(0.5), Inches(1.1), Inches(5.8), Inches(5.5))
+bordered(left_card, ORANGE_LIGHT, ORANGE, line_pt=1.5)
+header_card(slide, Inches(0.5), Inches(1.1), Inches(5.8), Inches(0.5), 'How It Works', ORANGE_DARK)
 
 add_text(slide, Inches(0.7), Inches(1.72), Inches(5.4), Inches(0.55),
-    "Standard RAG: retrieve once, generate once. Fixed pipeline.",
-    size=11, bold=False, color=GRAY_DARK)
-add_text(slide, Inches(0.7), Inches(2.32), Inches(5.4), Inches(0.55),
-    "Agentic RAG: LLM decides which tools to call, in what order, "
-    "based on the question. Can call multiple sources, iterate.",
-    size=11, bold=False, color=GRAY_DARK)
+    'Each department is a specialized agent: its own system prompt, '
+    'clinical scope, and model. The router picks the right one.',
+    size=11, color=GRAY_DARK)
 
-# 4 tools
-tools = [
-    ("kb_retrieve", "Vector + Graph KB", "Semantic search on WHO, trials, protocols", ORANGE),
-    ("graph_retrieve", "Neptune / AnalyticDB", "Multi-hop entity traversal", ORANGE_DARK),
-    ("icd11_lookup", "WHO ICD-11 API", "Live disease classification + synonyms", ORANGE),
-    ("pubmed_search", "NCBI E-utilities", "Real-time research literature (query-time)", ORANGE_DARK),
+flow_items = [
+    ('Doctors question', ORANGE, False),
+    ('PHI mask + cache check', ORANGE, False),
+    ('Emergency toggle ON?', RED_COLOR, True),
+    ('YES: Emergency agent (Haiku 4.5)', RED_COLOR, False),
+    ('NO: Router (Nova Micro, JSON mode)', ORANGE_DARK, False),
+    ('Routes to 1 of 12 specialty agents', ORANGE, False),
+    ('Specialty agent (Sonnet 4.5) generates answer', ORANGE_DARK, False),
+    ('Citations validated + streamed to browser', GREEN, False),
 ]
-for i, (tool_name, source, desc, color) in enumerate(tools):
-    y = Inches(3.0 + i * 0.72)
-    tc = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
-        Inches(0.7), y, Inches(5.2), Inches(0.62))
-    tc.fill.solid(); tc.fill.fore_color.rgb = WHITE
-    tc.line.color.rgb = color; tc.line.width = Pt(1.5); tc.adjustments[0] = 0.1
-    acc = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.7), y, Inches(0.07), Inches(0.62))
-    acc.fill.solid(); acc.fill.fore_color.rgb = color; acc.line.fill.background()
-    add_text(slide, Inches(0.9), y + Inches(0.05), Inches(1.5), Inches(0.3),
-             tool_name, size=10, bold=True, color=color)
-    add_text(slide, Inches(0.9), y + Inches(0.33), Inches(1.5), Inches(0.25),
-             source, size=9, italic=True, color=GRAY_MED)
-    add_text(slide, Inches(2.5), y + Inches(0.15), Inches(3.3), Inches(0.35),
-             desc, size=10, color=GRAY_DARK)
+for i, (text, color, is_decision) in enumerate(flow_items):
+    y = Inches(2.38 + i * 0.46)
+    if is_decision:
+        shape = slide.shapes.add_shape(MSO_SHAPE.DIAMOND, Inches(0.7), y, Inches(5.2), Inches(0.38))
+    else:
+        shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.7), y, Inches(5.2), Inches(0.38))
+        shape.adjustments[0] = 0.15
+    shape.fill.solid(); shape.fill.fore_color.rgb = color; shape.line.fill.background()
+    tb = slide.shapes.add_textbox(Inches(0.7), y, Inches(5.2), Inches(0.38))
+    tf = tb.text_frame; tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    p = tf.paragraphs[0]; p.alignment = PP_ALIGN.CENTER
+    run = p.add_run(); run.text = text
+    run.font.name = 'Calibri'; run.font.size = Pt(9.5)
+    run.font.bold = True; run.font.color.rgb = WHITE
 
-# Right: how it works
-card(slide, Inches(6.6), Inches(1.1), Inches(6.2), Inches(5.5), WHITE, ORANGE, radius=0.05)
-header_card(slide, Inches(6.6), Inches(1.1), Inches(6.2), Inches(0.5), "How Agentic RAG Works (Complex Lane)", ORANGE)
+right_card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
+    Inches(6.6), Inches(1.1), Inches(6.2), Inches(5.5))
+bordered(right_card, WHITE, ORANGE, line_pt=1.5)
+header_card(slide, Inches(6.6), Inches(1.1), Inches(6.2), Inches(0.5),
+            '12 Deployed Department Agents (PoC)', ORANGE)
 
-steps_agentic = [
-    ("1", "Doctor asks complex question", ORANGE),
-    ("2", "Router classifies department", ORANGE_DARK),
-    ("3", "Specialty agent receives question", ORANGE),
-    ("4", "Agent calls kb_retrieve (vector + graph)", ORANGE_DARK),
-    ("5", "Agent optionally calls icd11_lookup for synonyms", ORANGE),
-    ("6", "Agent optionally calls pubmed_search for latest evidence", ORANGE_DARK),
-    ("7", "Agent synthesizes all results into grounded answer", ORANGE),
-    ("8", "Citation validator checks every [n] reference", ORANGE_DARK),
+depts = [
+    ('Emergency', 'Haiku 4.5', RED_COLOR),
+    ('Cardiology', 'Sonnet 4.5', ORANGE_DARK),
+    ('Pulmonology', 'Sonnet 4.5', ORANGE_DARK),
+    ('Gastroenterology', 'Sonnet 4.5', ORANGE_DARK),
+    ('Nephrology', 'Sonnet 4.5', ORANGE_DARK),
+    ('Endocrinology', 'Sonnet 4.5', ORANGE_DARK),
+    ('Neurology', 'Sonnet 4.5', ORANGE_DARK),
+    ('Infectious Disease', 'Sonnet 4.5', ORANGE_DARK),
+    ('Oncology', 'Sonnet 4.5', ORANGE_DARK),
+    ('Obstetrics & Gyn', 'Sonnet 4.5', ORANGE_DARK),
+    ('Pediatrics', 'Sonnet 4.5', ORANGE_DARK),
+    ('Radiology', 'Sonnet 4.5 + Vision', ORANGE),
 ]
-for i, (num, step_text, color) in enumerate(steps_agentic):
-    y = Inches(1.72 + i * 0.58)
-    badge = slide.shapes.add_shape(MSO_SHAPE.OVAL, Inches(6.8), y, Inches(0.38), Inches(0.38))
-    badge.fill.solid(); badge.fill.fore_color.rgb = color; badge.line.fill.background()
-    tb = slide.shapes.add_textbox(Inches(6.8), y, Inches(0.38), Inches(0.38))
+col_w = Inches(1.9); row_h = Inches(0.72)
+gap_x = Inches(0.1); gap_y = Inches(0.1)
+start_x = Inches(6.7); start_y = Inches(1.72)
+
+for i, (name, model, color) in enumerate(depts):
+    col = i % 3; row = i // 3
+    x = start_x + col * (col_w + gap_x)
+    y = start_y + row * (row_h + gap_y)
+    dc = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, col_w, row_h)
+    bordered(dc, ORANGE_LIGHT if i % 2 == 0 else WHITE, color, line_pt=1.5, radius=0.1)
+    add_text(slide, x + Inches(0.08), y + Inches(0.08), col_w - Inches(0.16), Inches(0.35),
+             name, size=10, bold=True, color=color)
+    add_text(slide, x + Inches(0.08), y + Inches(0.42), col_w - Inches(0.16), Inches(0.25),
+             model, size=8.5, italic=True, color=GRAY_MED)
+
+note_y = Inches(6.55)
+note = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.5), note_y, Inches(12.3), Inches(0.42))
+solid(note, ORANGE); note.adjustments[0] = 0.2
+add_text(slide, Inches(0.7), note_y + Inches(0.06), Inches(11.9), Inches(0.32),
+         'PoC: 12 departments, system prompt per agent, bedrock.converse() directly.  '
+         'Production: 40 sub-specialties, Bedrock Agents service with tool calling.',
+         size=11, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
+
+print('  Slide 3 (Multi-Agent 12 depts): done')
+
+
+# =============================================================================
+# SLIDE 4: Agentic RAG - PoC vs Production
+# =============================================================================
+slide = new_slide(prs)
+slide_title(slide, 'Agentic RAG: PoC vs Production Architecture')
+
+GREEN_LIGHT  = RGBColor(0xE8, 0xF5, 0xE9)
+AMBER        = RGBColor(0xFF, 0x8F, 0x00)
+AMBER_LIGHT  = RGBColor(0xFF, 0xF8, 0xE1)
+
+poc_card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
+    Inches(0.5), Inches(1.1), Inches(5.8), Inches(5.5))
+bordered(poc_card, GREEN_LIGHT, GREEN, line_pt=2)
+poc_hdr = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.5), Inches(1.1), Inches(5.8), Inches(0.5))
+solid(poc_hdr, GREEN)
+add_text(slide, Inches(0.5), Inches(1.1), Inches(5.8), Inches(0.5),
+         'PoC (Deployed Today)', size=14, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
+
+add_text(slide, Inches(0.7), Inches(1.72), Inches(5.4), Inches(0.45),
+         'Fixed pipeline - NO Bedrock Agents, NO tool calling',
+         size=11, bold=True, color=GREEN)
+
+poc_steps = [
+    ('1', 'PHI mask (regex)', GREEN),
+    ('2', 'Cache lookup (Redis)', GREEN),
+    ('3', 'Lane: emergency or complex (if/else)', GREEN),
+    ('4', 'Router: Nova Micro via bedrock.converse()', GREEN),
+    ('5', 'Retrieve: Bedrock KB Retrieve API (direct call)', GREEN),
+    ('6', 'GraphRAG: Bedrock KB Retrieve API (direct call)', GREEN),
+    ('7', 'Generate: bedrock.converse_stream() directly', GREEN),
+    ('8', 'Cache write + SSE stream to browser', GREEN),
+]
+for i, (num, text, color) in enumerate(poc_steps):
+    y = Inches(2.25 + i * 0.52)
+    badge = slide.shapes.add_shape(MSO_SHAPE.OVAL, Inches(0.7), y, Inches(0.36), Inches(0.36))
+    solid(badge, color)
+    tb = slide.shapes.add_textbox(Inches(0.7), y, Inches(0.36), Inches(0.36))
     tf = tb.text_frame; tf.vertical_anchor = MSO_ANCHOR.MIDDLE
     p = tf.paragraphs[0]; p.alignment = PP_ALIGN.CENTER
     run = p.add_run(); run.text = num
-    run.font.name = "Calibri"; run.font.size = Pt(10); run.font.bold = True
+    run.font.name = 'Calibri'; run.font.size = Pt(10); run.font.bold = True
     run.font.color.rgb = WHITE
-    add_text(slide, Inches(7.3), y + Inches(0.04), Inches(5.3), Inches(0.38),
-             step_text, size=10.5, color=GRAY_DARK)
+    add_text(slide, Inches(1.18), y + Inches(0.04), Inches(4.9), Inches(0.38),
+             text, size=10.5, color=GRAY_DARK)
 
-print("  Slide 4 (Agentic RAG): done")
+add_text(slide, Inches(0.7), Inches(6.35), Inches(5.4), Inches(0.25),
+         'No icd11_lookup, no pubmed_search in PoC. PubMed = future feature.',
+         size=9.5, italic=True, color=GRAY_MED)
 
+prod_card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
+    Inches(6.6), Inches(1.1), Inches(6.2), Inches(5.5))
+bordered(prod_card, AMBER_LIGHT, AMBER, line_pt=2)
+prod_hdr = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(6.6), Inches(1.1), Inches(6.2), Inches(0.5))
+solid(prod_hdr, AMBER)
+add_text(slide, Inches(6.6), Inches(1.1), Inches(6.2), Inches(0.5),
+         'Production Target (Bedrock Agents)', size=14, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
+
+add_text(slide, Inches(6.8), Inches(1.72), Inches(5.8), Inches(0.45),
+         'Agentic loop - LLM decides which tools to call',
+         size=11, bold=True, color=AMBER)
+
+tools = [
+    ('kb_retrieve', 'Vector + GraphRAG KB', 'Semantic search on WHO, trials, protocols'),
+    ('graph_retrieve', 'Neptune Analytics', 'Multi-hop entity traversal'),
+    ('icd11_lookup', 'WHO ICD-11 API', 'Live disease classification + synonyms'),
+    ('pubmed_search', 'NCBI E-utilities', 'Real-time research literature'),
+]
+add_text(slide, Inches(6.8), Inches(2.25), Inches(5.8), Inches(0.35),
+         'Agent tools (Bedrock action groups):', size=11, bold=True, color=AMBER)
+for i, (tool_name, source, desc) in enumerate(tools):
+    y = Inches(2.65 + i * 0.62)
+    tc = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(6.8), y, Inches(5.8), Inches(0.55))
+    bordered(tc, WHITE, AMBER, line_pt=1.2, radius=0.1)
+    acc = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(6.8), y, Inches(0.06), Inches(0.55))
+    solid(acc, AMBER)
+    add_text(slide, Inches(7.0), y + Inches(0.04), Inches(1.6), Inches(0.28),
+             tool_name, size=10, bold=True, color=AMBER)
+    add_text(slide, Inches(7.0), y + Inches(0.3), Inches(1.6), Inches(0.22),
+             source, size=9, italic=True, color=GRAY_MED)
+    add_text(slide, Inches(8.7), y + Inches(0.12), Inches(3.8), Inches(0.35),
+             desc, size=10, color=GRAY_DARK)
+
+add_text(slide, Inches(6.8), Inches(5.2), Inches(5.8), Inches(0.45),
+         'Why not in PoC?', size=11, bold=True, color=AMBER)
+reasons = [
+    'Bedrock Agent InvokeAgent blocked by IAM trust chain issue',
+    'converse_stream() used directly instead (works, faster to build)',
+    'Production: resolve IAM + enable full agentic loop',
+]
+bullet_list(slide, Inches(6.8), Inches(5.68), Inches(5.8), reasons,
+            size=10, bullet_color=AMBER, spacing=0.28)
+
+banner = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
+    Inches(0.5), Inches(6.65), Inches(12.3), Inches(0.38))
+solid(banner, ORANGE); banner.adjustments[0] = 0.2
+add_text(slide, Inches(0.7), Inches(6.69), Inches(11.9), Inches(0.32),
+         'PoC proves the retrieval + generation quality. Production adds Bedrock Agents for dynamic tool selection.',
+         size=11, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
+
+print('  Slide 4 (Agentic RAG PoC vs Prod): done')
 
 # =============================================================================
 # SLIDE 5: RAG vs Fine-tuning Comparison (AWS vs Alibaba)
