@@ -166,7 +166,7 @@ text_box(slide, Inches(6.3), Inches(1.1), Inches(6.5), Inches(0.4),
          "Use Case Scenarios", size=15, bold=True, color=ORANGE_DARK)
 
 scenarios = [
-    ("\u26a1", "Emergency Speed",
+    ("\U0001f550", "Emergency Speed",
      "Emergency care needs 2-second response time",
      RED, RED_LIGHT),
     ("\U0001f4c5", "WHO Monthly Updates",
