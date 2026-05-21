@@ -110,6 +110,41 @@ def _check_token(request: Request) -> None:
         raise HTTPException(status_code=401, detail="bad or missing token")
 
 
+@app.post("/api/phi/scan")
+async def phi_scan(req: ChatRequest) -> dict[str, Any]:
+    """Show exactly what PHI was detected and masked in the input.
+    Returns the original text, masked text, and a list of detected PHI tokens.
+    """
+    try:
+        from app.graph import phi_mask, _PHI_PATTERNS
+    except ImportError:
+        from .graph import phi_mask, _PHI_PATTERNS  # type: ignore
+
+    original = req.message
+    masked = phi_mask(original)
+
+    # Find which patterns matched
+    import re as _re
+    detected = []
+    for pattern, token in _PHI_PATTERNS:
+        for match in pattern.finditer(original):
+            detected.append({
+                "type": token.strip("[]"),
+                "original_value": match.group(0),
+                "replaced_with": token,
+                "position": [match.start(), match.end()],
+            })
+    detected.sort(key=lambda x: x["position"][0])
+
+    return {
+        "original": original,
+        "masked": masked,
+        "phi_detected": original != masked,
+        "phi_count": len(detected),
+        "detections": detected,
+    }
+
+
 @app.get("/healthz")
 def healthz() -> dict[str, Any]:
     return {

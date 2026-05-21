@@ -1,0 +1,23 @@
+# Fine-tuning dependencies — install in addition to requirements.txt
+# pip install -r requirements-finetune.txt
+
+# HuggingFace stack
+transformers>=4.45,<5.0
+datasets>=2.20,<4.0
+accelerate>=0.34,<2.0
+peft>=0.13,<2.0
+trl>=0.12,<2.0
+huggingface_hub>=0.24,<2.0   # InferenceClient for teacher (Qwen3.5-397B via DeepInfra)
+
+# Optional: 4-bit QLoRA (reduces VRAM from ~8GB to ~4GB)
+bitsandbytes>=0.43,<1.0
+
+# Teacher/judge: Qwen3.5-397B-A17B via HuggingFace InferenceClient (DeepInfra provider)
+# Requires: export HF_TOKEN=hf_...  (HuggingFace token with billing enabled)
+# Cost: ~$0.54/1M input + $3.40/1M output (DeepInfra pricing)
+# 4000 Q&A phase 1 ~ $1.73 total
+
+# Torch — install the right variant for your hardware:
+# CUDA 12.1:  pip install torch --index-url https://download.pytorch.org/whl/cu121
+# CUDA 11.8:  pip install torch --index-url https://download.pytorch.org/whl/cu118
+# CPU only:   pip install torch

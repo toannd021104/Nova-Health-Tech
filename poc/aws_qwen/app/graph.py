@@ -51,10 +51,16 @@ from typing import Any, Optional
 import boto3
 from langgraph.graph import END, StateGraph
 
-from poc.aws_qwen.app import cache as redis_cache
-from poc.aws_qwen.app import graphrag
-from poc.aws_qwen.app.agents import DEPARTMENTS, Department, QWEN_EMERGENCY
-from poc.aws_qwen.app.router import BEDROCK_REGION, RouterDecision, route as route_department
+try:
+    from poc.aws_qwen.app import cache as redis_cache
+    from poc.aws_qwen.app import graphrag
+    from poc.aws_qwen.app.agents import DEPARTMENTS, Department, NOVA_LITE
+    from poc.aws_qwen.app.router import BEDROCK_REGION, RouterDecision, route as route_department
+except ImportError:
+    from app import cache as redis_cache  # type: ignore
+    from app import graphrag  # type: ignore
+    from app.agents import DEPARTMENTS, Department, NOVA_LITE  # type: ignore
+    from app.router import BEDROCK_REGION, RouterDecision, route as route_department  # type: ignore
 
 log = logging.getLogger(__name__)
 
@@ -91,6 +97,9 @@ class ChatState:
     citations: list[dict[str, Any]] = field(default_factory=list)
     route_badge: str = ""
     cache_hit: bool = False
+    # timing fields set by streaming endpoint
+    _pre_gen_ms: int = 0
+    _retrieve_ms: int = 0
 
 
 def _node_phi_mask(state: ChatState) -> ChatState:
@@ -184,25 +193,28 @@ def _node_emergency_agent(state: ChatState) -> ChatState:
 def _node_retrieve(state: ChatState) -> ChatState:
     if state.cache_hit:
         return state
-    from poc.aws_qwen.app.rag import retrieve  # lazy import so tests can stub it
+    try:
+        from poc.aws_qwen.app.rag import retrieve
+    except ImportError:
+        from app.rag import retrieve  # type: ignore
 
     assert state.department is not None
+
+    # Emergency: top-3 for speed. Complex: top-15 for recall.
+    retrieve_k = 3 if state.lane == "emergency" else 15
     state.retrieved = retrieve(
         query=state.masked_question,
         namespace=state.department.kb_namespace,
-        top_k=5,
+        top_k=retrieve_k,
     )
 
-    # On complex-lane multi-hop-looking questions, also ask GraphRAG.
-    # Simple heuristic: the question has 'and' or ',' and is complex lane.
-    if (
-        state.lane == "complex"
-        and (" and " in state.masked_question.lower() or "," in state.masked_question)
-    ):
-        graph_hits = graphrag.graph_retrieve(state.masked_question, top_k=3)
-        state.graph_hits = [
-            {"source": h.source, "text": h.text, "score": h.score} for h in graph_hits
-        ]
+    # GraphRAG on both lanes — emergency top-2, complex top-3.
+    # Heuristic removed: always try GraphRAG; it returns empty if KB_ID not set.
+    graph_k = 2 if state.lane == "emergency" else 3
+    graph_hits = graphrag.graph_retrieve(state.masked_question, top_k=graph_k)
+    state.graph_hits = [
+        {"source": h.source, "text": h.text, "score": h.score} for h in graph_hits
+    ]
 
     # Merge citations
     state.citations = [
@@ -252,9 +264,9 @@ def _node_generate(state: ChatState, *, bedrock=None) -> ChatState:
         f"Question:\n{state.masked_question}"
     )
 
-    # Emergency lane forces the fast-lane MoE regardless of department default.
-    model_id = QWEN_EMERGENCY if state.lane == "emergency" else state.department.model
-    max_tokens = 700 if state.lane == "emergency" else 1500
+    # Emergency lane forces Nova Lite regardless of department default.
+    model_id = NOVA_LITE if state.lane == "emergency" else state.department.model
+    max_tokens = 300 if state.lane == "emergency" else 1500
     temperature = 0.1 if state.lane == "emergency" else 0.2
 
     # Build the Converse content. For Radiology with an attached image we
@@ -265,7 +277,6 @@ def _node_generate(state: ChatState, *, bedrock=None) -> ChatState:
             mime = att.get("type", "")
             if mime.startswith("image/"):
                 import base64  # noqa: PLC0415
-
                 raw = base64.b64decode(att.get("data_b64", ""))
                 user_content.append(
                     {
@@ -276,12 +287,23 @@ def _node_generate(state: ChatState, *, bedrock=None) -> ChatState:
                     }
                 )
 
-    response = bedrock.converse(
+    # Guardrails: emergency lane skips (speed priority), complex lane enabled.
+    import os as _os  # noqa: PLC0415
+    guardrail_id = _os.environ.get("GUARDRAIL_ID", "")
+    converse_kwargs: dict[str, Any] = dict(
         modelId=model_id,
         system=[{"text": state.department.system_prompt}],
         messages=[{"role": "user", "content": user_content}],
         inferenceConfig={"maxTokens": max_tokens, "temperature": temperature},
     )
+    if guardrail_id and state.lane != "emergency":
+        converse_kwargs["guardrailConfig"] = {
+            "guardrailIdentifier": guardrail_id,
+            "guardrailVersion": "DRAFT",
+            "trace": "enabled",
+        }
+
+    response = bedrock.converse(**converse_kwargs)
     state.answer = _extract_text(response)
     return state
 

@@ -2,58 +2,121 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Nova Health Clinical AI — POC</title>
+  <title>Nova Health Clinical AI — AWS + Qwen PoC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 </head>
 <body>
   <header>
-    <h1>Nova Health Clinical AI — POC</h1>
-    <div class="subtitle">Multi-agent department routing · Emergency bypass · RAG-grounded · 10-day demo</div>
+    <h1>Nova Health Clinical AI <span class="version-tag">AWS + Qwen</span></h1>
+    <div class="subtitle">Multi-agent · GraphRAG · SFT student · PHI masking · Emergency bypass</div>
   </header>
 
   <main>
     <aside>
-      <div class="panel">
-        <h3>Emergency toggle</h3>
+      <!-- Emergency toggle -->
+      <div class="panel emergency-panel">
+        <h3>Emergency mode</h3>
         <label class="switch">
           <input type="checkbox" id="emergency">
           <span class="slider"></span>
         </label>
-        <p class="hint">When ON, bypasses the router and goes straight to Haiku 4.5 on the Emergency Medicine agent. Target p95 ≤ 2 s.</p>
+        <p class="hint" id="emergency-hint">
+          <strong>Teacher:</strong> bypasses department router, uses Nova Lite (fastest), target TTFT &le; 2s.<br>
+          <strong>Student:</strong> sends directly to fine-tuned model — no routing, no RAG.
+        </p>
       </div>
 
+      <!-- Model selector -->
       <div class="panel">
-        <h3>Route preview</h3>
-        <div id="route-badge" class="badge">—</div>
-        <div id="route-reason" class="reason-text">(submit a question to see how the router classified it)</div>
+        <h3>Model</h3>
+        <div class="model-toggle">
+          <label class="model-option">
+            <input type="radio" name="model-mode" value="teacher" checked>
+            <span class="model-label">
+              <span class="model-name">Teacher</span>
+              <span class="model-desc">Nova Pro · full RAG + GraphRAG pipeline</span>
+            </span>
+          </label>
+          <label class="model-option">
+            <input type="radio" name="model-mode" value="student">
+            <span class="model-label">
+              <span class="model-name">Student</span>
+              <span class="model-desc">Qwen3-4B SFT+LoRA · no RAG · SageMaker</span>
+            </span>
+          </label>
+        </div>
+        <div id="student-status" class="student-status-badge">checking...</div>
+        <p class="hint" style="margin-top:8px">
+          Emergency toggle affects <strong>Teacher only</strong> — it switches from Nova Pro (complex lane) to Nova Lite (emergency lane) and skips the router.
+          Student always calls the SageMaker endpoint directly regardless of emergency state.
+        </p>
       </div>
 
+      <!-- Route preview -->
+      <div class="panel">
+        <h3>Route</h3>
+        <div id="route-badge" class="badge">—</div>
+        <div id="route-reason" class="reason-text"></div>
+        <div id="route-timing" class="reason-text"></div>
+        <div id="timing-display" class="timing-pill"></div>
+      </div>
+
+      <!-- Sample questions -->
       <div class="panel">
         <h3>Try these</h3>
         <ul class="samples">
-          <li><button data-sample="What's the WHO 1-hour sepsis bundle for a 70 kg adult with septic shock?" data-emergency="true">Sepsis bundle (emergency)</button></li>
-          <li><button data-sample="54-year-old with eGFR 35 and a sulfa allergy, what antibiotic for complicated UTI?" data-emergency="false">Complicated UTI + eGFR 35 + sulfa allergy</button></li>
-          <li><button data-sample="Newly diagnosed HFrEF with LVEF 30%, pick the first-line quadruple therapy." data-emergency="false">HFrEF first-line</button></li>
-          <li><button data-sample="I'm attaching a chest X-ray — describe the findings." data-emergency="false">Radiology (attach an image below)</button></li>
+          <li><button data-sample="Patient SpO2 82% on room air with severe COVID-19. What treatment does WHO recommend immediately?" data-emergency="true">COVID-19 SpO2 drop (emergency)</button></li>
+          <li><button data-sample="Patient John Smith, MRN: 12345678. What is the sepsis 1-hour bundle for a 70kg adult?" data-emergency="true">Sepsis bundle with PHI (emergency)</button></li>
+          <li><button data-sample="54-year-old with eGFR 35 and sulfa allergy. What antibiotic for complicated UTI?" data-emergency="false">UTI + eGFR 35 + allergy</button></li>
+          <li><button data-sample="Newly diagnosed HFrEF LVEF 30%. First-line quadruple therapy?" data-emergency="false">HFrEF quadruple therapy</button></li>
+          <li><button data-sample="What are the common themes across cardiology and nephrology trials in our knowledge base?" data-emergency="false">GraphRAG multi-hop query</button></li>
+          <li><button data-sample="Type 2 diabetes HbA1c 9.5% on metformin. Add-on therapy options?" data-emergency="false">T2DM add-on therapy</button></li>
         </ul>
+      </div>
+
+      <!-- Stack info -->
+      <div class="panel">
+        <h3>Stack</h3>
+        <ul class="stack-info">
+          <li>Teacher (complex): Nova Pro · Bedrock SG</li>
+          <li>Teacher (emergency): Nova Lite · Bedrock SG</li>
+          <li>Student: Qwen3-4B SFT+LoRA · SageMaker</li>
+          <li>Router: Nova Micro · Bedrock SG</li>
+          <li>RAG: Bedrock KB (OpenSearch hybrid)</li>
+          <li>GraphRAG: Bedrock Neptune KB</li>
+          <li>PHI: regex mask (pre-LLM)</li>
+        </ul>
+        <div class="footer-powered">Powered by AWS &middot; Amazon Bedrock &middot; ap-southeast-1</div>
       </div>
     </aside>
 
     <section>
-      <div id="chat-log" class="chat-log"></div>
+      <div id="chat-log" class="chat-log">
+        <div class="welcome">
+          <p>Ask a clinical question. The system routes it to the right department agent.</p>
+          <p><strong>Teacher mode:</strong> Nova Pro with RAG + GraphRAG. Toggle Emergency for Nova Lite fast-lane (target TTFT &le; 2s).</p>
+          <p><strong>Student mode:</strong> Fine-tuned Qwen3-4B (SFT+LoRA on clinical Q&amp;A). Direct inference, no RAG.</p>
+        </div>
+      </div>
 
       <form id="chat-form">
-        <input type="file" id="attach" accept="image/*" multiple>
-        <textarea id="message" placeholder="Ask a clinical question…" required></textarea>
-        <button type="submit">Send</button>
+        <div class="input-row">
+          <textarea id="message" placeholder="Ask a clinical question… (Shift+Enter for newline)" rows="2" required></textarea>
+          <button type="submit" id="send-btn">Send</button>
+        </div>
+        <div class="input-meta">
+          <input type="file" id="attach" accept="image/*" multiple>
+          <span id="timing-inline"></span>
+        </div>
       </form>
     </section>
   </main>
 
-  <footer>
-    <span id="token-counter">0 tokens this session</span>
-    <span>Version: POC · cheapest AWS SG</span>
+  <footer class="site-footer">
+    Powered by AWS &middot; Amazon Bedrock &middot; Nova Health PoC (Version B) &middot; ap-southeast-1
   </footer>
 
   <script src="app.js"></script>

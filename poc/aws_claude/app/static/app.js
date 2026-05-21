@@ -56,10 +56,27 @@ function appendUser(text, isEmergency) {
   chatLog.scrollTop = chatLog.scrollHeight;
 }
 
-function appendAI(placeholder) {
+function appendAI(phiResult) {
   const el = document.createElement('div');
   el.className = 'msg ai';
+
+  // Build PHI badge HTML if any PHI was detected
+  let phiBadgeHtml = '';
+  if (phiResult && phiResult.phi_detected && phiResult.phi_count > 0) {
+    const labels = phiResult.detections.map(d => {
+      const label = d.type.replace(/_/g, ' ');
+      return `<span class="phi-token">${label}</span>`;
+    }).join(' ');
+    phiBadgeHtml = `
+      <div class="phi-badge" title="PHI detected and masked before sending to AI">
+        <span class="phi-icon">&#128274;</span>
+        <span class="phi-label">${phiResult.phi_count} PHI masked:</span>
+        ${labels}
+      </div>`;
+  }
+
   el.innerHTML = `
+    ${phiBadgeHtml}
     <div class="msg-header">
       <span class="msg-role">AI</span>
       <span class="msg-tag" id="ai-route-tag">...</span>
@@ -131,7 +148,18 @@ form.addEventListener('submit', async (ev) => {
   reasonEl.textContent = '';
   timingEl.textContent = '';
 
-  const aiBubble = appendAI();
+  // Scan for PHI before sending — purely for UI visibility, masking also happens server-side
+  let phiResult = null;
+  try {
+    const phiResp = await fetch('/api/phi/scan' + (TOKEN ? '?token=' + encodeURIComponent(TOKEN) : ''), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ message, emergency: isEmergency }),
+    });
+    if (phiResp.ok) phiResult = await phiResp.json();
+  } catch (_) { /* non-fatal — proceed without badge */ }
+
+  const aiBubble = appendAI(phiResult);
   const t0 = performance.now();
   const body = aiBubble.querySelector('#ai-body');
   const routeTagEl = aiBubble.querySelector('#ai-route-tag');
